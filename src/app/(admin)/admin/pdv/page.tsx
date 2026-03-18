@@ -27,37 +27,16 @@ export default async function PdvPage() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="Modulo ERP"
-        title="PDV"
-        description="Registro de vendas com divisao de pagamentos e baixa automatica de estoque."
+        title="PDV operacional"
+        description="Estrutura de atendimento rapido com categorias, busca de produtos e carrinho lateral para fechamento."
       />
-
-      <section className="grid gap-4 md:grid-cols-3">
-        <Card size="sm">
-          <CardHeader className="pb-0">
-            <CardDescription>Caixas abertos</CardDescription>
-            <CardTitle className="text-2xl">{openSessions.length}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card size="sm">
-          <CardHeader className="pb-0">
-            <CardDescription>Produtos ativos para venda</CardDescription>
-            <CardTitle className="text-2xl">{products.length}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card size="sm">
-          <CardHeader className="pb-0">
-            <CardDescription>Vendas no historico recente</CardDescription>
-            <CardTitle className="text-2xl">{sales.length}</CardTitle>
-          </CardHeader>
-        </Card>
-      </section>
 
       {canManage ? (
         <Card>
           <CardHeader className="border-b border-border/70 pb-4">
             <CardTitle>Nova venda</CardTitle>
             <CardDescription>
-              Fluxo de venda com multiplos itens, desconto e pagamentos divididos por metodo.
+              Fluxo de balcão com adicao de itens, ajuste de quantidade e validacao de pagamentos em tempo real.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -92,6 +71,11 @@ export default async function PdvPage() {
                   sku: product.sku,
                   salePrice: product.salePrice.toString(),
                   currentStock: product.currentStock,
+                  category: {
+                    id: product.category.id,
+                    name: product.category.name,
+                    slug: product.category.slug,
+                  },
                 }))}
               />
             )}

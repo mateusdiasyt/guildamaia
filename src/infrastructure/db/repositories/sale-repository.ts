@@ -24,6 +24,13 @@ export async function listPdvProductOptions() {
       salePrice: true,
       currentStock: true,
       status: true,
+      category: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+        },
+      },
     },
     orderBy: {
       name: "asc",
