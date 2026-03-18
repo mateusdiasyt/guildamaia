@@ -4,7 +4,6 @@ import { useActionState } from "react";
 
 import { ActionFeedback } from "@/components/admin/action-feedback";
 import { FormSubmitButton } from "@/components/admin/form-submit-button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { initialActionState } from "@/presentation/admin/common/action-state";
@@ -26,10 +25,7 @@ export function UpsertDailyGoalForm({
 
   return (
     <form action={formAction} className="grid gap-4">
-      <div className="space-y-2">
-        <Label htmlFor="goalDate">Data da meta</Label>
-        <Input id="goalDate" name="goalDate" type="date" defaultValue={defaultGoalDate} required />
-      </div>
+      <input type="hidden" name="goalDate" value={defaultGoalDate} />
 
       <div className="space-y-2">
         <Label htmlFor="notes">Observacao (opcional)</Label>

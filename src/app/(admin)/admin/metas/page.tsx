@@ -199,7 +199,7 @@ export default async function MetasPage() {
           <CardHeader className="border-b border-border/70 pb-4">
             <CardTitle>Configurar meta diaria</CardTitle>
             <CardDescription>
-              Selecione a data para aplicar a meta geral do dia com base no planejamento mensal automatico.
+              Aplicacao automatica da meta geral para a data atual, com base no planejamento mensal.
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-4">
