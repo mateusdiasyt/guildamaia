@@ -123,14 +123,14 @@ export default async function AdminDashboardPage() {
         <Card>
           <CardHeader className="space-y-1">
             <CardTitle>Metas de hoje</CardTitle>
-            <CardDescription>Comparativo entre meta geral de faturamento e realizado do dia.</CardDescription>
+            <CardDescription>Comparativo da meta diaria automatica e saldo acumulado do mes.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {!summary.goal ? (
               <div className="space-y-3 rounded-xl border border-dashed border-border/80 bg-muted/30 p-4">
-                <p className="text-sm text-muted-foreground">Nenhuma meta diaria configurada para hoje.</p>
+                <p className="text-sm text-muted-foreground">Configure o planejamento mensal para ativar esse painel.</p>
                 <Link href="/admin/metas" className={quickActionClass}>
-                  Configurar meta diaria
+                  Configurar metas
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
@@ -162,6 +162,39 @@ export default async function AdminDashboardPage() {
                   <p className="text-xs text-muted-foreground">
                     {summary.goal.revenuePercent.toFixed(1)}% da meta geral
                   </p>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl border border-border/80 bg-background/55 p-3">
+                    <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Meta acumulada</p>
+                    <p className="mt-1 text-sm font-semibold text-foreground">
+                      {formatCurrency(summary.goal.monthExpectedToDate)}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-border/80 bg-background/55 p-3">
+                    <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Realizado acumulado</p>
+                    <p className="mt-1 text-sm font-semibold text-foreground">
+                      {formatCurrency(summary.goal.monthRevenueActual)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-border/80 bg-background/55 p-3">
+                  <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Saldo acumulado do mes</p>
+                  <p
+                    className={`mt-1 text-sm font-semibold ${
+                      summary.goal.monthBalanceToDate >= 0 ? "text-emerald-300" : "text-rose-300"
+                    }`}
+                  >
+                    {summary.goal.monthBalanceToDate >= 0 ? "Saldo positivo " : "Saldo a recuperar "}
+                    {formatCurrency(Math.abs(summary.goal.monthBalanceToDate))}
+                  </p>
+                  {summary.goal.remainingDaysInCurrentMonth > 0 ? (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Ritmo sugerido: {formatCurrency(summary.goal.recommendedDailyTarget)} por dia nos proximos{" "}
+                      {summary.goal.remainingDaysInCurrentMonth} dia(s).
+                    </p>
+                  ) : null}
                 </div>
 
                 <Link href="/admin/metas" className={quickActionClass}>

@@ -39,12 +39,20 @@ function percentOfTarget(actual: number, target: number) {
   return (actual / target) * 100;
 }
 
+function roundCurrency(value: number) {
+  return Math.round(value * 100) / 100;
+}
+
+function getDaysInMonth(date: Date) {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)).getUTCDate();
+}
+
 export async function getGoalsPageData() {
   const now = new Date();
   const currentMonthStart = monthStart(now);
   const currentNextMonthStart = nextMonthStart(now);
 
-  const [todayGoal, recentGoals, monthlyPlan, monthRevenueAggregate] = await Promise.all([
+  const [todayGoal, recentGoals, monthlyPlan, monthRevenueAggregate, todayProgress] = await Promise.all([
     getDailyGoalByDate(now),
     listRecentDailyGoals(20),
     getMonthlyGoalPlanByDate(now),
@@ -59,6 +67,9 @@ export async function getGoalsPageData() {
       _sum: {
         totalAmount: true,
       },
+    }),
+    getDailyGoalProgress({
+      goalDate: now,
     }),
   ]);
 
@@ -79,9 +90,20 @@ export async function getGoalsPageData() {
   );
 
   const monthRevenueActual = Number(monthRevenueAggregate._sum.totalAmount ?? 0);
+  const totalDaysInCurrentMonth = getDaysInMonth(now);
+  const elapsedDaysInCurrentMonth = Math.min(now.getUTCDate(), totalDaysInCurrentMonth);
 
   return {
     todayGoal,
+    todaySummary: monthlyPlan
+      ? {
+          goalDate: toDateInputValue(now),
+          revenueTarget: Number(monthlyPlan.dailyRevenueTarget),
+          revenueActual: todayProgress.revenueActual,
+          dailyBalance: roundCurrency(todayProgress.revenueActual - Number(monthlyPlan.dailyRevenueTarget)),
+          dailyPercent: percentOfTarget(todayProgress.revenueActual, Number(monthlyPlan.dailyRevenueTarget)),
+        }
+      : null,
     todayDefaultGoalDate: toDateInputValue(now),
     goals: goalsWithProgress,
     currentMonthReference: toMonthInputValue(currentMonthStart),
@@ -94,6 +116,20 @@ export async function getGoalsPageData() {
           monthlyRevenueTarget: Number(monthlyPlan.monthlyRevenueTarget),
           dailyRevenueTarget: Number(monthlyPlan.dailyRevenueTarget),
           monthRevenueActual,
+          expectedRevenueToDate: roundCurrency(Number(monthlyPlan.dailyRevenueTarget) * elapsedDaysInCurrentMonth),
+          elapsedDaysInCurrentMonth,
+          totalDaysInCurrentMonth,
+          remainingDaysInCurrentMonth: Math.max(totalDaysInCurrentMonth - elapsedDaysInCurrentMonth, 0),
+          balanceToDate: roundCurrency(
+            monthRevenueActual - Number(monthlyPlan.dailyRevenueTarget) * elapsedDaysInCurrentMonth,
+          ),
+          remainingRevenueToTarget: roundCurrency(Number(monthlyPlan.monthlyRevenueTarget) - monthRevenueActual),
+          recommendedDailyTarget: roundCurrency(
+            Math.max(totalDaysInCurrentMonth - elapsedDaysInCurrentMonth, 0) > 0
+              ? Math.max(Number(monthlyPlan.monthlyRevenueTarget) - monthRevenueActual, 0) /
+                  Math.max(totalDaysInCurrentMonth - elapsedDaysInCurrentMonth, 1)
+              : 0,
+          ),
           monthRevenuePercent: percentOfTarget(monthRevenueActual, Number(monthlyPlan.monthlyRevenueTarget)),
         }
       : null,

@@ -1,7 +1,7 @@
 import { Prisma, SaleStatus } from "@prisma/client";
 
 import { countCategories } from "@/infrastructure/db/repositories/category-repository";
-import { getDailyGoalByDate, getDailyGoalProgress } from "@/infrastructure/db/repositories/goal-repository";
+import { getDailyGoalProgress, getMonthlyGoalPlanByDate } from "@/infrastructure/db/repositories/goal-repository";
 import { countProducts, listLowStockProducts } from "@/infrastructure/db/repositories/product-repository";
 import { prisma } from "@/lib/prisma";
 import { countStockMovements } from "@/infrastructure/db/repositories/stock-repository";
@@ -36,6 +36,14 @@ function percentOfTarget(actual: number, target: number) {
   return (actual / target) * 100;
 }
 
+function roundCurrency(value: number) {
+  return Math.round(value * 100) / 100;
+}
+
+function getDaysInMonth(date: Date) {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)).getUTCDate();
+}
+
 export async function getDashboardSummary() {
   const now = new Date();
   const todayStart = startOfDay(now);
@@ -64,7 +72,7 @@ export async function getDashboardSummary() {
     previousMonthRevenueAggregate,
     recentSales,
     topProductsRaw,
-    todayGoal,
+    monthlyGoalPlan,
   ] = await Promise.all([
     countUsers(),
     countCategories(),
@@ -176,7 +184,7 @@ export async function getDashboardSummary() {
       },
       take: 6,
     }),
-    getDailyGoalByDate(now),
+    getMonthlyGoalPlanByDate(now),
   ]);
 
   const todayRevenue = toNumber(todayRevenueAggregate._sum.totalAmount);
@@ -242,23 +250,34 @@ export async function getDashboardSummary() {
     };
   });
 
-  const todayGoalProgress = todayGoal
-    ? await getDailyGoalProgress({
+  const todayGoalProgress = await getDailyGoalProgress({
       goalDate: now,
-      })
-    : {
-        revenueActual: 0,
-      };
+    });
 
-  const goal = todayGoal
+  const totalDaysInCurrentMonth = getDaysInMonth(now);
+  const elapsedDaysInCurrentMonth = Math.min(now.getUTCDate(), totalDaysInCurrentMonth);
+
+  const goal = monthlyGoalPlan
     ? {
-        id: todayGoal.id,
-        goalDate: todayGoal.goalDate,
-        revenueTarget: Number(todayGoal.consumptionSalesTarget),
+        monthStart: monthlyGoalPlan.monthStart,
+        revenueTarget: Number(monthlyGoalPlan.dailyRevenueTarget),
         revenueActual: todayGoalProgress.revenueActual,
         revenuePercent: percentOfTarget(
           todayGoalProgress.revenueActual,
-          Number(todayGoal.consumptionSalesTarget),
+          Number(monthlyGoalPlan.dailyRevenueTarget),
+        ),
+        dailyBalance: roundCurrency(todayGoalProgress.revenueActual - Number(monthlyGoalPlan.dailyRevenueTarget)),
+        monthRevenueActual: monthRevenue,
+        monthExpectedToDate: roundCurrency(Number(monthlyGoalPlan.dailyRevenueTarget) * elapsedDaysInCurrentMonth),
+        monthBalanceToDate: roundCurrency(
+          monthRevenue - Number(monthlyGoalPlan.dailyRevenueTarget) * elapsedDaysInCurrentMonth,
+        ),
+        remainingDaysInCurrentMonth: Math.max(totalDaysInCurrentMonth - elapsedDaysInCurrentMonth, 0),
+        recommendedDailyTarget: roundCurrency(
+          Math.max(totalDaysInCurrentMonth - elapsedDaysInCurrentMonth, 0) > 0
+            ? Math.max(Number(monthlyGoalPlan.monthlyRevenueTarget) - monthRevenue, 0) /
+                Math.max(totalDaysInCurrentMonth - elapsedDaysInCurrentMonth, 1)
+            : 0,
         ),
       }
     : null;

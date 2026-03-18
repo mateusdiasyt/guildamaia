@@ -72,7 +72,7 @@ function ProgressRow({
 export default async function MetasPage() {
   await requirePermission(PERMISSIONS.DASHBOARD_VIEW);
   const data = await getGoalsPageData();
-  const todayGoal = data.goals.find((goal) => goal.goalDate.toISOString().slice(0, 10) === data.todayDefaultGoalDate) ?? null;
+  const todaySummary = data.todaySummary;
 
   return (
     <div className="space-y-6">
@@ -147,6 +147,47 @@ export default async function MetasPage() {
                   target={data.monthlyPlan.monthlyRevenueTarget}
                   valueFormatter={(value) => formatCurrency(value)}
                 />
+
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-xl border border-border/80 bg-background/60 p-3">
+                    <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Meta acumulada</p>
+                    <p className="mt-1 text-sm font-semibold text-foreground">
+                      {formatCurrency(data.monthlyPlan.expectedRevenueToDate)}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-border/80 bg-background/60 p-3">
+                    <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Realizado acumulado</p>
+                    <p className="mt-1 text-sm font-semibold text-foreground">
+                      {formatCurrency(data.monthlyPlan.monthRevenueActual)}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-border/80 bg-background/60 p-3">
+                    <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Saldo acumulado</p>
+                    <p
+                      className={`mt-1 text-sm font-semibold ${
+                        data.monthlyPlan.balanceToDate >= 0 ? "text-emerald-300" : "text-rose-300"
+                      }`}
+                    >
+                      {data.monthlyPlan.balanceToDate >= 0 ? "Saldo positivo " : "Saldo a recuperar "}
+                      {formatCurrency(Math.abs(data.monthlyPlan.balanceToDate))}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-border/80 bg-background/55 p-3">
+                  <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Ritmo sugerido</p>
+                  {data.monthlyPlan.remainingDaysInCurrentMonth > 0 ? (
+                    <p className="mt-1 text-sm text-foreground">
+                      Para fechar o mes na meta:{" "}
+                      <span className="font-semibold text-primary">
+                        {formatCurrency(data.monthlyPlan.recommendedDailyTarget)}
+                      </span>{" "}
+                      por dia nos proximos {data.monthlyPlan.remainingDaysInCurrentMonth} dia(s).
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-sm text-muted-foreground">Mes encerrado para calculo de ritmo diario.</p>
+                  )}
+                </div>
               </>
             )}
           </CardContent>
@@ -176,9 +217,9 @@ export default async function MetasPage() {
             <CardDescription>Resumo atual da data {dateFormatter.format(new Date())}.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
-            {!todayGoal ? (
+            {!todaySummary ? (
               <div className="rounded-xl border border-dashed border-border/80 bg-muted/30 p-4 text-sm text-muted-foreground">
-                Nenhuma meta configurada para hoje.
+                Configure o planejamento mensal para ativar o acompanhamento automatico da meta diaria.
               </div>
             ) : (
               <>
@@ -187,7 +228,7 @@ export default async function MetasPage() {
                     <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Data</p>
                     <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-foreground">
                       <CalendarDays className="h-4 w-4 text-primary" />
-                      {dateFormatter.format(todayGoal.goalDate)}
+                      {dateFormatter.format(new Date(todaySummary.goalDate))}
                     </p>
                   </div>
                   <div className="rounded-xl border border-border/80 bg-background/60 p-3">
@@ -198,10 +239,22 @@ export default async function MetasPage() {
 
                 <ProgressRow
                   label="Faturamento"
-                  actual={todayGoal.revenueActual}
-                  target={todayGoal.revenueTarget}
+                  actual={todaySummary.revenueActual}
+                  target={todaySummary.revenueTarget}
                   valueFormatter={(value) => formatCurrency(value)}
                 />
+
+                <div className="rounded-xl border border-border/80 bg-background/55 p-3">
+                  <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Saldo do dia</p>
+                  <p
+                    className={`mt-1 text-sm font-semibold ${
+                      todaySummary.dailyBalance >= 0 ? "text-emerald-300" : "text-rose-300"
+                    }`}
+                  >
+                    {todaySummary.dailyBalance >= 0 ? "Saldo positivo " : "Faltante "}
+                    {formatCurrency(Math.abs(todaySummary.dailyBalance))}
+                  </p>
+                </div>
               </>
             )}
           </CardContent>
