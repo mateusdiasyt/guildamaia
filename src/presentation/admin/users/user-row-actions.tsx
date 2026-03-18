@@ -6,13 +6,18 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 type UserRowActionsProps = {
-  editHref: string;
+  onAssignPermissions: () => void;
   toggleFormId: string;
   toggleLabel: string;
   destructiveToggle?: boolean;
 };
 
-export function UserRowActions({ editHref, toggleFormId, toggleLabel, destructiveToggle = false }: UserRowActionsProps) {
+export function UserRowActions({
+  onAssignPermissions,
+  toggleFormId,
+  toggleLabel,
+  destructiveToggle = false,
+}: UserRowActionsProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -22,7 +27,7 @@ export function UserRowActions({ editHref, toggleFormId, toggleLabel, destructiv
         <span className="sr-only">Acoes</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52 min-w-52">
-        <DropdownMenuItem render={<a href={editHref} className="w-full" />}>
+        <DropdownMenuItem onClick={onAssignPermissions}>
           <ShieldCheck className="h-4 w-4" />
           Atribuir permissoes
         </DropdownMenuItem>

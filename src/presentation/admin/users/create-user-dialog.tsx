@@ -1,14 +1,18 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import type { Role } from "@prisma/client";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreateUserForm } from "@/presentation/admin/users/create-user-form";
 
+type RoleOption = {
+  id: string;
+  name: string;
+};
+
 type CreateUserDialogProps = {
-  roles: Role[];
+  roles: RoleOption[];
 };
 
 export function CreateUserDialog({ roles }: CreateUserDialogProps) {

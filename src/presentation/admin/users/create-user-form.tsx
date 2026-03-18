@@ -1,6 +1,6 @@
 "use client";
 
-import { RecordStatus, type Role } from "@prisma/client";
+import { RecordStatus } from "@prisma/client";
 import { useActionState } from "react";
 
 import { ActionFeedback } from "@/components/admin/action-feedback";
@@ -10,8 +10,13 @@ import { Label } from "@/components/ui/label";
 import { initialActionState } from "@/presentation/admin/common/action-state";
 import { createUserAction } from "@/presentation/admin/users/actions";
 
+type RoleOption = {
+  id: string;
+  name: string;
+};
+
 type CreateUserFormProps = {
-  roles: Role[];
+  roles: RoleOption[];
 };
 
 export function CreateUserForm({ roles }: CreateUserFormProps) {
