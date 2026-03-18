@@ -1,7 +1,9 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Boxes,
+  Calculator,
   ChartColumnBig,
+  Receipt,
   Package,
   PackagePlus,
   ShieldUser,
@@ -54,6 +56,18 @@ export const adminNavigation: AdminNavigationItem[] = [
     href: "/admin/stock",
     icon: Warehouse,
     permission: PERMISSIONS.STOCK_VIEW,
+  },
+  {
+    label: "Caixa",
+    href: "/admin/cash",
+    icon: Calculator,
+    permission: PERMISSIONS.CASH_VIEW,
+  },
+  {
+    label: "PDV",
+    href: "/admin/pdv",
+    icon: Receipt,
+    permission: PERMISSIONS.PDV_VIEW,
   },
   {
     label: "Movimentar Estoque",

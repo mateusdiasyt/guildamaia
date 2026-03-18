@@ -15,6 +15,11 @@ const permissions = [
   { key: "products:manage", description: "Criar e editar produtos" },
   { key: "stock:view", description: "Visualizar movimentacoes de estoque" },
   { key: "stock:manage", description: "Registrar movimentacoes de estoque" },
+  { key: "cash:view", description: "Visualizar sessoes de caixa" },
+  { key: "cash:manage", description: "Abrir e fechar caixa, registrar sangria" },
+  { key: "pdv:view", description: "Visualizar vendas no PDV" },
+  { key: "pdv:manage", description: "Registrar vendas no PDV" },
+  { key: "pdv:cancel", description: "Cancelar vendas no PDV" },
 ];
 
 const rolePermissions = {
@@ -30,6 +35,11 @@ const rolePermissions = {
     "products:manage",
     "stock:view",
     "stock:manage",
+    "cash:view",
+    "cash:manage",
+    "pdv:view",
+    "pdv:manage",
+    "pdv:cancel",
   ],
   operador: [
     "dashboard:view",
@@ -38,6 +48,10 @@ const rolePermissions = {
     "products:view",
     "stock:view",
     "stock:manage",
+    "cash:view",
+    "cash:manage",
+    "pdv:view",
+    "pdv:manage",
   ],
 } as const;
 
@@ -132,6 +146,21 @@ async function main() {
       email: process.env.DEFAULT_ADMIN_EMAIL ?? "admin@guildamaia.com",
       passwordHash: hashedPassword,
       roleId: adminRole.id,
+      status: RecordStatus.ACTIVE,
+      unitId: defaultUnit.id,
+    },
+  });
+
+  await prisma.cashRegister.upsert({
+    where: { code: "CAIXA-01" },
+    update: {
+      name: "Caixa Principal",
+      status: RecordStatus.ACTIVE,
+      unitId: defaultUnit.id,
+    },
+    create: {
+      code: "CAIXA-01",
+      name: "Caixa Principal",
       status: RecordStatus.ACTIVE,
       unitId: defaultUnit.id,
     },

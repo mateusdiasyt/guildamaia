@@ -10,6 +10,11 @@ export const PERMISSIONS = {
   PRODUCTS_MANAGE: "products:manage",
   STOCK_VIEW: "stock:view",
   STOCK_MANAGE: "stock:manage",
+  CASH_VIEW: "cash:view",
+  CASH_MANAGE: "cash:manage",
+  PDV_VIEW: "pdv:view",
+  PDV_MANAGE: "pdv:manage",
+  PDV_CANCEL: "pdv:cancel",
 } as const;
 
 export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

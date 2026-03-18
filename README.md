@@ -79,6 +79,8 @@ Pode sobrescrever com:
 - Fornecedores
 - Produtos
 - Estoque (movimentacoes com trilha auditavel)
+- Caixa (abertura, sangria e fechamento)
+- PDV (vendas, pagamento dividido e cancelamento com retorno de estoque)
 
 ## Estrutura arquitetural
 
