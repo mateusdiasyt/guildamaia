@@ -13,7 +13,15 @@ export async function listUsers(search?: string) {
         }
       : undefined,
     include: {
-      role: true,
+      role: {
+        include: {
+          permissions: {
+            select: {
+              permissionId: true,
+            },
+          },
+        },
+      },
       unit: true,
       directPermissions: {
         include: {

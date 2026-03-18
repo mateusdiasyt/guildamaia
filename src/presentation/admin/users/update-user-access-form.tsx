@@ -33,6 +33,8 @@ type UpdateUserAccessFormProps = {
   users: AccessUser[];
   roles: AccessRole[];
   permissions: AccessPermission[];
+  initialUserId?: string;
+  lockUser?: boolean;
 };
 
 type PermissionDisplay = {
@@ -154,8 +156,14 @@ function moduleSortIndex(moduleName: string) {
   return index >= 0 ? index : moduleOrder.length + 1;
 }
 
-export function UpdateUserAccessForm({ users, roles, permissions }: UpdateUserAccessFormProps) {
-  const initialUser = users[0];
+export function UpdateUserAccessForm({
+  users,
+  roles,
+  permissions,
+  initialUserId,
+  lockUser = false,
+}: UpdateUserAccessFormProps) {
+  const initialUser = users.find((user) => user.id === initialUserId) ?? users[0];
   const [state, formAction] = useActionState(updateUserAccessAction, initialActionState);
   const [selectedUserId, setSelectedUserId] = useState(initialUser?.id ?? "");
   const [selectedRoleId, setSelectedRoleId] = useState(initialUser?.roleId ?? roles[0]?.id ?? "");
@@ -263,20 +271,27 @@ export function UpdateUserAccessForm({ users, roles, permissions }: UpdateUserAc
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="userId-access">Usuario</Label>
-          <select
-            id="userId-access"
-            name="userId"
-            className="admin-native-select"
-            value={selectedUser.id}
-            onChange={(event) => handleUserChange(event.target.value)}
-            required
-          >
-            {users.map((user) => (
-              <option key={user.id} value={user.id}>
-                {user.name} ({user.email})
-              </option>
-            ))}
-          </select>
+          {lockUser ? (
+            <>
+              <Input id="userId-access" value={`${selectedUser.name} (${selectedUser.email})`} readOnly />
+              <input type="hidden" name="userId" value={selectedUser.id} />
+            </>
+          ) : (
+            <select
+              id="userId-access"
+              name="userId"
+              className="admin-native-select"
+              value={selectedUser.id}
+              onChange={(event) => handleUserChange(event.target.value)}
+              required
+            >
+              {users.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.name} ({user.email})
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         <div className="space-y-2">
