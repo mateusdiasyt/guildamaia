@@ -38,7 +38,20 @@ export const createComandaSchema = z.object({
       .min(0, "Numero da comanda invalido.")
       .max(200, "Numero maximo da comanda: 200."),
   ),
-  customerId: z.string().optional().or(z.literal("")),
+  customerId: z.preprocess(
+    (value) => {
+      if (value === null || value === undefined) {
+        return "";
+      }
+
+      if (typeof value === "string") {
+        return value.trim();
+      }
+
+      return "";
+    },
+    z.union([z.literal(""), z.string().cuid("Cliente selecionado invalido.")]),
+  ),
   isWalkIn: z.preprocess(
     (value) => value === true || value === "true" || value === "on" || value === "1",
     z.boolean(),
