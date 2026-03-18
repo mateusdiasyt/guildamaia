@@ -7,7 +7,6 @@ import { FormSubmitButton } from "@/components/admin/form-submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { formatCurrency } from "@/lib/format";
 import { initialActionState } from "@/presentation/admin/common/action-state";
 import { upsertDailyGoalAction } from "@/presentation/admin/goals/actions";
 
@@ -45,20 +44,6 @@ export function UpsertDailyGoalForm({
           defaultValue={defaultEntryTicketsTarget ?? 0}
           required
         />
-      </div>
-
-      <div className="space-y-2 md:col-span-2">
-        <Label>Meta diaria de consumacao (calculada automaticamente)</Label>
-        <div className="rounded-xl border border-border/80 bg-background/65 px-3 py-2.5">
-          <p className="text-sm font-semibold text-foreground">
-            {hasMonthlyPlan ? formatCurrency(autoConsumptionSalesTarget ?? 0) : "Planejamento mensal nao configurado"}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {hasMonthlyPlan
-              ? "Valor calculado pelo custo mensal + percentual de lucro desejado."
-              : "Cadastre o planejamento mensal para liberar o salvamento da meta diaria."}
-          </p>
-        </div>
       </div>
 
       <div className="space-y-2 md:col-span-2">
