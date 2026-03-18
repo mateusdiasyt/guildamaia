@@ -20,6 +20,11 @@ export default function AdminError({ error, reset }: AdminErrorProps) {
       <p className="mt-2 text-sm text-rose-700">
         Tente novamente. Se o problema persistir, valide variaveis de ambiente e conexao com banco.
       </p>
+      {error.digest ? (
+        <p className="mt-2 text-xs text-rose-700/80">
+          Digest: <span className="font-mono">{error.digest}</span>
+        </p>
+      ) : null}
       <Button className="mt-4" variant="destructive" onClick={reset} type="button">
         Tentar novamente
       </Button>

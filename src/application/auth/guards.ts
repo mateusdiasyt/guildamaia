@@ -21,7 +21,7 @@ export async function requirePermission(permission: PermissionKey) {
   const session = await requireSession();
 
   if (!hasPermission(session.user.permissions, permission)) {
-    redirect("/admin");
+    redirect("/forbidden");
   }
 
   return session;
