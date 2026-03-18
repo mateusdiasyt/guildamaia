@@ -86,12 +86,28 @@ export function CreateProductForm({ categories, suppliers }: CreateProductFormPr
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="minStock">Estoque minimo</Label>
+        <Label htmlFor="minStock" className="inline-flex items-center gap-1.5">
+          Estoque minimo
+          <span
+            title="Quantidade de alerta para reposicao. Quando o estoque atual atingir esse valor, o produto entra em nivel de atencao."
+            className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-zinc-300 text-[10px] font-semibold text-zinc-600"
+          >
+            ?
+          </span>
+        </Label>
         <Input id="minStock" name="minStock" type="number" min={0} defaultValue={0} required />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="currentStock">Estoque atual</Label>
+        <Label htmlFor="currentStock" className="inline-flex items-center gap-1.5">
+          Estoque atual
+          <span
+            title="Quantidade disponivel agora para venda. Esse valor diminui a cada venda e aumenta com entradas ou ajustes."
+            className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-zinc-300 text-[10px] font-semibold text-zinc-600"
+          >
+            ?
+          </span>
+        </Label>
         <Input id="currentStock" name="currentStock" type="number" min={0} defaultValue={0} required />
       </div>
 
