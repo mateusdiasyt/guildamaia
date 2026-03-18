@@ -205,7 +205,6 @@ export default async function MetasPage() {
           <CardContent className="pt-4">
             <UpsertDailyGoalForm
               defaultGoalDate={data.todayDefaultGoalDate}
-              defaultNotes={data.todayGoal?.notes ?? undefined}
               autoRevenueTarget={data.monthlyPlan?.dailyRevenueTarget ?? null}
             />
           </CardContent>

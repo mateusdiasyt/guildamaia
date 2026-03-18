@@ -169,7 +169,7 @@ export async function upsertMonthlyGoalPlanRecord(input: FormData, actorId: stri
 export async function upsertDailyGoalRecord(input: FormData, actorId: string) {
   const parsed = upsertDailyGoalSchema.parse({
     goalDate: input.get("goalDate"),
-    notes: input.get("notes"),
+    notes: input.get("notes") ?? undefined,
   });
 
   const goalDate = parseGoalDateInput(parsed.goalDate);
