@@ -1,11 +1,16 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import { IBM_Plex_Mono, Manrope, Sora } from "next/font/google";
 import { Toaster } from "sonner";
 
 import "./globals.css";
 
-const plusJakartaSans = Plus_Jakarta_Sans({
-  variable: "--font-plus-jakarta",
+const manrope = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin"],
+});
+
+const sora = Sora({
+  variable: "--font-sora",
   subsets: ["latin"],
 });
 
@@ -28,7 +33,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className={`${plusJakartaSans.variable} ${ibmPlexMono.variable} antialiased`}>
+      <body className={`${manrope.variable} ${sora.variable} ${ibmPlexMono.variable} antialiased`}>
         {children}
         <Toaster richColors position="top-right" />
       </body>
