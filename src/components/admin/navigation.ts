@@ -1,0 +1,64 @@
+import type { LucideIcon } from "lucide-react";
+import {
+  Boxes,
+  ChartColumnBig,
+  Package,
+  PackagePlus,
+  ShieldUser,
+  Store,
+  Warehouse,
+} from "lucide-react";
+
+import { PERMISSIONS, type PermissionKey } from "@/domain/auth/permissions";
+
+export type AdminNavigationItem = {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  permission: PermissionKey;
+};
+
+export const adminNavigation: AdminNavigationItem[] = [
+  {
+    label: "Dashboard",
+    href: "/admin",
+    icon: ChartColumnBig,
+    permission: PERMISSIONS.DASHBOARD_VIEW,
+  },
+  {
+    label: "Usuarios",
+    href: "/admin/users",
+    icon: ShieldUser,
+    permission: PERMISSIONS.USERS_VIEW,
+  },
+  {
+    label: "Categorias",
+    href: "/admin/categories",
+    icon: Boxes,
+    permission: PERMISSIONS.CATEGORIES_VIEW,
+  },
+  {
+    label: "Fornecedores",
+    href: "/admin/suppliers",
+    icon: Store,
+    permission: PERMISSIONS.SUPPLIERS_VIEW,
+  },
+  {
+    label: "Produtos",
+    href: "/admin/products",
+    icon: Package,
+    permission: PERMISSIONS.PRODUCTS_VIEW,
+  },
+  {
+    label: "Estoque",
+    href: "/admin/stock",
+    icon: Warehouse,
+    permission: PERMISSIONS.STOCK_VIEW,
+  },
+  {
+    label: "Movimentar Estoque",
+    href: "/admin/stock#novo-registro",
+    icon: PackagePlus,
+    permission: PERMISSIONS.STOCK_MANAGE,
+  },
+];

@@ -1,0 +1,196 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RecordStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum StockMovementType {
+  IN
+  OUT
+  ADJUSTMENT
+}
+
+model BusinessUnit {
+  id        String   @id @default(cuid())
+  name      String
+  code      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users          User[]
+  categories     ProductCategory[]
+  suppliers      Supplier[]
+  products       Product[]
+  stockMovements StockMovement[]
+
+  @@index([name])
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+
+  roles RolePermission[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model User {
+  id           String       @id @default(cuid())
+  name         String
+  email        String       @unique
+  passwordHash String
+  status       RecordStatus @default(ACTIVE)
+  roleId       String
+  unitId       String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  role      Role         @relation(fields: [roleId], references: [id])
+  unit      BusinessUnit? @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  auditLogs AuditLog[]
+
+  stockMovements StockMovement[] @relation("MovementOperator")
+
+  @@index([status])
+  @@index([roleId])
+  @@index([unitId])
+}
+
+model ProductCategory {
+  id          String       @id @default(cuid())
+  name        String
+  slug        String
+  description String?
+  status      RecordStatus @default(ACTIVE)
+  unitId      String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  unit     BusinessUnit? @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  products Product[]
+
+  @@unique([slug, unitId])
+  @@index([status])
+}
+
+model Supplier {
+  id         String       @id @default(cuid())
+  tradeName  String
+  legalName  String?
+  document   String?
+  email      String?
+  phone      String?
+  status     RecordStatus @default(ACTIVE)
+  unitId     String?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  unit     BusinessUnit? @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  products Product[]
+
+  @@index([tradeName])
+  @@index([status])
+}
+
+model Product {
+  id            String       @id @default(cuid())
+  name          String
+  sku           String       @unique
+  description   String?
+  costPrice     Decimal      @db.Decimal(12, 2)
+  salePrice     Decimal      @db.Decimal(12, 2)
+  marginPercent Decimal      @default(0) @db.Decimal(5, 2)
+  minStock      Int          @default(0)
+  currentStock  Int          @default(0)
+  status        RecordStatus @default(ACTIVE)
+  categoryId    String
+  supplierId    String?
+  unitId        String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  category ProductCategory @relation(fields: [categoryId], references: [id])
+  supplier Supplier?       @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  unit     BusinessUnit?   @relation(fields: [unitId], references: [id], onDelete: SetNull)
+
+  stockMovements StockMovement[]
+
+  @@index([name])
+  @@index([categoryId])
+  @@index([supplierId])
+  @@index([status])
+  @@index([unitId])
+}
+
+model StockMovement {
+  id             String            @id @default(cuid())
+  productId      String
+  type           StockMovementType
+  quantity       Int
+  unitCost       Decimal?          @db.Decimal(12, 2)
+  previousStock  Int
+  resultingStock Int
+  note           String?
+  operatorId     String?
+  unitId         String?
+  createdAt      DateTime          @default(now())
+
+  product  Product       @relation(fields: [productId], references: [id])
+  operator User?         @relation("MovementOperator", fields: [operatorId], references: [id], onDelete: SetNull)
+  unit     BusinessUnit? @relation(fields: [unitId], references: [id], onDelete: SetNull)
+
+  @@index([productId, createdAt])
+  @@index([type])
+  @@index([unitId])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  entity     String
+  entityId   String?
+  metadata   Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([action])
+  @@index([entity, entityId])
+  @@index([createdAt])
+}

@@ -1,0 +1,149 @@
+import bcrypt from "bcryptjs";
+import { PrismaClient, RecordStatus } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
+const permissions = [
+  { key: "dashboard:view", description: "Visualizar dashboard administrativo" },
+  { key: "users:view", description: "Visualizar usuarios" },
+  { key: "users:manage", description: "Criar e editar usuarios" },
+  { key: "categories:view", description: "Visualizar categorias" },
+  { key: "categories:manage", description: "Criar e editar categorias" },
+  { key: "suppliers:view", description: "Visualizar fornecedores" },
+  { key: "suppliers:manage", description: "Criar e editar fornecedores" },
+  { key: "products:view", description: "Visualizar produtos" },
+  { key: "products:manage", description: "Criar e editar produtos" },
+  { key: "stock:view", description: "Visualizar movimentacoes de estoque" },
+  { key: "stock:manage", description: "Registrar movimentacoes de estoque" },
+];
+
+const rolePermissions = {
+  administrador: permissions.map((permission) => permission.key),
+  gerente: [
+    "dashboard:view",
+    "users:view",
+    "categories:view",
+    "categories:manage",
+    "suppliers:view",
+    "suppliers:manage",
+    "products:view",
+    "products:manage",
+    "stock:view",
+    "stock:manage",
+  ],
+  operador: [
+    "dashboard:view",
+    "categories:view",
+    "suppliers:view",
+    "products:view",
+    "stock:view",
+    "stock:manage",
+  ],
+} as const;
+
+async function main() {
+  const defaultUnit = await prisma.businessUnit.upsert({
+    where: { code: "HQ" },
+    update: {},
+    create: {
+      code: "HQ",
+      name: "Unidade Principal",
+    },
+  });
+
+  for (const permission of permissions) {
+    await prisma.permission.upsert({
+      where: { key: permission.key },
+      update: { description: permission.description },
+      create: permission,
+    });
+  }
+
+  const roles = [
+    {
+      slug: "administrador",
+      name: "Administrador",
+      description: "Controle total da plataforma",
+    },
+    {
+      slug: "gerente",
+      name: "Gerente",
+      description: "Gestao operacional e acompanhamento de indicadores",
+    },
+    {
+      slug: "operador",
+      name: "Operador",
+      description: "Operacao diaria de cadastro e estoque",
+    },
+  ];
+
+  for (const role of roles) {
+    const roleRecord = await prisma.role.upsert({
+      where: { slug: role.slug },
+      update: {
+        name: role.name,
+        description: role.description,
+        isSystem: true,
+      },
+      create: {
+        ...role,
+        isSystem: true,
+      },
+    });
+
+    const allowedPermissionKeys = rolePermissions[role.slug as keyof typeof rolePermissions];
+    const permissionRecords = await prisma.permission.findMany({
+      where: {
+        key: { in: allowedPermissionKeys as string[] },
+      },
+    });
+
+    await prisma.rolePermission.deleteMany({
+      where: { roleId: roleRecord.id },
+    });
+
+    await prisma.rolePermission.createMany({
+      data: permissionRecords.map((permission) => ({
+        roleId: roleRecord.id,
+        permissionId: permission.id,
+      })),
+      skipDuplicates: true,
+    });
+  }
+
+  const adminRole = await prisma.role.findUniqueOrThrow({
+    where: { slug: "administrador" },
+  });
+
+  const adminPassword = process.env.DEFAULT_ADMIN_PASSWORD ?? "Admin123!";
+  const hashedPassword = await bcrypt.hash(adminPassword, 12);
+
+  await prisma.user.upsert({
+    where: { email: process.env.DEFAULT_ADMIN_EMAIL ?? "admin@guildamaia.com" },
+    update: {
+      name: "Administrador Sistema",
+      passwordHash: hashedPassword,
+      roleId: adminRole.id,
+      status: RecordStatus.ACTIVE,
+      unitId: defaultUnit.id,
+    },
+    create: {
+      name: "Administrador Sistema",
+      email: process.env.DEFAULT_ADMIN_EMAIL ?? "admin@guildamaia.com",
+      passwordHash: hashedPassword,
+      roleId: adminRole.id,
+      status: RecordStatus.ACTIVE,
+      unitId: defaultUnit.id,
+    },
+  });
+}
+
+main()
+  .then(async () => {
+    await prisma.$disconnect();
+  })
+  .catch(async (error) => {
+    console.error("Seed failure", error);
+    await prisma.$disconnect();
+    process.exit(1);
+  });
