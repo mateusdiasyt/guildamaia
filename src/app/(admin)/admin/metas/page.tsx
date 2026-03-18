@@ -79,7 +79,7 @@ export default async function MetasPage() {
       <PageHeader
         eyebrow="Planejamento comercial"
         title="Metas diarias e mensais"
-        description="Defina custo mensal e lucro desejado para calcular a meta diaria automatica de consumacao. A meta de ingressos continua configuravel por dia."
+        description="Defina custo mensal e lucro desejado para calcular automaticamente a meta diaria geral de faturamento."
       />
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
@@ -87,7 +87,7 @@ export default async function MetasPage() {
           <CardHeader className="border-b border-border/70 pb-4">
             <CardTitle>Planejamento mensal</CardTitle>
             <CardDescription>
-              Informe custo da empresa e lucro desejado para gerar automaticamente a meta diaria de consumacao.
+              Informe custo da empresa e lucro desejado para gerar automaticamente a meta diaria geral de faturamento.
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-4">
@@ -158,15 +158,14 @@ export default async function MetasPage() {
           <CardHeader className="border-b border-border/70 pb-4">
             <CardTitle>Configurar meta diaria</CardTitle>
             <CardDescription>
-              Defina a meta de ingressos do dia. A meta de consumacao e aplicada automaticamente pelo planejamento mensal.
+              Selecione a data para aplicar a meta geral do dia com base no planejamento mensal automatico.
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-4">
             <UpsertDailyGoalForm
               defaultGoalDate={data.todayDefaultGoalDate}
-              defaultEntryTicketsTarget={data.todayGoal?.entryTicketsTarget}
               defaultNotes={data.todayGoal?.notes ?? undefined}
-              autoConsumptionSalesTarget={data.monthlyPlan?.dailyRevenueTarget ?? null}
+              autoRevenueTarget={data.monthlyPlan?.dailyRevenueTarget ?? null}
             />
           </CardContent>
         </Card>
@@ -198,15 +197,9 @@ export default async function MetasPage() {
                 </div>
 
                 <ProgressRow
-                  label="Ingressos"
-                  actual={todayGoal.entryTicketsActual}
-                  target={todayGoal.entryTicketsTarget}
-                  valueFormatter={(value) => `${value}`}
-                />
-                <ProgressRow
-                  label="Consumacao"
-                  actual={todayGoal.consumptionSalesActual}
-                  target={todayGoal.consumptionSalesTarget}
+                  label="Faturamento"
+                  actual={todayGoal.revenueActual}
+                  target={todayGoal.revenueTarget}
                   valueFormatter={(value) => formatCurrency(value)}
                 />
               </>
@@ -225,49 +218,40 @@ export default async function MetasPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Data</TableHead>
-                <TableHead>Meta ingresso</TableHead>
-                <TableHead>Meta consumacao</TableHead>
+                <TableHead>Meta geral</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {data.goals.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-sm text-muted-foreground">
+                  <TableCell colSpan={3} className="text-center text-sm text-muted-foreground">
                     Nenhuma meta cadastrada ainda.
                   </TableCell>
                 </TableRow>
               ) : null}
               {data.goals.map((goal) => {
-                const entryPercent = toPercent(goal.entryTicketsActual, goal.entryTicketsTarget);
-                const consumptionPercent = toPercent(goal.consumptionSalesActual, goal.consumptionSalesTarget);
-                const bestPercent = Math.max(entryPercent, consumptionPercent);
+                const revenuePercent = toPercent(goal.revenueActual, goal.revenueTarget);
 
                 return (
                   <TableRow key={goal.id}>
                     <TableCell>{dateFormatter.format(goal.goalDate)}</TableCell>
                     <TableCell>
                       <p className="font-medium text-foreground">
-                        {goal.entryTicketsActual} / {goal.entryTicketsTarget}
+                        {formatCurrency(goal.revenueActual)} / {formatCurrency(goal.revenueTarget)}
                       </p>
-                      <p className="text-xs text-muted-foreground">{entryPercent}%</p>
-                    </TableCell>
-                    <TableCell>
-                      <p className="font-medium text-foreground">
-                        {formatCurrency(goal.consumptionSalesActual)} / {formatCurrency(goal.consumptionSalesTarget)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{consumptionPercent}%</p>
+                      <p className="text-xs text-muted-foreground">{revenuePercent}%</p>
                     </TableCell>
                     <TableCell>
                       <Badge
                         className={
-                          bestPercent >= 100
+                          revenuePercent >= 100
                             ? "border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/10"
                             : "border border-primary/30 bg-primary/15 text-primary hover:bg-primary/15"
                         }
                       >
                         <Flag className="mr-1 h-3.5 w-3.5" />
-                        {bestPercent >= 100 ? "Meta batida" : "Em andamento"}
+                        {revenuePercent >= 100 ? "Meta batida" : "Em andamento"}
                       </Badge>
                     </TableCell>
                   </TableRow>

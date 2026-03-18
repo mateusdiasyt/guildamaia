@@ -12,41 +12,26 @@ import { upsertDailyGoalAction } from "@/presentation/admin/goals/actions";
 
 type UpsertDailyGoalFormProps = {
   defaultGoalDate: string;
-  defaultEntryTicketsTarget?: number;
   defaultNotes?: string;
-  autoConsumptionSalesTarget?: number | null;
+  autoRevenueTarget?: number | null;
 };
 
 export function UpsertDailyGoalForm({
   defaultGoalDate,
-  defaultEntryTicketsTarget,
   defaultNotes,
-  autoConsumptionSalesTarget,
+  autoRevenueTarget,
 }: UpsertDailyGoalFormProps) {
   const [state, formAction] = useActionState(upsertDailyGoalAction, initialActionState);
-  const hasMonthlyPlan = typeof autoConsumptionSalesTarget === "number";
+  const hasMonthlyPlan = typeof autoRevenueTarget === "number";
 
   return (
-    <form action={formAction} className="grid gap-4 md:grid-cols-2">
+    <form action={formAction} className="grid gap-4">
       <div className="space-y-2">
         <Label htmlFor="goalDate">Data da meta</Label>
         <Input id="goalDate" name="goalDate" type="date" defaultValue={defaultGoalDate} required />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="entryTicketsTarget">Meta de ingressos (unidades)</Label>
-        <Input
-          id="entryTicketsTarget"
-          name="entryTicketsTarget"
-          type="number"
-          min={0}
-          step={1}
-          defaultValue={defaultEntryTicketsTarget ?? 0}
-          required
-        />
-      </div>
-
-      <div className="space-y-2 md:col-span-2">
         <Label htmlFor="notes">Observacao (opcional)</Label>
         <Textarea
           id="notes"
@@ -57,7 +42,7 @@ export function UpsertDailyGoalForm({
         />
       </div>
 
-      <div className="md:col-span-2">
+      <div>
         {hasMonthlyPlan ? (
           <FormSubmitButton>Salvar meta diaria</FormSubmitButton>
         ) : (

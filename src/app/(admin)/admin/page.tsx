@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AlertTriangle, ArrowRight, Goal, Ticket, Wallet } from "lucide-react";
+import { AlertTriangle, ArrowRight, Goal, Wallet } from "lucide-react";
 
 import { requirePermission } from "@/application/auth/guards";
 import { getDashboardSummary } from "@/application/dashboard/dashboard-service";
@@ -48,7 +48,7 @@ export default async function AdminDashboardPage() {
       <PageHeader
         eyebrow="Controle operacional"
         title="Painel"
-        description="Visao diaria de faturamento, volume de vendas, produtos lideres e progresso das metas de entrada e consumacao."
+        description="Visao diaria de faturamento, volume de vendas, produtos lideres e progresso da meta geral do dia."
       />
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -123,7 +123,7 @@ export default async function AdminDashboardPage() {
         <Card>
           <CardHeader className="space-y-1">
             <CardTitle>Metas de hoje</CardTitle>
-            <CardDescription>Comparativo entre meta e realizado para entrada e consumacao.</CardDescription>
+            <CardDescription>Comparativo entre meta geral de faturamento e realizado do dia.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {!summary.goal ? (
@@ -136,56 +136,31 @@ export default async function AdminDashboardPage() {
               </div>
             ) : (
               <>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-xl border border-border/80 bg-background/55 p-3">
-                    <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Meta ingresso</p>
-                    <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-foreground">
-                      <Ticket className="h-4 w-4 text-primary" />
-                      Meta geral do dia
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-border/80 bg-background/55 p-3">
-                    <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Meta consumacao</p>
-                    <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-foreground">
-                      <Wallet className="h-4 w-4 text-primary" />
-                      Meta geral do dia
-                    </p>
-                  </div>
+                <div className="rounded-xl border border-border/80 bg-background/55 p-3">
+                  <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Meta geral</p>
+                  <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <Wallet className="h-4 w-4 text-primary" />
+                    Meta geral de faturamento
+                  </p>
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <p className="text-muted-foreground">Ingressos</p>
+                    <p className="text-muted-foreground">Faturamento</p>
                     <p className="font-semibold text-foreground">
-                      {summary.goal.entryTicketsActual} / {summary.goal.entryTicketsTarget}
-                    </p>
-                  </div>
-                  <div className="h-2 rounded-full bg-muted/70">
-                    <div
-                      className="h-2 rounded-full bg-primary transition-all"
-                      style={{ width: `${percentOfTarget(summary.goal.entryTicketsActual, summary.goal.entryTicketsTarget)}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">{summary.goal.entryPercent.toFixed(1)}% da meta de entrada</p>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <p className="text-muted-foreground">Consumacao</p>
-                    <p className="font-semibold text-foreground">
-                      {formatCurrency(summary.goal.consumptionSalesActual)} / {formatCurrency(summary.goal.consumptionSalesTarget)}
+                      {formatCurrency(summary.goal.revenueActual)} / {formatCurrency(summary.goal.revenueTarget)}
                     </p>
                   </div>
                   <div className="h-2 rounded-full bg-muted/70">
                     <div
                       className="h-2 rounded-full bg-chart-2 transition-all"
                       style={{
-                        width: `${percentOfTarget(summary.goal.consumptionSalesActual, summary.goal.consumptionSalesTarget)}%`,
+                        width: `${percentOfTarget(summary.goal.revenueActual, summary.goal.revenueTarget)}%`,
                       }}
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {summary.goal.consumptionPercent.toFixed(1)}% da meta de consumacao
+                    {summary.goal.revenuePercent.toFixed(1)}% da meta geral
                   </p>
                 </div>
 

@@ -34,10 +34,7 @@ export function parseMonthReferenceInput(value: string) {
 
 export async function upsertDailyGoal(data: {
   goalDate: Date;
-  entryTicketsTarget: number;
-  consumptionSalesTarget: Prisma.Decimal;
-  entryCategoryId?: string | null;
-  consumptionCategoryId?: string | null;
+  revenueTarget: Prisma.Decimal;
   notes?: string;
   createdById?: string;
 }) {
@@ -48,25 +45,23 @@ export async function upsertDailyGoal(data: {
       goalDate: normalizedGoalDate,
     },
     update: {
-      entryTicketsTarget: data.entryTicketsTarget,
-      consumptionSalesTarget: data.consumptionSalesTarget,
-      entryCategoryId: data.entryCategoryId,
-      consumptionCategoryId: data.consumptionCategoryId,
+      entryTicketsTarget: 0,
+      consumptionSalesTarget: data.revenueTarget,
+      entryCategoryId: null,
+      consumptionCategoryId: null,
       notes: data.notes,
       createdById: data.createdById,
     },
     create: {
       goalDate: normalizedGoalDate,
-      entryTicketsTarget: data.entryTicketsTarget,
-      consumptionSalesTarget: data.consumptionSalesTarget,
-      entryCategoryId: data.entryCategoryId,
-      consumptionCategoryId: data.consumptionCategoryId,
+      entryTicketsTarget: 0,
+      consumptionSalesTarget: data.revenueTarget,
+      entryCategoryId: null,
+      consumptionCategoryId: null,
       notes: data.notes,
       createdById: data.createdById,
     },
     include: {
-      entryCategory: true,
-      consumptionCategory: true,
       createdBy: {
         select: {
           id: true,
@@ -123,10 +118,6 @@ export async function getDailyGoalByDate(goalDate: Date) {
     where: {
       goalDate: normalizeGoalDate(goalDate),
     },
-    include: {
-      entryCategory: true,
-      consumptionCategory: true,
-    },
   });
 }
 
@@ -149,8 +140,6 @@ export async function getMonthlyGoalPlanByDate(date: Date) {
 export async function listRecentDailyGoals(limit = 30) {
   return prisma.dailyGoal.findMany({
     include: {
-      entryCategory: true,
-      consumptionCategory: true,
       createdBy: {
         select: {
           id: true,
@@ -167,60 +156,25 @@ export async function listRecentDailyGoals(limit = 30) {
 
 export async function getDailyGoalProgress(data: {
   goalDate: Date;
-  entryCategoryId?: string | null;
-  consumptionCategoryId?: string | null;
 }) {
   const start = normalizeGoalDate(data.goalDate);
   const end = new Date(start);
   end.setUTCDate(end.getUTCDate() + 1);
 
-  const [entryAggregate, consumptionAggregate] = await Promise.all([
-    prisma.saleItem.aggregate({
-      where: {
-        sale: {
-          status: SaleStatus.COMPLETED,
-          createdAt: {
-            gte: start,
-            lt: end,
-          },
-        },
-        ...(data.entryCategoryId
-          ? {
-              product: {
-                categoryId: data.entryCategoryId,
-              },
-            }
-          : {}),
+  const revenueAggregate = await prisma.sale.aggregate({
+    where: {
+      status: SaleStatus.COMPLETED,
+      createdAt: {
+        gte: start,
+        lt: end,
       },
-      _sum: {
-        quantity: true,
-      },
-    }),
-    prisma.saleItem.aggregate({
-      where: {
-        sale: {
-          status: SaleStatus.COMPLETED,
-          createdAt: {
-            gte: start,
-            lt: end,
-          },
-        },
-        ...(data.consumptionCategoryId
-          ? {
-              product: {
-                categoryId: data.consumptionCategoryId,
-              },
-            }
-          : {}),
-      },
-      _sum: {
-        lineTotal: true,
-      },
-    }),
-  ]);
+    },
+    _sum: {
+      totalAmount: true,
+    },
+  });
 
   return {
-    entryTicketsActual: Number(entryAggregate._sum.quantity ?? 0),
-    consumptionSalesActual: Number(consumptionAggregate._sum.lineTotal ?? 0),
+    revenueActual: Number(revenueAggregate._sum.totalAmount ?? 0),
   };
 }

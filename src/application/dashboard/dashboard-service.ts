@@ -244,28 +244,20 @@ export async function getDashboardSummary() {
 
   const todayGoalProgress = todayGoal
     ? await getDailyGoalProgress({
-        goalDate: now,
-        entryCategoryId: todayGoal.entryCategoryId,
-        consumptionCategoryId: todayGoal.consumptionCategoryId,
+      goalDate: now,
       })
     : {
-        entryTicketsActual: 0,
-        consumptionSalesActual: 0,
+        revenueActual: 0,
       };
 
   const goal = todayGoal
     ? {
         id: todayGoal.id,
         goalDate: todayGoal.goalDate,
-        entryTicketsTarget: todayGoal.entryTicketsTarget,
-        consumptionSalesTarget: Number(todayGoal.consumptionSalesTarget),
-        entryCategoryName: todayGoal.entryCategory?.name ?? null,
-        consumptionCategoryName: todayGoal.consumptionCategory?.name ?? null,
-        entryTicketsActual: todayGoalProgress.entryTicketsActual,
-        consumptionSalesActual: todayGoalProgress.consumptionSalesActual,
-        entryPercent: percentOfTarget(todayGoalProgress.entryTicketsActual, todayGoal.entryTicketsTarget),
-        consumptionPercent: percentOfTarget(
-          todayGoalProgress.consumptionSalesActual,
+        revenueTarget: Number(todayGoal.consumptionSalesTarget),
+        revenueActual: todayGoalProgress.revenueActual,
+        revenuePercent: percentOfTarget(
+          todayGoalProgress.revenueActual,
           Number(todayGoal.consumptionSalesTarget),
         ),
       }

@@ -66,17 +66,13 @@ export async function getGoalsPageData() {
     recentGoals.map(async (goal) => {
       const progress = await getDailyGoalProgress({
         goalDate: goal.goalDate,
-        entryCategoryId: goal.entryCategoryId,
-        consumptionCategoryId: goal.consumptionCategoryId,
       });
 
       return {
         id: goal.id,
         goalDate: goal.goalDate,
-        entryTicketsTarget: goal.entryTicketsTarget,
-        consumptionSalesTarget: Number(goal.consumptionSalesTarget),
-        entryTicketsActual: progress.entryTicketsActual,
-        consumptionSalesActual: progress.consumptionSalesActual,
+        revenueTarget: Number(goal.consumptionSalesTarget),
+        revenueActual: progress.revenueActual,
         notes: goal.notes,
       };
     }),
@@ -137,7 +133,6 @@ export async function upsertMonthlyGoalPlanRecord(input: FormData, actorId: stri
 export async function upsertDailyGoalRecord(input: FormData, actorId: string) {
   const parsed = upsertDailyGoalSchema.parse({
     goalDate: input.get("goalDate"),
-    entryTicketsTarget: input.get("entryTicketsTarget"),
     notes: input.get("notes"),
   });
 
@@ -150,10 +145,7 @@ export async function upsertDailyGoalRecord(input: FormData, actorId: string) {
 
   return upsertDailyGoal({
     goalDate,
-    entryTicketsTarget: parsed.entryTicketsTarget,
-    consumptionSalesTarget: monthPlan.dailyRevenueTarget,
-    entryCategoryId: null,
-    consumptionCategoryId: null,
+    revenueTarget: monthPlan.dailyRevenueTarget,
     notes: emptyToUndefined(parsed.notes),
     createdById: actorId,
   });
