@@ -83,8 +83,6 @@ export default async function PdvPage() {
         <CardContent>
           <OpenComandasBoard
             openComandas={openComandasView}
-            products={productOptions}
-            openSessions={openSessionOptions}
             canManage={canManage}
           />
         </CardContent>
@@ -125,6 +123,7 @@ export default async function PdvPage() {
                   subtotalAmount: comanda.subtotalAmount,
                   itemCount: comanda.itemCount,
                 }))}
+                products={productOptions}
               />
             )}
           </CardContent>

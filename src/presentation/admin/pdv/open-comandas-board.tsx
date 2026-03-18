@@ -7,8 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/format";
 import { removeComandaItemAction } from "@/presentation/admin/pdv/actions";
-import { AddComandaItemForm } from "@/presentation/admin/pdv/add-comanda-item-form";
-import { CloseComandaForm } from "@/presentation/admin/pdv/close-comanda-form";
 
 type ComandaItemView = {
   id: string;
@@ -32,24 +30,8 @@ type OpenComandaView = {
   items: ComandaItemView[];
 };
 
-type ProductOption = {
-  id: string;
-  name: string;
-  sku: string;
-};
-
-type OpenSessionOption = {
-  id: string;
-  cashRegister: {
-    name: string;
-    code: string;
-  };
-};
-
 type OpenComandasBoardProps = {
   openComandas: OpenComandaView[];
-  products: ProductOption[];
-  openSessions: OpenSessionOption[];
   canManage: boolean;
 };
 
@@ -60,8 +42,6 @@ const openedAtFormatter = new Intl.DateTimeFormat("pt-BR", {
 
 export function OpenComandasBoard({
   openComandas,
-  products,
-  openSessions,
   canManage,
 }: OpenComandasBoardProps) {
   const [selectedComandaId, setSelectedComandaId] = useState("");
@@ -203,23 +183,9 @@ export function OpenComandasBoard({
             )}
 
             {canManage ? (
-              <div className="rounded-xl border border-border/75 bg-background/60 p-3">
-                <p className="mb-3 text-sm font-semibold text-foreground">Adicionar produto</p>
-                <AddComandaItemForm comandaId={selectedComanda.id} products={products} />
-              </div>
-            ) : null}
-
-            {canManage ? (
-              openSessions.length === 0 ? (
-                <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-                  Abra uma sessao de caixa para fechar a comanda.
-                </p>
-              ) : (
-                <div className="rounded-xl border border-border/75 bg-background/60 p-3">
-                  <p className="mb-3 text-sm font-semibold text-foreground">Fechamento da comanda</p>
-                  <CloseComandaForm comandaId={selectedComanda.id} openSessions={openSessions} />
-                </div>
-              )
+              <p className="rounded-xl border border-dashed border-border px-3 py-3 text-xs text-muted-foreground">
+                Para lancar pedidos e registrar venda, use a area de caixa abaixo selecionando o numero da comanda.
+              </p>
             ) : null}
           </div>
         )}
