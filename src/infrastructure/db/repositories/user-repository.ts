@@ -29,6 +29,13 @@ export async function listUsers(search?: string) {
 
 export async function listRoles() {
   return prisma.role.findMany({
+    include: {
+      permissions: {
+        select: {
+          permissionId: true,
+        },
+      },
+    },
     orderBy: {
       name: "asc",
     },

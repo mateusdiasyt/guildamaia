@@ -71,11 +71,11 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="xl:col-span-2">
             <CardHeader>
               <CardTitle>Editar acesso e permissoes</CardTitle>
               <CardDescription>
-                Escolha o usuario, defina o perfil base e adicione permissoes extras via selecao.
+                Defina o perfil base e libere apenas excecoes necessarias por modulo.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -90,6 +90,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
                 roles={roles.map((role) => ({
                   id: role.id,
                   name: role.name,
+                  permissionIds: role.permissions.map((item) => item.permissionId),
                 }))}
                 permissions={permissions.map((permission) => ({
                   id: permission.id,
