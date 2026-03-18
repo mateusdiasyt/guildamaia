@@ -112,6 +112,7 @@ model User {
   cancelledSales Sale[]          @relation("SaleCancelledBy")
   directPermissions UserPermission[]
   createdGoals   DailyGoal[]     @relation("GoalCreatedBy")
+  createdMonthlyGoalPlans MonthlyGoalPlan[] @relation("MonthlyGoalPlanCreatedBy")
 
   @@index([status])
   @@index([roleId])
@@ -369,4 +370,20 @@ model DailyGoal {
   @@index([goalDate])
   @@index([entryCategoryId])
   @@index([consumptionCategoryId])
+}
+
+model MonthlyGoalPlan {
+  id                   String   @id @default(cuid())
+  monthStart           DateTime @unique @db.Date
+  companyCost          Decimal  @db.Decimal(12, 2)
+  desiredProfitPercent Decimal  @db.Decimal(5, 2)
+  monthlyRevenueTarget Decimal  @db.Decimal(12, 2)
+  dailyRevenueTarget   Decimal  @db.Decimal(12, 2)
+  createdById          String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  createdBy User? @relation("MonthlyGoalPlanCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([monthStart])
 }

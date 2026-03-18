@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { PERMISSIONS } from "@/domain/auth/permissions";
 import { formatCurrency } from "@/lib/format";
 import { UpsertDailyGoalForm } from "@/presentation/admin/goals/upsert-daily-goal-form";
+import { UpsertMonthlyGoalPlanForm } from "@/presentation/admin/goals/upsert-monthly-goal-plan-form";
 
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
   day: "2-digit",
@@ -77,26 +78,95 @@ export default async function MetasPage() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="Planejamento comercial"
-        title="Metas diarias"
-        description="Configure meta geral de ingressos e consumacao por dia. O painel usa essas metas para acompanhar evolucao em tempo real."
+        title="Metas diarias e mensais"
+        description="Defina custo mensal e lucro desejado para calcular a meta diaria automatica de consumacao. A meta de ingressos continua configuravel por dia."
       />
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
         <Card>
           <CardHeader className="border-b border-border/70 pb-4">
-            <CardTitle>Configurar meta</CardTitle>
+            <CardTitle>Planejamento mensal</CardTitle>
             <CardDescription>
-              Defina a meta geral de entrada (ingressos) e consumacao para o dia.
+              Informe custo da empresa e lucro desejado para gerar automaticamente a meta diaria de consumacao.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <UpsertMonthlyGoalPlanForm
+              defaultMonthReference={data.currentMonthReference}
+              defaultCompanyCost={data.monthlyPlan ? data.monthlyPlan.companyCost.toFixed(2) : undefined}
+              defaultDesiredProfitPercent={data.monthlyPlan ? data.monthlyPlan.desiredProfitPercent.toFixed(2) : undefined}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="border-b border-border/70 pb-4">
+            <CardTitle>Resumo mensal</CardTitle>
+            <CardDescription>
+              {data.monthlyPlan
+                ? `Plano ativo para ${dateFormatter.format(data.monthlyPlan.monthStart)}.`
+                : "Nenhum plano mensal cadastrado para o mes atual."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 pt-4">
+            {!data.monthlyPlan ? (
+              <div className="rounded-xl border border-dashed border-border/80 bg-muted/30 p-4 text-sm text-muted-foreground">
+                Cadastre o planejamento mensal para gerar as metas diarias automaticamente.
+              </div>
+            ) : (
+              <>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl border border-border/80 bg-background/60 p-3">
+                    <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Custo da empresa</p>
+                    <p className="mt-1 text-sm font-semibold text-foreground">
+                      {formatCurrency(data.monthlyPlan.companyCost)}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-border/80 bg-background/60 p-3">
+                    <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Lucro desejado</p>
+                    <p className="mt-1 text-sm font-semibold text-foreground">
+                      {data.monthlyPlan.desiredProfitPercent.toFixed(2)}%
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-border/80 bg-background/60 p-3">
+                    <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Meta mensal</p>
+                    <p className="mt-1 text-sm font-semibold text-foreground">
+                      {formatCurrency(data.monthlyPlan.monthlyRevenueTarget)}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-border/80 bg-background/60 p-3">
+                    <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Meta diaria (auto)</p>
+                    <p className="mt-1 text-sm font-semibold text-foreground">
+                      {formatCurrency(data.monthlyPlan.dailyRevenueTarget)}
+                    </p>
+                  </div>
+                </div>
+                <ProgressRow
+                  label="Faturamento mensal"
+                  actual={data.monthlyPlan.monthRevenueActual}
+                  target={data.monthlyPlan.monthlyRevenueTarget}
+                  valueFormatter={(value) => formatCurrency(value)}
+                />
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+        <Card>
+          <CardHeader className="border-b border-border/70 pb-4">
+            <CardTitle>Configurar meta diaria</CardTitle>
+            <CardDescription>
+              Defina a meta de ingressos do dia. A meta de consumacao e aplicada automaticamente pelo planejamento mensal.
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-4">
             <UpsertDailyGoalForm
               defaultGoalDate={data.todayDefaultGoalDate}
               defaultEntryTicketsTarget={data.todayGoal?.entryTicketsTarget}
-              defaultConsumptionSalesTarget={
-                data.todayGoal ? Number(data.todayGoal.consumptionSalesTarget).toFixed(2) : "0.00"
-              }
               defaultNotes={data.todayGoal?.notes ?? undefined}
+              autoConsumptionSalesTarget={data.monthlyPlan?.dailyRevenueTarget ?? null}
             />
           </CardContent>
         </Card>

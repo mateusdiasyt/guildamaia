@@ -6,6 +6,14 @@ function normalizeGoalDate(date: Date) {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
 }
 
+function normalizeMonthStart(date: Date) {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1));
+}
+
+function getDaysInMonth(monthStart: Date) {
+  return new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() + 1, 0)).getUTCDate();
+}
+
 export function parseGoalDateInput(value: string) {
   const parsed = new Date(`${value}T00:00:00.000Z`);
   if (Number.isNaN(parsed.getTime())) {
@@ -13,6 +21,15 @@ export function parseGoalDateInput(value: string) {
   }
 
   return normalizeGoalDate(parsed);
+}
+
+export function parseMonthReferenceInput(value: string) {
+  const parsed = new Date(`${value}-01T00:00:00.000Z`);
+  if (Number.isNaN(parsed.getTime())) {
+    throw new Error("Mes de referencia invalido.");
+  }
+
+  return normalizeMonthStart(parsed);
 }
 
 export async function upsertDailyGoal(data: {
@@ -60,6 +77,47 @@ export async function upsertDailyGoal(data: {
   });
 }
 
+export async function upsertMonthlyGoalPlan(data: {
+  monthStart: Date;
+  companyCost: Prisma.Decimal;
+  desiredProfitPercent: Prisma.Decimal;
+  createdById?: string;
+}) {
+  const normalizedMonthStart = normalizeMonthStart(data.monthStart);
+  const daysInMonth = getDaysInMonth(normalizedMonthStart);
+  const monthlyRevenueTarget = data.companyCost.times(data.desiredProfitPercent.div(100).plus(1)).toDecimalPlaces(2);
+  const dailyRevenueTarget = monthlyRevenueTarget.div(daysInMonth).toDecimalPlaces(2);
+
+  return prisma.monthlyGoalPlan.upsert({
+    where: {
+      monthStart: normalizedMonthStart,
+    },
+    update: {
+      companyCost: data.companyCost,
+      desiredProfitPercent: data.desiredProfitPercent,
+      monthlyRevenueTarget,
+      dailyRevenueTarget,
+      createdById: data.createdById,
+    },
+    create: {
+      monthStart: normalizedMonthStart,
+      companyCost: data.companyCost,
+      desiredProfitPercent: data.desiredProfitPercent,
+      monthlyRevenueTarget,
+      dailyRevenueTarget,
+      createdById: data.createdById,
+    },
+    include: {
+      createdBy: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+}
+
 export async function getDailyGoalByDate(goalDate: Date) {
   return prisma.dailyGoal.findUnique({
     where: {
@@ -68,6 +126,22 @@ export async function getDailyGoalByDate(goalDate: Date) {
     include: {
       entryCategory: true,
       consumptionCategory: true,
+    },
+  });
+}
+
+export async function getMonthlyGoalPlanByDate(date: Date) {
+  return prisma.monthlyGoalPlan.findUnique({
+    where: {
+      monthStart: normalizeMonthStart(date),
+    },
+    include: {
+      createdBy: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
     },
   });
 }
