@@ -141,14 +141,14 @@ export default async function AdminDashboardPage() {
                     <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Meta ingresso</p>
                     <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-foreground">
                       <Ticket className="h-4 w-4 text-primary" />
-                      {summary.goal.entryCategoryName ?? "Todas categorias"}
+                      Meta geral do dia
                     </p>
                   </div>
                   <div className="rounded-xl border border-border/80 bg-background/55 p-3">
                     <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Meta consumacao</p>
                     <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-foreground">
                       <Wallet className="h-4 w-4 text-primary" />
-                      {summary.goal.consumptionCategoryName ?? "Todas categorias"}
+                      Meta geral do dia
                     </p>
                   </div>
                 </div>

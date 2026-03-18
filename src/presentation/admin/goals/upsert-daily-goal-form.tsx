@@ -10,29 +10,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { initialActionState } from "@/presentation/admin/common/action-state";
 import { upsertDailyGoalAction } from "@/presentation/admin/goals/actions";
 
-type CategoryOption = {
-  id: string;
-  name: string;
-};
-
 type UpsertDailyGoalFormProps = {
   defaultGoalDate: string;
   defaultEntryTicketsTarget?: number;
   defaultConsumptionSalesTarget?: string;
-  defaultEntryCategoryId?: string;
-  defaultConsumptionCategoryId?: string;
   defaultNotes?: string;
-  categories: CategoryOption[];
 };
 
 export function UpsertDailyGoalForm({
   defaultGoalDate,
   defaultEntryTicketsTarget,
   defaultConsumptionSalesTarget,
-  defaultEntryCategoryId,
-  defaultConsumptionCategoryId,
   defaultNotes,
-  categories,
 }: UpsertDailyGoalFormProps) {
   const [state, formAction] = useActionState(upsertDailyGoalAction, initialActionState);
 
@@ -66,40 +55,6 @@ export function UpsertDailyGoalForm({
           defaultValue={defaultConsumptionSalesTarget ?? "0.00"}
           required
         />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="entryCategoryId">Categoria de ingresso</Label>
-        <select
-          id="entryCategoryId"
-          name="entryCategoryId"
-          className="admin-native-select"
-          defaultValue={defaultEntryCategoryId ?? ""}
-        >
-          <option value="">Nao selecionar</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="consumptionCategoryId">Categoria de consumacao</Label>
-        <select
-          id="consumptionCategoryId"
-          name="consumptionCategoryId"
-          className="admin-native-select"
-          defaultValue={defaultConsumptionCategoryId ?? ""}
-        >
-          <option value="">Nao selecionar</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
       </div>
 
       <div className="space-y-2 md:col-span-2">

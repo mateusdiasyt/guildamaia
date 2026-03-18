@@ -7,7 +7,6 @@ import {
   parseGoalDateInput,
   upsertDailyGoal,
 } from "@/infrastructure/db/repositories/goal-repository";
-import { listCategoryOptions } from "@/infrastructure/db/repositories/category-repository";
 import { parseDecimalInput } from "@/lib/decimal";
 
 function toDateInputValue(date: Date) {
@@ -16,11 +15,7 @@ function toDateInputValue(date: Date) {
 
 export async function getGoalsPageData() {
   const now = new Date();
-  const [categories, todayGoal, recentGoals] = await Promise.all([
-    listCategoryOptions(),
-    getDailyGoalByDate(now),
-    listRecentDailyGoals(20),
-  ]);
+  const [todayGoal, recentGoals] = await Promise.all([getDailyGoalByDate(now), listRecentDailyGoals(20)]);
 
   const goalsWithProgress = await Promise.all(
     recentGoals.map(async (goal) => {
@@ -45,7 +40,6 @@ export async function getGoalsPageData() {
   );
 
   return {
-    categories,
     todayGoal,
     todayDefaultGoalDate: toDateInputValue(now),
     goals: goalsWithProgress,
@@ -57,8 +51,6 @@ export async function upsertDailyGoalRecord(input: FormData, actorId: string) {
     goalDate: input.get("goalDate"),
     entryTicketsTarget: input.get("entryTicketsTarget"),
     consumptionSalesTarget: input.get("consumptionSalesTarget"),
-    entryCategoryId: input.get("entryCategoryId"),
-    consumptionCategoryId: input.get("consumptionCategoryId"),
     notes: input.get("notes"),
   });
 
@@ -71,8 +63,8 @@ export async function upsertDailyGoalRecord(input: FormData, actorId: string) {
     goalDate: parseGoalDateInput(parsed.goalDate),
     entryTicketsTarget: parsed.entryTicketsTarget,
     consumptionSalesTarget,
-    entryCategoryId: emptyToUndefined(parsed.entryCategoryId),
-    consumptionCategoryId: emptyToUndefined(parsed.consumptionCategoryId),
+    entryCategoryId: null,
+    consumptionCategoryId: null,
     notes: emptyToUndefined(parsed.notes),
     createdById: actorId,
   });

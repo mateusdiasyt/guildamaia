@@ -1,4 +1,4 @@
-import { CalendarDays, Flag, Ticket, Wallet } from "lucide-react";
+import { CalendarDays, Flag } from "lucide-react";
 
 import { requirePermission } from "@/application/auth/guards";
 import { getGoalsPageData } from "@/application/goals/goal-service";
@@ -78,7 +78,7 @@ export default async function MetasPage() {
       <PageHeader
         eyebrow="Planejamento comercial"
         title="Metas diarias"
-        description="Configure meta de ingressos e consumacao por dia. O painel usa essas metas para acompanhar evolucao em tempo real."
+        description="Configure meta geral de ingressos e consumacao por dia. O painel usa essas metas para acompanhar evolucao em tempo real."
       />
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
@@ -86,7 +86,7 @@ export default async function MetasPage() {
           <CardHeader className="border-b border-border/70 pb-4">
             <CardTitle>Configurar meta</CardTitle>
             <CardDescription>
-              Defina a meta de entrada (ingressos) e meta de consumacao para o dia.
+              Defina a meta geral de entrada (ingressos) e consumacao para o dia.
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-4">
@@ -96,10 +96,7 @@ export default async function MetasPage() {
               defaultConsumptionSalesTarget={
                 data.todayGoal ? Number(data.todayGoal.consumptionSalesTarget).toFixed(2) : "0.00"
               }
-              defaultEntryCategoryId={data.todayGoal?.entryCategoryId ?? undefined}
-              defaultConsumptionCategoryId={data.todayGoal?.consumptionCategoryId ?? undefined}
               defaultNotes={data.todayGoal?.notes ?? undefined}
-              categories={data.categories}
             />
           </CardContent>
         </Card>
@@ -116,7 +113,7 @@ export default async function MetasPage() {
               </div>
             ) : (
               <>
-                <div className="grid gap-3 sm:grid-cols-3">
+                <div className="grid gap-3 sm:grid-cols-2">
                   <div className="rounded-xl border border-border/80 bg-background/60 p-3">
                     <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Data</p>
                     <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-foreground">
@@ -125,18 +122,8 @@ export default async function MetasPage() {
                     </p>
                   </div>
                   <div className="rounded-xl border border-border/80 bg-background/60 p-3">
-                    <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Entrada</p>
-                    <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-foreground">
-                      <Ticket className="h-4 w-4 text-primary" />
-                      {todayGoal.entryCategoryName ?? "Todas categorias"}
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-border/80 bg-background/60 p-3">
-                    <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Consumacao</p>
-                    <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-foreground">
-                      <Wallet className="h-4 w-4 text-primary" />
-                      {todayGoal.consumptionCategoryName ?? "Todas categorias"}
-                    </p>
+                    <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Escopo</p>
+                    <p className="mt-1 text-sm font-semibold text-foreground">Meta geral do dia</p>
                   </div>
                 </div>
 
@@ -170,14 +157,13 @@ export default async function MetasPage() {
                 <TableHead>Data</TableHead>
                 <TableHead>Meta ingresso</TableHead>
                 <TableHead>Meta consumacao</TableHead>
-                <TableHead>Categorias</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {data.goals.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-sm text-muted-foreground">
+                  <TableCell colSpan={4} className="text-center text-sm text-muted-foreground">
                     Nenhuma meta cadastrada ainda.
                   </TableCell>
                 </TableRow>
@@ -201,14 +187,6 @@ export default async function MetasPage() {
                         {formatCurrency(goal.consumptionSalesActual)} / {formatCurrency(goal.consumptionSalesTarget)}
                       </p>
                       <p className="text-xs text-muted-foreground">{consumptionPercent}%</p>
-                    </TableCell>
-                    <TableCell>
-                      <p className="text-xs text-muted-foreground">
-                        Entrada: {goal.entryCategoryName ?? "Todas"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Consumacao: {goal.consumptionCategoryName ?? "Todas"}
-                      </p>
                     </TableCell>
                     <TableCell>
                       <Badge

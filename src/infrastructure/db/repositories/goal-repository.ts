@@ -19,8 +19,8 @@ export async function upsertDailyGoal(data: {
   goalDate: Date;
   entryTicketsTarget: number;
   consumptionSalesTarget: Prisma.Decimal;
-  entryCategoryId?: string;
-  consumptionCategoryId?: string;
+  entryCategoryId?: string | null;
+  consumptionCategoryId?: string | null;
   notes?: string;
   createdById?: string;
 }) {
