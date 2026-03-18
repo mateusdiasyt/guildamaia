@@ -3,7 +3,6 @@ import { SaleStatus } from "@prisma/client";
 
 import { requirePermission } from "@/application/auth/guards";
 import { getPdvData } from "@/application/pdv/pdv-service";
-import { PageHeader } from "@/components/admin/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -25,12 +24,6 @@ export default async function PdvPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        eyebrow="Modulo ERP"
-        title="PDV operacional"
-        description="Estrutura de atendimento rapido com categorias, busca de produtos e carrinho lateral para fechamento."
-      />
-
       {canManage ? (
         <Card>
           <CardHeader className="border-b border-border/70 pb-4">
