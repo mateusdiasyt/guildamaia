@@ -111,24 +111,19 @@ export default async function PdvPage() {
                   Abrir caixa agora
                 </Link>
               </div>
-            ) : products.length === 0 ? (
+            ) : openComandasView.length === 0 ? (
               <p className="rounded-xl border border-border/80 bg-muted/35 px-3 py-2 text-sm text-muted-foreground">
-                Cadastre produtos ativos antes de registrar vendas.
+                Abra e monte ao menos uma comanda antes de registrar a venda.
               </p>
             ) : (
               <CreateSaleForm
                 openSessions={openSessionOptions}
-                products={products.map((product) => ({
-                  id: product.id,
-                  name: product.name,
-                  sku: product.sku,
-                  salePrice: product.salePrice.toString(),
-                  currentStock: product.currentStock,
-                  category: {
-                    id: product.category.id,
-                    name: product.category.name,
-                    slug: product.category.slug,
-                  },
+                openComandas={openComandasView.map((comanda) => ({
+                  id: comanda.id,
+                  number: comanda.number,
+                  customerName: comanda.customerName,
+                  subtotalAmount: comanda.subtotalAmount,
+                  itemCount: comanda.itemCount,
                 }))}
               />
             )}
