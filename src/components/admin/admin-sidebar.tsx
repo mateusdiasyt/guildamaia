@@ -11,13 +11,15 @@ import { cn } from "@/lib/utils";
 type AdminSidebarProps = {
   userName?: string | null;
   roleLabel: string;
+  roleSlug: string;
   permissions: string[];
 };
 
-export function AdminSidebar({ userName, roleLabel, permissions }: AdminSidebarProps) {
+export function AdminSidebar({ userName, roleLabel, roleSlug, permissions }: AdminSidebarProps) {
   const pathname = usePathname();
 
-  const items = adminNavigation.filter((item) => permissions.includes(item.permission));
+  const isAdmin = roleSlug === "administrador";
+  const items = adminNavigation.filter((item) => isAdmin || permissions.includes(item.permission));
 
   return (
     <aside className="flex h-screen w-72 flex-col border-r border-zinc-800 bg-zinc-950 text-zinc-100">

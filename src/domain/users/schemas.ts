@@ -14,5 +14,12 @@ export const updateUserStatusSchema = z.object({
   status: z.nativeEnum(RecordStatus),
 });
 
+export const updateUserAccessSchema = z.object({
+  userId: z.string().min(1, "Usuario obrigatorio"),
+  roleId: z.string().min(1, "Perfil obrigatorio"),
+  permissionIds: z.array(z.string().min(1)).default([]),
+});
+
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type UpdateUserStatusInput = z.infer<typeof updateUserStatusSchema>;
+export type UpdateUserAccessInput = z.infer<typeof updateUserAccessSchema>;

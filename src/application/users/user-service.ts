@@ -1,11 +1,13 @@
 import bcrypt from "bcryptjs";
 
-import { createUserSchema, updateUserStatusSchema } from "@/domain/users/schemas";
+import { createUserSchema, updateUserAccessSchema, updateUserStatusSchema } from "@/domain/users/schemas";
 import { createAuditLog } from "@/infrastructure/db/repositories/audit-log-repository";
 import {
   createUser,
+  listPermissions,
   listRoles,
   listUsers,
+  updateUserAccess,
   updateUserStatus,
 } from "@/infrastructure/db/repositories/user-repository";
 
@@ -15,6 +17,10 @@ export async function getUsers(search?: string) {
 
 export async function getRoles() {
   return listRoles();
+}
+
+export async function getPermissions() {
+  return listPermissions();
 }
 
 export async function createUserRecord(input: FormData, actorId?: string) {
@@ -63,6 +69,31 @@ export async function updateUserStatusRecord(input: FormData, actorId?: string) 
     entityId: updated.id,
     metadata: {
       status: updated.status,
+    },
+  });
+}
+
+export async function updateUserAccessRecord(input: FormData, actorId?: string) {
+  const parsed = updateUserAccessSchema.parse({
+    userId: input.get("userId"),
+    roleId: input.get("roleId"),
+    permissionIds: input.getAll("permissionIds").map((value) => String(value)),
+  });
+
+  const updated = await updateUserAccess({
+    userId: parsed.userId,
+    roleId: parsed.roleId,
+    permissionIds: parsed.permissionIds,
+  });
+
+  await createAuditLog({
+    userId: actorId,
+    action: "users.access.update",
+    entity: "User",
+    entityId: updated.id,
+    metadata: {
+      roleId: updated.roleId,
+      permissionCount: updated.directPermissions.length,
     },
   });
 }

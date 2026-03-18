@@ -51,6 +51,11 @@ export const authOptions: NextAuthOptions = {
                 },
               },
             },
+            directPermissions: {
+              include: {
+                permission: true,
+              },
+            },
           },
         });
 
@@ -64,12 +69,16 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        const rolePermissions = user.role.permissions.map((item) => item.permission.key);
+        const directPermissions = user.directPermissions.map((item) => item.permission.key);
+        const mergedPermissions = Array.from(new Set([...rolePermissions, ...directPermissions]));
+
         return {
           id: user.id,
           name: user.name,
           email: user.email,
           roleSlug: user.role.slug,
-          permissions: user.role.permissions.map((item) => item.permission.key),
+          permissions: mergedPermissions,
           status: user.status,
         };
       },

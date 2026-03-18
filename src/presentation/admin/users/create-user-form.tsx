@@ -7,7 +7,6 @@ import { ActionFeedback } from "@/components/admin/action-feedback";
 import { FormSubmitButton } from "@/components/admin/form-submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { initialActionState } from "@/presentation/admin/common/action-state";
 import { createUserAction } from "@/presentation/admin/users/actions";
 
@@ -37,31 +36,33 @@ export function CreateUserForm({ roles }: CreateUserFormProps) {
 
       <div className="space-y-2">
         <Label htmlFor="roleId">Perfil</Label>
-        <Select name="roleId" defaultValue={roles[0]?.id}>
-          <SelectTrigger id="roleId" className="w-full">
-            <SelectValue placeholder="Selecione o perfil" />
-          </SelectTrigger>
-          <SelectContent>
-            {roles.map((role) => (
-              <SelectItem key={role.id} value={role.id}>
-                {role.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <select
+          id="roleId"
+          name="roleId"
+          className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs"
+          defaultValue={roles[0]?.id}
+          required
+        >
+          {roles.map((role) => (
+            <option key={role.id} value={role.id}>
+              {role.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="status">Status</Label>
-        <Select name="status" defaultValue={RecordStatus.ACTIVE}>
-          <SelectTrigger id="status" className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={RecordStatus.ACTIVE}>Ativo</SelectItem>
-            <SelectItem value={RecordStatus.INACTIVE}>Inativo</SelectItem>
-          </SelectContent>
-        </Select>
+        <select
+          id="status"
+          name="status"
+          className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs"
+          defaultValue={RecordStatus.ACTIVE}
+          required
+        >
+          <option value={RecordStatus.ACTIVE}>Ativo</option>
+          <option value={RecordStatus.INACTIVE}>Inativo</option>
+        </select>
       </div>
 
       <div className="md:col-span-2">

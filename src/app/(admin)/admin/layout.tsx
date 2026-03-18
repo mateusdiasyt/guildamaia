@@ -22,12 +22,17 @@ export default async function AdminLayout({
         <AdminSidebar
           userName={session.user.name}
           roleLabel={roleLabel}
+          roleSlug={session.user.roleSlug}
           permissions={session.user.permissions}
         />
       </div>
 
       <div className="flex min-h-screen flex-1 flex-col">
-        <AdminHeader userName={session.user.name} permissions={session.user.permissions} />
+        <AdminHeader
+          userName={session.user.name}
+          roleSlug={session.user.roleSlug}
+          permissions={session.user.permissions}
+        />
         <main className="flex-1 p-4 md:p-6">{children}</main>
       </div>
     </div>

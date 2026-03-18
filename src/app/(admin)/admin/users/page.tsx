@@ -1,7 +1,7 @@
 import { RecordStatus } from "@prisma/client";
 
 import { requirePermission } from "@/application/auth/guards";
-import { getRoles, getUsers } from "@/application/users/user-service";
+import { getPermissions, getRoles, getUsers } from "@/application/users/user-service";
 import { PageHeader } from "@/components/admin/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { hasPermission, PERMISSIONS } from "@/domain/auth/permissions";
 import { CreateUserForm } from "@/presentation/admin/users/create-user-form";
+import { UpdateUserAccessForm } from "@/presentation/admin/users/update-user-access-form";
 import { toggleUserStatusAction } from "@/presentation/admin/users/actions";
 
 type UsersPageProps = {
@@ -23,7 +24,11 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
   const { q } = await searchParams;
   const search = q?.trim() || undefined;
 
-  const [users, roles] = await Promise.all([getUsers(search), getRoles()]);
+  const [users, roles, permissions] = await Promise.all([
+    getUsers(search),
+    getRoles(),
+    getPermissions(),
+  ]);
 
   const canManageUsers = hasPermission(session.user.permissions, PERMISSIONS.USERS_MANAGE);
 
@@ -55,15 +60,46 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
       </Card>
 
       {canManageUsers ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Novo usuario</CardTitle>
-            <CardDescription>Cadastro de contas administrativas com papel definido.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <CreateUserForm roles={roles} />
-          </CardContent>
-        </Card>
+        <section className="grid gap-4 xl:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Novo usuario</CardTitle>
+              <CardDescription>Cadastro de contas administrativas com papel definido.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <CreateUserForm roles={roles} />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Editar acesso e permissoes</CardTitle>
+              <CardDescription>
+                Escolha o usuario, defina o perfil base e adicione permissoes extras via selecao.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <UpdateUserAccessForm
+                users={users.map((user) => ({
+                  id: user.id,
+                  name: user.name,
+                  email: user.email,
+                  roleId: user.roleId,
+                  directPermissionIds: user.directPermissions.map((item) => item.permissionId),
+                }))}
+                roles={roles.map((role) => ({
+                  id: role.id,
+                  name: role.name,
+                }))}
+                permissions={permissions.map((permission) => ({
+                  id: permission.id,
+                  key: permission.key,
+                  description: permission.description,
+                }))}
+              />
+            </CardContent>
+          </Card>
+        </section>
       ) : null}
 
       <Card>
@@ -78,6 +114,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
                 <TableHead>Nome</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Perfil</TableHead>
+                <TableHead>Permissoes extras</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Acoes</TableHead>
               </TableRow>
@@ -85,7 +122,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
             <TableBody>
               {users.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-sm text-zinc-500">
+                  <TableCell colSpan={6} className="text-center text-sm text-zinc-500">
                     Nenhum usuario encontrado.
                   </TableCell>
                 </TableRow>
@@ -99,6 +136,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
                     <TableCell className="font-medium text-zinc-900">{user.name}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>{user.role.name}</TableCell>
+                    <TableCell>{user.directPermissions.length}</TableCell>
                     <TableCell>
                       <Badge
                         className={

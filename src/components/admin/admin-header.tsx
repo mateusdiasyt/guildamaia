@@ -6,15 +6,16 @@ import { Button } from "@/components/ui/button";
 
 type AdminHeaderProps = {
   userName?: string | null;
+  roleSlug: string;
   permissions: string[];
 };
 
-export function AdminHeader({ userName, permissions }: AdminHeaderProps) {
+export function AdminHeader({ userName, roleSlug, permissions }: AdminHeaderProps) {
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-zinc-200/70 bg-white/90 px-4 backdrop-blur-md md:px-6">
       <div className="flex items-center gap-3">
         <div className="md:hidden">
-          <AdminMobileNav permissions={permissions} />
+          <AdminMobileNav roleSlug={roleSlug} permissions={permissions} />
         </div>
         <div>
           <p className="text-xs uppercase tracking-[0.12em] text-zinc-500">Painel Administrativo</p>

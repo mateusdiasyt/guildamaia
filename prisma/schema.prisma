@@ -76,7 +76,8 @@ model Permission {
   description String?
   createdAt   DateTime @default(now())
 
-  roles RolePermission[]
+  roles           RolePermission[]
+  userPermissions UserPermission[]
 }
 
 model RolePermission {
@@ -109,10 +110,21 @@ model User {
   cashMovements  CashMovement[]  @relation("CashMovementOperator")
   sales          Sale[]          @relation("SaleOperator")
   cancelledSales Sale[]          @relation("SaleCancelledBy")
+  directPermissions UserPermission[]
 
   @@index([status])
   @@index([roleId])
   @@index([unitId])
+}
+
+model UserPermission {
+  userId       String
+  permissionId String
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([userId, permissionId])
 }
 
 model ProductCategory {

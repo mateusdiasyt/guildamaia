@@ -11,12 +11,14 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { cn } from "@/lib/utils";
 
 type AdminMobileNavProps = {
+  roleSlug: string;
   permissions: string[];
 };
 
-export function AdminMobileNav({ permissions }: AdminMobileNavProps) {
+export function AdminMobileNav({ roleSlug, permissions }: AdminMobileNavProps) {
   const pathname = usePathname();
-  const items = adminNavigation.filter((item) => permissions.includes(item.permission));
+  const isAdmin = roleSlug === "administrador";
+  const items = adminNavigation.filter((item) => isAdmin || permissions.includes(item.permission));
 
   return (
     <Sheet>

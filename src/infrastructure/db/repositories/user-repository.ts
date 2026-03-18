@@ -15,6 +15,11 @@ export async function listUsers(search?: string) {
     include: {
       role: true,
       unit: true,
+      directPermissions: {
+        include: {
+          permission: true,
+        },
+      },
     },
     orderBy: {
       createdAt: "desc",
@@ -26,6 +31,14 @@ export async function listRoles() {
   return prisma.role.findMany({
     orderBy: {
       name: "asc",
+    },
+  });
+}
+
+export async function listPermissions() {
+  return prisma.permission.findMany({
+    orderBy: {
+      key: "asc",
     },
   });
 }
@@ -47,6 +60,49 @@ export async function updateUserStatus(data: { userId: string; status: RecordSta
   return prisma.user.update({
     where: { id: data.userId },
     data: { status: data.status },
+  });
+}
+
+export async function updateUserAccess(data: {
+  userId: string;
+  roleId: string;
+  permissionIds: string[];
+}) {
+  return prisma.$transaction(async (tx) => {
+    await tx.user.update({
+      where: { id: data.userId },
+      data: {
+        roleId: data.roleId,
+      },
+    });
+
+    await tx.userPermission.deleteMany({
+      where: {
+        userId: data.userId,
+      },
+    });
+
+    if (data.permissionIds.length > 0) {
+      await tx.userPermission.createMany({
+        data: data.permissionIds.map((permissionId) => ({
+          userId: data.userId,
+          permissionId,
+        })),
+        skipDuplicates: true,
+      });
+    }
+
+    return tx.user.findUniqueOrThrow({
+      where: { id: data.userId },
+      include: {
+        role: true,
+        directPermissions: {
+          include: {
+            permission: true,
+          },
+        },
+      },
+    });
   });
 }
 
