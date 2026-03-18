@@ -67,7 +67,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
       <section className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-1">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Modulo ERP</p>
-          <h1 className="text-3xl font-semibold tracking-[-0.01em] text-foreground">Products List</h1>
+          <h1 className="text-3xl font-semibold tracking-[-0.01em] text-foreground">Lista de produtos</h1>
           <p className="text-sm text-muted-foreground">
             Listagem operacional de produtos com filtros por status e categoria.
           </p>
@@ -93,7 +93,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
               <Input
                 name="q"
                 defaultValue={search ?? ""}
-                placeholder="Search product name or SKU"
+                placeholder="Buscar por nome do produto ou SKU"
                 className="pl-9"
               />
             </div>
@@ -139,12 +139,12 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                 <TableHead className="w-8">
                   <input type="checkbox" className="h-4 w-4 rounded border-border/80 bg-background" />
                 </TableHead>
-                <TableHead>Product Name</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Stock</TableHead>
-                <TableHead className="text-right">Price</TableHead>
+                <TableHead>Produto</TableHead>
+                <TableHead>Categoria</TableHead>
+                <TableHead>Estoque</TableHead>
+                <TableHead className="text-right">Preco</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right">Action</TableHead>
+                <TableHead className="text-right">Acao</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -158,7 +158,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
               {products.map((product) => {
                 const isLowStock = product.currentStock <= product.minStock;
                 const isOutOfStock = product.currentStock <= 0;
-                const stockLabel = isOutOfStock ? "Out of Stock" : isLowStock ? "Low Stock" : "In Stock";
+                const stockLabel = isOutOfStock ? "Sem estoque" : isLowStock ? "Estoque baixo" : "Disponivel";
 
                 return (
                   <TableRow key={product.id}>
@@ -203,7 +203,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                             : "border border-rose-400/20 bg-rose-500/15 text-rose-300 hover:bg-rose-500/15"
                         }
                       >
-                        {product.status === RecordStatus.ACTIVE ? "Published" : "Inactive"}
+                        {product.status === RecordStatus.ACTIVE ? "Ativo" : "Inativo"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">

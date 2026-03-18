@@ -78,7 +78,7 @@ export default async function MetasPage() {
       <PageHeader
         eyebrow="Planejamento comercial"
         title="Metas diarias"
-        description="Configure meta de ingressos e consumacao por dia. O dashboard usa essas metas para acompanhar evolucao em tempo real."
+        description="Configure meta de ingressos e consumacao por dia. O painel usa essas metas para acompanhar evolucao em tempo real."
       />
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">

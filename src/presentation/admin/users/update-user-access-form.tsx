@@ -33,6 +33,32 @@ type UpdateUserAccessFormProps = {
   permissions: AccessPermission[];
 };
 
+function traduzirChavePermissao(chave: string) {
+  const [recurso, acao] = chave.split(":");
+
+  const recursoTraduzido: Record<string, string> = {
+    dashboard: "painel",
+    users: "usuarios",
+    categories: "categorias",
+    suppliers: "fornecedores",
+    products: "produtos",
+    stock: "estoque",
+    cash: "caixa",
+    pdv: "pdv",
+  };
+
+  const acaoTraduzida: Record<string, string> = {
+    view: "visualizar",
+    manage: "gerenciar",
+    cancel: "cancelar",
+  };
+
+  const recursoFinal = recursoTraduzido[recurso] ?? recurso;
+  const acaoFinal = acaoTraduzida[acao] ?? acao;
+
+  return `${acaoFinal} ${recursoFinal}`;
+}
+
 export function UpdateUserAccessForm({ users, roles, permissions }: UpdateUserAccessFormProps) {
   const [state, formAction] = useActionState(updateUserAccessAction, initialActionState);
   const [selectedUserId, setSelectedUserId] = useState(users[0]?.id ?? "");
@@ -109,10 +135,12 @@ export function UpdateUserAccessForm({ users, roles, permissions }: UpdateUserAc
                 className="mt-0.5 h-4 w-4 rounded border-zinc-300 text-primary focus:ring-primary"
               />
               <span className="space-y-0.5">
-                <span className="block text-sm font-medium text-foreground">{permission.key}</span>
+                <span className="block text-sm font-medium text-foreground">{traduzirChavePermissao(permission.key)}</span>
                 {permission.description ? (
                   <span className="block text-xs text-muted-foreground">{permission.description}</span>
-                ) : null}
+                ) : (
+                  <span className="block text-xs text-muted-foreground">Permissao adicional de sistema.</span>
+                )}
               </span>
             </label>
           );

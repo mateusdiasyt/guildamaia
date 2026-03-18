@@ -29,7 +29,7 @@ export default async function PdvPage() {
           <CardHeader className="border-b border-border/70 pb-4">
             <CardTitle>Nova venda</CardTitle>
             <CardDescription>
-              Fluxo de balcão com adicao de itens, ajuste de quantidade e validacao de pagamentos em tempo real.
+              Fluxo de balcao com adicao de itens, ajuste de quantidade e validacao de pagamentos em tempo real.
             </CardDescription>
           </CardHeader>
           <CardContent>

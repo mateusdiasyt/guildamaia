@@ -47,7 +47,7 @@ export default async function AdminDashboardPage() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="Controle operacional"
-        title="Dashboard"
+        title="Painel"
         description="Visao diaria de faturamento, volume de vendas, produtos lideres e progresso das metas de entrada e consumacao."
       />
 

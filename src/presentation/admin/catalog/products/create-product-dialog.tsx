@@ -26,11 +26,11 @@ export function CreateProductDialog({ categories, suppliers }: CreateProductDial
     <Dialog>
       <DialogTrigger render={<Button size="sm" className="gap-1" type="button" />}>
         <Plus className="h-4 w-4" />
-        Add Product
+        Novo produto
       </DialogTrigger>
       <DialogContent className="max-w-[min(1100px,95vw)] gap-0 border-border/80 bg-card p-0 sm:max-w-[min(1100px,95vw)]">
         <DialogHeader className="border-b border-border/70 px-5 py-4 pr-14">
-          <DialogTitle>Add Product</DialogTitle>
+          <DialogTitle>Novo produto</DialogTitle>
           <DialogDescription>Cadastro de produto com preco, estoque, categoria e fornecedor.</DialogDescription>
         </DialogHeader>
         <div className="max-h-[78vh] overflow-y-auto p-5">

@@ -4,7 +4,7 @@ import { PrismaClient, RecordStatus } from "@prisma/client";
 const prisma = new PrismaClient();
 
 const permissions = [
-  { key: "dashboard:view", description: "Visualizar dashboard administrativo" },
+  { key: "dashboard:view", description: "Visualizar painel administrativo" },
   { key: "users:view", description: "Visualizar usuarios" },
   { key: "users:manage", description: "Criar e editar usuarios" },
   { key: "categories:view", description: "Visualizar categorias" },

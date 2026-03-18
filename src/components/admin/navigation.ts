@@ -23,7 +23,7 @@ export type AdminNavigationItem = {
 
 export const adminNavigation: AdminNavigationItem[] = [
   {
-    label: "Dashboard",
+    label: "Painel",
     href: "/admin",
     icon: ChartColumnBig,
     permission: PERMISSIONS.DASHBOARD_VIEW,
