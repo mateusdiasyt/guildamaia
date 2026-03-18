@@ -69,50 +69,52 @@ export function OpenComandasBoard({
   }
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
+    <div className="space-y-4">
       <div className="space-y-3">
         <p className="text-xs text-muted-foreground">
-          Selecione uma comanda para abrir os detalhes na coluna da direita.
+          Selecione uma comanda para abrir os detalhes no painel abaixo.
         </p>
-        <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
-          {openComandas.map((comanda) => {
-            const isActive = comanda.id === resolvedSelectedComandaId;
+        <div className="max-h-[360px] overflow-auto pr-1">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+            {openComandas.map((comanda) => {
+              const isActive = comanda.id === resolvedSelectedComandaId;
 
-            return (
-              <button
-                key={comanda.id}
-                type="button"
-                onClick={() => setSelectedComandaId(comanda.id)}
-                className={`rounded-xl border p-3 text-left transition-all ${
-                  isActive
-                    ? "border-primary/70 bg-primary/10 shadow-[0_0_0_1px_color-mix(in_oklab,var(--primary)_42%,transparent)]"
-                    : "border-border/70 bg-card/70 hover:border-primary/40 hover:bg-card"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">Comanda #{comanda.number}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {comanda.isWalkIn ? "Avulsa" : comanda.customerName}
-                    </p>
+              return (
+                <button
+                  key={comanda.id}
+                  type="button"
+                  onClick={() => setSelectedComandaId(comanda.id)}
+                  className={`rounded-xl border p-3 text-left transition-all ${
+                    isActive
+                      ? "border-primary/70 bg-primary/10 shadow-[0_0_0_1px_color-mix(in_oklab,var(--primary)_42%,transparent)]"
+                      : "border-border/70 bg-card/70 hover:border-primary/40 hover:bg-card"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Comanda #{comanda.number}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {comanda.isWalkIn ? "Avulsa" : comanda.customerName}
+                      </p>
+                    </div>
+                    <Badge className="border border-border/70 bg-background/70 text-[11px] text-foreground hover:bg-background/70">
+                      {comanda.itemCount} item(ns)
+                    </Badge>
                   </div>
-                  <Badge className="border border-border/70 bg-background/70 text-[11px] text-foreground hover:bg-background/70">
-                    {comanda.itemCount} item(ns)
-                  </Badge>
-                </div>
-                <div className="mt-3 flex items-center justify-between">
-                  <span className="text-[11px] text-muted-foreground">Subtotal</span>
-                  <span className="text-sm font-semibold text-foreground">
-                    {formatCurrency(comanda.subtotalAmount)}
-                  </span>
-                </div>
-              </button>
-            );
-          })}
+                  <div className="mt-3 flex items-center justify-between">
+                    <span className="text-[11px] text-muted-foreground">Subtotal</span>
+                    <span className="text-sm font-semibold text-foreground">
+                      {formatCurrency(comanda.subtotalAmount)}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border/75 bg-card/85 p-4 xl:sticky xl:top-4 xl:h-fit">
+      <div className="rounded-2xl border border-border/75 bg-card/85 p-4">
         {!selectedComanda ? (
           <p className="rounded-xl border border-dashed border-border/80 bg-muted/35 px-3 py-4 text-sm text-muted-foreground">
             Nenhuma comanda selecionada.
@@ -184,7 +186,7 @@ export function OpenComandasBoard({
 
             {canManage ? (
               <p className="rounded-xl border border-dashed border-border px-3 py-3 text-xs text-muted-foreground">
-                Para lancar pedidos e registrar venda, use a area de caixa abaixo selecionando o numero da comanda.
+                Para lancar pedidos e registrar venda, use a area de caixa ao lado selecionando o numero da comanda.
               </p>
             ) : null}
           </div>
