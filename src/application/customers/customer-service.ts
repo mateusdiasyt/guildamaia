@@ -1,0 +1,71 @@
+import { RecordStatus } from "@prisma/client";
+import { z } from "zod";
+
+import { createAuditLog } from "@/infrastructure/db/repositories/audit-log-repository";
+import {
+  createCustomer,
+  listCustomers,
+  updateCustomerStatus,
+} from "@/infrastructure/db/repositories/customer-repository";
+import { createCustomerSchema, sanitizeDocumentNumber } from "@/domain/customers/schemas";
+import { emptyToUndefined } from "@/domain/shared/normalizers";
+
+export async function getCustomers(search?: string) {
+  return listCustomers(search);
+}
+
+export async function createCustomerRecord(input: FormData, actorId?: string) {
+  const parsed = createCustomerSchema.parse({
+    fullName: input.get("fullName"),
+    documentType: input.get("documentType"),
+    documentNumber: input.get("documentNumber"),
+    phone: input.get("phone"),
+    email: input.get("email"),
+    status: input.get("status"),
+  });
+
+  const created = await createCustomer({
+    fullName: parsed.fullName.trim(),
+    documentType: parsed.documentType,
+    documentNumber: sanitizeDocumentNumber(parsed.documentNumber),
+    phone: emptyToUndefined(parsed.phone),
+    email: emptyToUndefined(parsed.email)?.toLowerCase(),
+    status: parsed.status,
+  });
+
+  await createAuditLog({
+    userId: actorId,
+    action: "customers.create",
+    entity: "Customer",
+    entityId: created.id,
+    metadata: {
+      fullName: created.fullName,
+      documentType: created.documentType,
+      documentNumber: created.documentNumber,
+    },
+  });
+}
+
+const updateCustomerStatusSchema = z.object({
+  customerId: z.string().min(1, "Cliente obrigatorio"),
+  status: z.nativeEnum(RecordStatus),
+});
+
+export async function updateCustomerStatusRecord(input: FormData, actorId?: string) {
+  const parsed = updateCustomerStatusSchema.parse({
+    customerId: input.get("customerId"),
+    status: input.get("status"),
+  });
+
+  const updated = await updateCustomerStatus(parsed);
+
+  await createAuditLog({
+    userId: actorId,
+    action: "customers.status.update",
+    entity: "Customer",
+    entityId: updated.id,
+    metadata: {
+      status: updated.status,
+    },
+  });
+}

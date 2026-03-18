@@ -1,9 +1,26 @@
 import { PaymentMethod, SaleStatus } from "@prisma/client";
 
-import { cancelSaleSchema, createSaleSchema, saleItemSchema, salePaymentSchema } from "@/domain/pdv/schemas";
+import {
+  addComandaItemSchema,
+  cancelSaleSchema,
+  closeComandaSchema,
+  createComandaSchema,
+  createSaleSchema,
+  removeComandaItemSchema,
+  saleItemSchema,
+  salePaymentSchema,
+} from "@/domain/pdv/schemas";
 import { emptyToUndefined } from "@/domain/shared/normalizers";
 import { parseDecimalInput } from "@/lib/decimal";
 import { createAuditLog } from "@/infrastructure/db/repositories/audit-log-repository";
+import {
+  addItemToComanda,
+  closeComandaWithSale,
+  createComanda,
+  listOpenComandas,
+  removeItemFromComanda,
+} from "@/infrastructure/db/repositories/comanda-repository";
+import { listCustomerOptions } from "@/infrastructure/db/repositories/customer-repository";
 import {
   cancelSaleAndRestock,
   createSaleWithStockAdjustment,
@@ -73,13 +90,15 @@ function parsePayments(formData: FormData) {
 }
 
 export async function getPdvData() {
-  const [openSessions, products, sales] = await Promise.all([
+  const [openSessions, products, sales, customers, openComandas] = await Promise.all([
     listPdvOpenSessions(),
     listPdvProductOptions(),
     listRecentSales(),
+    listCustomerOptions(),
+    listOpenComandas(),
   ]);
 
-  return { openSessions, products, sales };
+  return { openSessions, products, sales, customers, openComandas };
 }
 
 export async function createSaleRecord(input: FormData, actorId: string) {
@@ -116,6 +135,113 @@ export async function createSaleRecord(input: FormData, actorId: string) {
       saleNumber: sale.saleNumber,
       itemCount: sale.items.length,
       totalAmount: sale.totalAmount.toString(),
+    },
+  });
+}
+
+export async function createComandaRecord(input: FormData, actorId: string) {
+  const parsed = createComandaSchema.parse({
+    number: input.get("number"),
+    customerId: input.get("customerId"),
+    isWalkIn: input.get("isWalkIn"),
+  });
+
+  const customerId = emptyToUndefined(parsed.customerId);
+
+  if (!parsed.isWalkIn && !customerId) {
+    throw new Error("Selecione um cliente ou marque a opcao de comanda avulsa.");
+  }
+
+  const created = await createComanda({
+    number: parsed.number,
+    customerId,
+    isWalkIn: parsed.isWalkIn || !customerId,
+    openedById: actorId,
+  });
+
+  await createAuditLog({
+    userId: actorId,
+    action: "pdv.comanda.create",
+    entity: "Comanda",
+    entityId: created.id,
+    metadata: {
+      number: created.number,
+      isWalkIn: created.isWalkIn,
+      customerId: created.customerId,
+    },
+  });
+}
+
+export async function addComandaItemRecord(input: FormData, actorId: string) {
+  const parsed = addComandaItemSchema.parse({
+    comandaId: input.get("comandaId"),
+    productId: input.get("productId"),
+    quantity: input.get("quantity"),
+  });
+
+  await addItemToComanda(parsed);
+
+  await createAuditLog({
+    userId: actorId,
+    action: "pdv.comanda.item.add",
+    entity: "Comanda",
+    entityId: parsed.comandaId,
+    metadata: {
+      productId: parsed.productId,
+      quantity: parsed.quantity,
+    },
+  });
+}
+
+export async function removeComandaItemRecord(input: FormData, actorId: string) {
+  const parsed = removeComandaItemSchema.parse({
+    comandaId: input.get("comandaId"),
+    productId: input.get("productId"),
+  });
+
+  await removeItemFromComanda(parsed);
+
+  await createAuditLog({
+    userId: actorId,
+    action: "pdv.comanda.item.remove",
+    entity: "Comanda",
+    entityId: parsed.comandaId,
+    metadata: {
+      productId: parsed.productId,
+    },
+  });
+}
+
+export async function closeComandaRecord(input: FormData, actorId: string) {
+  const parsed = closeComandaSchema.parse({
+    comandaId: input.get("comandaId"),
+    cashSessionId: input.get("cashSessionId"),
+    paymentMethod: input.get("paymentMethod"),
+    discountAmount: input.get("discountAmount") ?? "0",
+  });
+
+  const discountAmount = parseDecimalInput(parsed.discountAmount || "0");
+  if (discountAmount.lessThan(0)) {
+    throw new Error("Desconto invalido.");
+  }
+
+  const sale = await closeComandaWithSale({
+    comandaId: parsed.comandaId,
+    cashSessionId: parsed.cashSessionId,
+    paymentMethod: parsed.paymentMethod,
+    discountAmount,
+    operatorId: actorId,
+    saleNumber: createSaleNumber(),
+  });
+
+  await createAuditLog({
+    userId: actorId,
+    action: "pdv.comanda.close",
+    entity: "Comanda",
+    entityId: parsed.comandaId,
+    metadata: {
+      saleId: sale.id,
+      saleNumber: sale.saleNumber,
     },
   });
 }

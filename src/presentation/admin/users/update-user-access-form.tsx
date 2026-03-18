@@ -45,7 +45,7 @@ type PermissionDisplay = {
   description: string;
 };
 
-const moduleOrder = ["Painel", "Usuarios", "Categorias", "Fornecedores", "Produtos", "Estoque", "Caixa", "PDV"];
+const moduleOrder = ["Painel", "Usuarios", "Categorias", "Fornecedores", "Clientes", "Produtos", "Estoque", "Caixa", "PDV"];
 
 const permissionDictionary: Record<string, { module: string; title: string; description: string }> = {
   "dashboard:view": {
@@ -82,6 +82,16 @@ const permissionDictionary: Record<string, { module: string; title: string; desc
     module: "Fornecedores",
     title: "Gerenciar fornecedores",
     description: "Permite criar e editar dados de fornecedores.",
+  },
+  "customers:view": {
+    module: "Clientes",
+    title: "Visualizar clientes",
+    description: "Permite consultar cadastro de clientes para atendimentos e comandas.",
+  },
+  "customers:manage": {
+    module: "Clientes",
+    title: "Gerenciar clientes",
+    description: "Permite cadastrar, editar e ativar/desativar clientes.",
   },
   "products:view": {
     module: "Produtos",

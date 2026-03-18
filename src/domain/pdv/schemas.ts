@@ -9,6 +9,30 @@ export const createSaleSchema = z.object({
   discountAmount: z.string().regex(decimalRegex, "Desconto invalido"),
 });
 
+export const createComandaSchema = z.object({
+  number: z.coerce.number().int().min(0, "Numero da comanda invalido").max(200, "Numero maximo da comanda: 200"),
+  customerId: z.string().optional().or(z.literal("")),
+  isWalkIn: z.coerce.boolean().default(false),
+});
+
+export const addComandaItemSchema = z.object({
+  comandaId: z.string().min(1, "Comanda obrigatoria"),
+  productId: z.string().min(1, "Produto obrigatorio"),
+  quantity: z.coerce.number().int().positive("Quantidade invalida"),
+});
+
+export const removeComandaItemSchema = z.object({
+  comandaId: z.string().min(1, "Comanda obrigatoria"),
+  productId: z.string().min(1, "Produto obrigatorio"),
+});
+
+export const closeComandaSchema = z.object({
+  comandaId: z.string().min(1, "Comanda obrigatoria"),
+  cashSessionId: z.string().min(1, "Sessao de caixa obrigatoria"),
+  paymentMethod: z.nativeEnum(PaymentMethod),
+  discountAmount: z.string().regex(decimalRegex, "Desconto invalido"),
+});
+
 export const saleItemSchema = z.object({
   productId: z.string().min(1, "Produto obrigatorio"),
   quantity: z.number().int().positive("Quantidade invalida"),

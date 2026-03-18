@@ -6,6 +6,8 @@ export const PERMISSIONS = {
   CATEGORIES_MANAGE: "categories:manage",
   SUPPLIERS_VIEW: "suppliers:view",
   SUPPLIERS_MANAGE: "suppliers:manage",
+  CUSTOMERS_VIEW: "customers:view",
+  CUSTOMERS_MANAGE: "customers:manage",
   PRODUCTS_VIEW: "products:view",
   PRODUCTS_MANAGE: "products:manage",
   STOCK_VIEW: "stock:view",

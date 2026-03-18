@@ -33,6 +33,13 @@ export default async function AdminLayout({
           <main className="flex-1 px-4 pb-8 pt-5 md:px-8 md:pt-6">
             <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-6">{children}</div>
           </main>
+          <footer className="border-t border-border/70 px-4 py-3 md:px-8">
+            <div className="mx-auto w-full max-w-[1400px]">
+              <p className="text-xs text-muted-foreground">
+                O site foi feito por Mateus Mendoza @devmanteusmendoza
+              </p>
+            </div>
+          </footer>
         </div>
       </div>
     </div>

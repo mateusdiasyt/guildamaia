@@ -3,6 +3,7 @@ import {
   Boxes,
   Calculator,
   ChartColumnBig,
+  ContactRound,
   Receipt,
   Package,
   PackagePlus,
@@ -45,6 +46,12 @@ export const adminNavigation: AdminNavigationItem[] = [
     href: "/admin/suppliers",
     icon: Store,
     permission: PERMISSIONS.SUPPLIERS_VIEW,
+  },
+  {
+    label: "Clientes",
+    href: "/admin/customers",
+    icon: ContactRound,
+    permission: PERMISSIONS.CUSTOMERS_VIEW,
   },
   {
     label: "Produtos",
