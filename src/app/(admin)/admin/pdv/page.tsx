@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { hasPermission, PERMISSIONS } from "@/domain/auth/permissions";
 import { formatCurrency } from "@/lib/format";
 import { CancelSaleForm } from "@/presentation/admin/pdv/cancel-sale-form";
-import { CreateComandaForm } from "@/presentation/admin/pdv/create-comanda-form";
+import { CreateComandaDialog } from "@/presentation/admin/pdv/create-comanda-dialog";
 import { OpenComandasBoard } from "@/presentation/admin/pdv/open-comandas-board";
 import { CreateSaleForm } from "@/presentation/admin/pdv/create-sale-form";
 
@@ -23,6 +23,13 @@ export default async function PdvPage() {
   const { openSessions, products, sales, customers, openComandas } = await getPdvData();
   const canManage = hasPermission(session.user.permissions, PERMISSIONS.PDV_MANAGE);
   const canCancel = hasPermission(session.user.permissions, PERMISSIONS.PDV_CANCEL);
+
+  const customerOptions = customers.map((customer) => ({
+    id: customer.id,
+    fullName: customer.fullName,
+    documentType: customer.documentType,
+    documentNumber: customer.documentNumber,
+  }));
 
   const openSessionOptions = openSessions.map((openSession) => ({
     id: openSession.id,
@@ -60,44 +67,15 @@ export default async function PdvPage() {
 
   return (
     <div className="space-y-6">
-      {canManage ? (
-        <Card>
-          <CardHeader className="border-b border-border/70 pb-4">
-            <CardTitle>Nova comanda</CardTitle>
-            <CardDescription>
-              Abra comandas numeradas de 0 a 200 e vincule um cliente cadastrado ou atendimento avulso.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <CreateComandaForm
-              customers={customers.map((customer) => ({
-                id: customer.id,
-                fullName: customer.fullName,
-                documentType: customer.documentType,
-                documentNumber: customer.documentNumber,
-              }))}
-            />
-            {customers.length === 0 ? (
-              <div className="mt-3 rounded-xl border border-border/70 bg-card/55 px-4 py-3">
-                <p className="text-sm text-muted-foreground">
-                  Nenhum cliente cadastrado. Para comanda nominal, cadastre clientes na aba correspondente.
-                </p>
-                <Link
-                  href="/admin/customers"
-                  className="mt-2 inline-flex h-8 items-center justify-center rounded-lg border border-border/70 bg-background/70 px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted/50"
-                >
-                  Ir para clientes
-                </Link>
-              </div>
-            ) : null}
-          </CardContent>
-        </Card>
-      ) : null}
-
       <Card>
-        <CardHeader className="border-b border-border/70 pb-4">
-          <CardTitle>Comandas abertas</CardTitle>
-          <CardDescription>{openComandasView.length} comanda(s) ativa(s).</CardDescription>
+        <CardHeader className="space-y-3 border-b border-border/70 pb-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <CardTitle>Comandas abertas</CardTitle>
+              <CardDescription>{openComandasView.length} comanda(s) ativa(s).</CardDescription>
+            </div>
+            {canManage ? <CreateComandaDialog customers={customerOptions} /> : null}
+          </div>
         </CardHeader>
         <CardContent>
           <OpenComandasBoard
