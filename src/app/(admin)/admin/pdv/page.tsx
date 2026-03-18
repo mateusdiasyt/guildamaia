@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { SaleStatus } from "@prisma/client";
 
 import { requirePermission } from "@/application/auth/guards";
@@ -40,7 +41,17 @@ export default async function PdvPage() {
           </CardHeader>
           <CardContent>
             {openSessions.length === 0 ? (
-              <p className="text-sm text-zinc-600">Abra um caixa antes de registrar vendas no PDV.</p>
+              <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+                <p className="text-sm text-amber-800">
+                  Nenhum caixa aberto. Abra uma sessao para habilitar o registro de vendas no PDV.
+                </p>
+                <Link
+                  href="/admin/cash"
+                  className="inline-flex h-8 items-center justify-center rounded-lg bg-primary px-2.5 text-sm font-medium text-primary-foreground"
+                >
+                  Abrir caixa agora
+                </Link>
+              </div>
             ) : products.length === 0 ? (
               <p className="text-sm text-zinc-600">Cadastre produtos ativos antes de registrar vendas.</p>
             ) : (
