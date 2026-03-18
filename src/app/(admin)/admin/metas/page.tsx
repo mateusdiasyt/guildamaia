@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PERMISSIONS } from "@/domain/auth/permissions";
 import { formatCurrency } from "@/lib/format";
-import { UpsertDailyGoalForm } from "@/presentation/admin/goals/upsert-daily-goal-form";
 import { UpsertMonthlyGoalPlanForm } from "@/presentation/admin/goals/upsert-monthly-goal-plan-form";
 
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
@@ -194,22 +193,7 @@ export default async function MetasPage() {
         </Card>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-        <Card>
-          <CardHeader className="border-b border-border/70 pb-4">
-            <CardTitle>Configurar meta diaria</CardTitle>
-            <CardDescription>
-              Aplicacao automatica da meta geral para a data atual, com base no planejamento mensal.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <UpsertDailyGoalForm
-              defaultGoalDate={data.todayDefaultGoalDate}
-              autoRevenueTarget={data.monthlyPlan?.dailyRevenueTarget ?? null}
-            />
-          </CardContent>
-        </Card>
-
+      <section>
         <Card>
           <CardHeader className="border-b border-border/70 pb-4">
             <CardTitle>Meta de hoje</CardTitle>
