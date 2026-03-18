@@ -49,71 +49,71 @@
 }
 
 :root {
-  --background: #0b0f17;
-  --foreground: #f3f0e8;
-  --card: #131b2a;
-  --card-foreground: #f3f0e8;
-  --popover: #152033;
-  --popover-foreground: #f3f0e8;
+  --background: #0a0a0a;
+  --foreground: #f4efe4;
+  --card: #121212;
+  --card-foreground: #f4efe4;
+  --popover: #151515;
+  --popover-foreground: #f4efe4;
   --primary: #d4a62a;
-  --primary-foreground: #0f1420;
-  --secondary: #1c2840;
-  --secondary-foreground: #ecf1fb;
-  --muted: #182235;
-  --muted-foreground: #9aa7bd;
-  --accent: #b98a2f;
-  --accent-foreground: #f9efd4;
+  --primary-foreground: #111111;
+  --secondary: #1c1c1c;
+  --secondary-foreground: #f2ede2;
+  --muted: #171717;
+  --muted-foreground: #9f998f;
+  --accent: #b9882a;
+  --accent-foreground: #faeed2;
   --destructive: #ef4444;
-  --border: #2a3750;
-  --input: #2a3750;
+  --border: #2b2b2b;
+  --input: #2b2b2b;
   --ring: #d4a62a;
   --chart-1: #d4a62a;
-  --chart-2: #4f82d8;
-  --chart-3: #8c66d2;
-  --chart-4: #2dbd9c;
-  --chart-5: #e27e39;
+  --chart-2: #b9882a;
+  --chart-3: #7f6124;
+  --chart-4: #4b3b1a;
+  --chart-5: #f1cd79;
   --radius: 0.625rem;
-  --sidebar: #101a2a;
-  --sidebar-foreground: #f5f1e4;
+  --sidebar: #101010;
+  --sidebar-foreground: #f5f0e5;
   --sidebar-primary: #d4a62a;
-  --sidebar-primary-foreground: #0f1420;
-  --sidebar-accent: #1a2538;
-  --sidebar-accent-foreground: #eef2fa;
-  --sidebar-border: #26344d;
+  --sidebar-primary-foreground: #111111;
+  --sidebar-accent: #171717;
+  --sidebar-accent-foreground: #f1ece2;
+  --sidebar-border: #252525;
   --sidebar-ring: #d4a62a;
 }
 
 .dark {
-  --background: #070b12;
-  --foreground: #f7f3ea;
-  --card: #0f1826;
-  --card-foreground: #f7f3ea;
-  --popover: #121d2e;
-  --popover-foreground: #f7f3ea;
+  --background: #070707;
+  --foreground: #f7f2e8;
+  --card: #0d0d0d;
+  --card-foreground: #f7f2e8;
+  --popover: #121212;
+  --popover-foreground: #f7f2e8;
   --primary: #e0b33a;
-  --primary-foreground: #0d121a;
-  --secondary: #1a263d;
-  --secondary-foreground: #f0f4fc;
-  --muted: #141f31;
-  --muted-foreground: #a0adc2;
-  --accent: #c09233;
-  --accent-foreground: #fbf0d6;
+  --primary-foreground: #0f0f0f;
+  --secondary: #191919;
+  --secondary-foreground: #f2ece2;
+  --muted: #141414;
+  --muted-foreground: #a7a196;
+  --accent: #c79634;
+  --accent-foreground: #fdf1d7;
   --destructive: #ef4444;
-  --border: #25344e;
-  --input: #25344e;
+  --border: #242424;
+  --input: #242424;
   --ring: #e0b33a;
   --chart-1: #e0b33a;
-  --chart-2: #5d91e3;
-  --chart-3: #9f77e3;
-  --chart-4: #35c9a8;
-  --chart-5: #eb8b42;
-  --sidebar: #0b1524;
-  --sidebar-foreground: #f7f3ea;
+  --chart-2: #bf9032;
+  --chart-3: #8f6f2e;
+  --chart-4: #5b471f;
+  --chart-5: #f5d17d;
+  --sidebar: #0b0b0b;
+  --sidebar-foreground: #f7f2e8;
   --sidebar-primary: #e0b33a;
-  --sidebar-primary-foreground: #0d121a;
-  --sidebar-accent: #162238;
-  --sidebar-accent-foreground: #f0f4fc;
-  --sidebar-border: #24334d;
+  --sidebar-primary-foreground: #0f0f0f;
+  --sidebar-accent: #151515;
+  --sidebar-accent-foreground: #f2ece2;
+  --sidebar-border: #232323;
   --sidebar-ring: #e0b33a;
 }
 
@@ -124,9 +124,9 @@
   body {
     @apply min-h-screen bg-background text-foreground;
     background-image:
-      radial-gradient(circle at top right, color-mix(in oklab, var(--accent) 13%, transparent) 0, transparent 42%),
-      radial-gradient(circle at 12% 88%, color-mix(in oklab, var(--primary) 8%, transparent) 0, transparent 36%),
-      radial-gradient(circle at 88% 68%, color-mix(in oklab, var(--secondary) 40%, transparent) 0, transparent 34%),
+      radial-gradient(circle at top right, color-mix(in oklab, var(--accent) 9%, transparent) 0, transparent 40%),
+      radial-gradient(circle at 12% 88%, color-mix(in oklab, var(--primary) 6%, transparent) 0, transparent 34%),
+      radial-gradient(circle at 88% 68%, color-mix(in oklab, white 4%, transparent) 0, transparent 36%),
       linear-gradient(180deg, color-mix(in oklab, var(--background) 90%, black) 0%, var(--background) 100%);
     background-attachment: fixed;
   }
