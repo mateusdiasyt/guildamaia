@@ -20,6 +20,10 @@ export async function requireSession() {
 export async function requirePermission(permission: PermissionKey) {
   const session = await requireSession();
 
+  if (session.user.roleSlug === "administrador") {
+    return session;
+  }
+
   if (!hasPermission(session.user.permissions, permission)) {
     redirect("/forbidden");
   }
