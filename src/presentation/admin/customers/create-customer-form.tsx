@@ -22,6 +22,11 @@ export function CreateCustomerForm() {
       </div>
 
       <div className="space-y-2">
+        <Label htmlFor="birthDate">Data de nascimento</Label>
+        <Input id="birthDate" name="birthDate" type="date" required />
+      </div>
+
+      <div className="space-y-2">
         <Label htmlFor="documentType">Tipo de documento</Label>
         <Select name="documentType" defaultValue={CustomerDocumentType.CPF}>
           <SelectTrigger id="documentType" className="w-full">

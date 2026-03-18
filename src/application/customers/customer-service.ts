@@ -17,6 +17,7 @@ export async function getCustomers(search?: string) {
 export async function createCustomerRecord(input: FormData, actorId?: string) {
   const parsed = createCustomerSchema.parse({
     fullName: input.get("fullName"),
+    birthDate: input.get("birthDate"),
     documentType: input.get("documentType"),
     documentNumber: input.get("documentNumber"),
     phone: input.get("phone"),
@@ -26,6 +27,7 @@ export async function createCustomerRecord(input: FormData, actorId?: string) {
 
   const created = await createCustomer({
     fullName: parsed.fullName.trim(),
+    birthDate: new Date(`${parsed.birthDate}T00:00:00.000Z`),
     documentType: parsed.documentType,
     documentNumber: sanitizeDocumentNumber(parsed.documentNumber),
     phone: emptyToUndefined(parsed.phone),
@@ -40,6 +42,7 @@ export async function createCustomerRecord(input: FormData, actorId?: string) {
     entityId: created.id,
     metadata: {
       fullName: created.fullName,
+      birthDate: created.birthDate,
       documentType: created.documentType,
       documentNumber: created.documentNumber,
     },

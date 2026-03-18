@@ -336,6 +336,7 @@ model Sale {
 model Customer {
   id             String               @id @default(cuid())
   fullName       String
+  birthDate      DateTime?            @db.Date
   documentType   CustomerDocumentType
   documentNumber String
   phone          String?

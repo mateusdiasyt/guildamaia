@@ -54,6 +54,7 @@ export async function findCustomerById(customerId: string) {
 
 export async function createCustomer(data: {
   fullName: string;
+  birthDate: Date;
   documentType: CustomerDocumentType;
   documentNumber: string;
   phone?: string;

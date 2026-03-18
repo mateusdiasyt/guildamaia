@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { hasPermission, PERMISSIONS } from "@/domain/auth/permissions";
-import { CreateCustomerForm } from "@/presentation/admin/customers/create-customer-form";
+import { CreateCustomerDialog } from "@/presentation/admin/customers/create-customer-dialog";
 import { toggleCustomerStatusAction } from "@/presentation/admin/customers/actions";
 
 type CustomersPageProps = {
@@ -26,6 +26,14 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
   const customers = await getCustomers(search);
   const canManage = hasPermission(session.user.permissions, PERMISSIONS.CUSTOMERS_MANAGE);
 
+  function formatBirthDate(date: Date | null) {
+    if (!date) {
+      return "-";
+    }
+
+    return date.toLocaleDateString("pt-BR", { timeZone: "UTC" });
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -35,10 +43,16 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
       />
 
       <Card>
-        <CardHeader>
-          <CardTitle>Filtro rapido</CardTitle>
+        <CardHeader className="space-y-3 border-b border-border/70 pb-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <CardTitle>Filtro rapido</CardTitle>
+              <CardDescription>Busque por nome, documento, telefone ou email.</CardDescription>
+            </div>
+            {canManage ? <CreateCustomerDialog /> : null}
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4">
           <form method="GET">
             <Input
               name="q"
@@ -48,18 +62,6 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
           </form>
         </CardContent>
       </Card>
-
-      {canManage ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Novo cliente</CardTitle>
-            <CardDescription>Cadastro com nome completo e documento (CPF ou RG).</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <CreateCustomerForm />
-          </CardContent>
-        </Card>
-      ) : null}
 
       <Card>
         <CardHeader>
@@ -71,6 +73,7 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead>
+                <TableHead>Nascimento</TableHead>
                 <TableHead>Documento</TableHead>
                 <TableHead>Contato</TableHead>
                 <TableHead>Status</TableHead>
@@ -81,7 +84,7 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
             <TableBody>
               {customers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-sm text-zinc-500">
+                  <TableCell colSpan={7} className="text-center text-sm text-zinc-500">
                     Nenhum cliente encontrado.
                   </TableCell>
                 </TableRow>
@@ -89,6 +92,7 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
               {customers.map((customer) => (
                 <TableRow key={customer.id}>
                   <TableCell className="font-medium text-zinc-900">{customer.fullName}</TableCell>
+                  <TableCell>{formatBirthDate(customer.birthDate)}</TableCell>
                   <TableCell>
                     {customer.documentType}: {customer.documentNumber}
                   </TableCell>
