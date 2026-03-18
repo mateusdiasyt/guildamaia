@@ -1,18 +1,18 @@
 import Link from "next/link";
 import { RecordStatus } from "@prisma/client";
-import { Download, Plus, Search, SlidersHorizontal } from "lucide-react";
+import { Download, Search, SlidersHorizontal } from "lucide-react";
 
 import { requirePermission } from "@/application/auth/guards";
 import { getProductFormOptions, getProducts } from "@/application/catalog/product-service";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { hasPermission, PERMISSIONS } from "@/domain/auth/permissions";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { CreateProductForm } from "@/presentation/admin/catalog/products/create-product-form";
+import { CreateProductDialog } from "@/presentation/admin/catalog/products/create-product-dialog";
 import { toggleProductStatusAction } from "@/presentation/admin/catalog/products/actions";
 
 type ProductsPageProps = {
@@ -31,9 +31,6 @@ const statusFilterOptions: Array<{ label: string; value: string }> = [
 
 const headerOutlineLinkClass =
   "inline-flex h-8 items-center justify-center gap-1.5 rounded-xl border border-border/80 bg-background/85 px-3 text-[0.8rem] font-medium text-foreground shadow-sm transition-colors hover:border-border hover:bg-muted/70";
-
-const headerDefaultLinkClass =
-  "inline-flex h-8 items-center justify-center gap-1 rounded-xl bg-primary px-3 text-[0.8rem] font-medium text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:-translate-y-0.5 hover:bg-primary/92 hover:shadow-xl hover:shadow-primary/30";
 
 function productAvatarLabel(name: string) {
   return name
@@ -81,12 +78,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             <Download className="h-4 w-4" />
             Atualizar
           </Link>
-          {canManage ? (
-            <a href="#novo-produto" className={headerDefaultLinkClass}>
-              <Plus className="h-4 w-4" />
-              Add Product
-            </a>
-          ) : null}
+          {canManage ? <CreateProductDialog categories={options.categories} suppliers={options.suppliers} /> : null}
         </div>
       </section>
 
@@ -250,17 +242,6 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         </CardContent>
       </Card>
 
-      {canManage ? (
-        <Card id="novo-produto">
-          <CardHeader>
-            <CardTitle>Add Product</CardTitle>
-            <CardDescription>Cadastro de produto com preco, estoque, categoria e fornecedor.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <CreateProductForm categories={options.categories} suppliers={options.suppliers} />
-          </CardContent>
-        </Card>
-      ) : null}
     </div>
   );
 }
