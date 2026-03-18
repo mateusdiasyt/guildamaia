@@ -79,13 +79,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             Atualizar
           </Link>
           {canManage ? (
-            <Link
-              href="#novo-produto"
-              className={buttonVariants({ size: "sm" })}
-            >
+            <a href="#novo-produto" className={buttonVariants({ size: "sm" })}>
               <Plus className="h-4 w-4" />
               Add Product
-            </Link>
+            </a>
           ) : null}
         </div>
       </section>
