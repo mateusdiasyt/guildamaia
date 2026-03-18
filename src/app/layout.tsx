@@ -18,6 +18,11 @@ const ibmPlexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "Painel Maia | Sistema Administrativo",
   description: "Sistema administrativo profissional para operacao, estoque, caixa e PDV.",
+  icons: {
+    icon: "/favicon-maia.png",
+    shortcut: "/favicon-maia.png",
+    apple: "/favicon-maia.png",
+  },
 };
 
 export default function RootLayout({
