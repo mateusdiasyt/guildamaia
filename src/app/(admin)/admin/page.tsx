@@ -5,10 +5,11 @@ import { requirePermission } from "@/application/auth/guards";
 import { getDashboardSummary } from "@/application/dashboard/dashboard-service";
 import { MetricCard } from "@/components/admin/metric-card";
 import { PageHeader } from "@/components/admin/page-header";
-import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PERMISSIONS } from "@/domain/auth/permissions";
-import { cn } from "@/lib/utils";
+
+const quickActionClass =
+  "inline-flex h-8 w-full items-center justify-between rounded-lg border border-border bg-background px-2.5 text-sm font-medium hover:bg-muted";
 
 export default async function AdminDashboardPage() {
   await requirePermission(PERMISSIONS.DASHBOARD_VIEW);
@@ -71,21 +72,21 @@ export default async function AdminDashboardPage() {
           <CardContent className="space-y-2">
             <Link
               href="/admin/users"
-              className={cn(buttonVariants({ variant: "outline" }), "w-full justify-between")}
+              className={quickActionClass}
             >
               Gerenciar usuarios
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/admin/products"
-              className={cn(buttonVariants({ variant: "outline" }), "w-full justify-between")}
+              className={quickActionClass}
             >
               Cadastro de produtos
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/admin/stock#novo-registro"
-              className={cn(buttonVariants({ variant: "outline" }), "w-full justify-between")}
+              className={quickActionClass}
             >
               Registrar movimentacao
               <ArrowRight className="h-4 w-4" />

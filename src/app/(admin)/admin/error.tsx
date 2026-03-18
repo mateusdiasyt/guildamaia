@@ -20,6 +20,9 @@ export default function AdminError({ error, reset }: AdminErrorProps) {
       <p className="mt-2 text-sm text-rose-700">
         Tente novamente. Se o problema persistir, valide variaveis de ambiente e conexao com banco.
       </p>
+      <p className="mt-2 text-xs text-rose-700/80">
+        Diagnostico rapido: acesse <span className="font-mono">/api/health</span>
+      </p>
       {error.digest ? (
         <p className="mt-2 text-xs text-rose-700/80">
           Digest: <span className="font-mono">{error.digest}</span>
