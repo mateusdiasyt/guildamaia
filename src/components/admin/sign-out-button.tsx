@@ -18,7 +18,7 @@ export function SignOutButton() {
   return (
     <Button
       variant="ghost"
-      className="w-full justify-start gap-2 rounded-xl border border-sidebar-border/70 bg-sidebar-accent/40 text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+      className="w-full justify-start gap-2 rounded-xl border border-sidebar-border/70 bg-sidebar-accent/45 text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-foreground"
       onClick={handleSignOut}
       disabled={isPending}
       type="button"
