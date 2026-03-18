@@ -1,5 +1,6 @@
 import { AdminHeader } from "@/components/admin/admin-header";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
+import { FooterCredit } from "@/components/admin/footer-credit";
 import { getServerAuthSession } from "@/lib/auth";
 
 export default async function AdminLayout({
@@ -35,20 +36,7 @@ export default async function AdminLayout({
           </main>
           <footer className="border-t border-border/70 px-4 py-3 md:px-8">
             <div className="mx-auto w-full max-w-[1400px]">
-              <div className="relative inline-flex">
-                <p className="group relative inline-flex cursor-default text-xs text-muted-foreground">
-                  <span>O site foi feito por Mateus Mendoza @devmanteusmendoza</span>
-                  <span className="pointer-events-none absolute bottom-full left-0 z-30 mb-3 hidden w-52 overflow-hidden rounded-xl border border-border/80 bg-card shadow-[0_20px_70px_rgba(0,0,0,0.55)] group-hover:block">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src="https://media.tenor.com/AhTqmaQ6VfoAAAAM/russo-dan%C3%A7a.gif"
-                      alt="GIF de danca"
-                      className="h-40 w-full object-cover"
-                      loading="lazy"
-                    />
-                  </span>
-                </p>
-              </div>
+              <FooterCredit />
             </div>
           </footer>
         </div>

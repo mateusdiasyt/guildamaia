@@ -10,9 +10,39 @@ export const createSaleSchema = z.object({
 });
 
 export const createComandaSchema = z.object({
-  number: z.coerce.number().int().min(0, "Numero da comanda invalido").max(200, "Numero maximo da comanda: 200"),
+  number: z.preprocess(
+    (value) => {
+      if (value === null || value === undefined || value === "") {
+        return undefined;
+      }
+
+      if (typeof value === "string") {
+        const normalized = value.trim();
+        if (!normalized) {
+          return undefined;
+        }
+
+        const parsed = Number(normalized);
+        return Number.isNaN(parsed) ? undefined : parsed;
+      }
+
+      if (typeof value === "number") {
+        return Number.isNaN(value) ? undefined : value;
+      }
+
+      return undefined;
+    },
+    z
+      .number({ message: "Informe o numero da comanda." })
+      .int("Numero da comanda deve ser inteiro.")
+      .min(0, "Numero da comanda invalido.")
+      .max(200, "Numero maximo da comanda: 200."),
+  ),
   customerId: z.string().optional().or(z.literal("")),
-  isWalkIn: z.coerce.boolean().default(false),
+  isWalkIn: z.preprocess(
+    (value) => value === true || value === "true" || value === "on" || value === "1",
+    z.boolean(),
+  ),
 });
 
 export const addComandaItemSchema = z.object({

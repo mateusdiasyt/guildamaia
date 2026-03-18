@@ -47,13 +47,13 @@ export default async function PdvPage() {
               }))}
             />
             {customers.length === 0 ? (
-              <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
-                <p className="text-sm text-amber-800">
+              <div className="mt-3 rounded-xl border border-border/70 bg-card/55 px-4 py-3">
+                <p className="text-sm text-muted-foreground">
                   Nenhum cliente cadastrado. Para comanda nominal, cadastre clientes na aba correspondente.
                 </p>
                 <Link
                   href="/admin/customers"
-                  className="mt-2 inline-flex h-9 items-center justify-center rounded-xl bg-primary px-3 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/25"
+                  className="mt-2 inline-flex h-8 items-center justify-center rounded-lg border border-border/70 bg-background/70 px-3 text-xs font-medium text-foreground transition-colors hover:bg-muted/50"
                 >
                   Ir para clientes
                 </Link>
