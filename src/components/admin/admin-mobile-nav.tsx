@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 
+import { BrandLogo } from "@/components/admin/brand-logo";
 import { adminNavigation } from "@/components/admin/navigation";
 import { SignOutButton } from "@/components/admin/sign-out-button";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,8 @@ export function AdminMobileNav({ roleSlug, permissions }: AdminMobileNavProps) {
       </SheetTrigger>
       <SheetContent side="left" className="flex flex-col border-sidebar-border/80 bg-sidebar p-0 text-sidebar-foreground">
         <SheetHeader className="border-b border-sidebar-border/80 p-6">
-          <SheetTitle className="text-left text-sidebar-foreground">ERP + Guild</SheetTitle>
+          <SheetTitle className="sr-only">Menu</SheetTitle>
+          <BrandLogo className="max-w-[176px]" />
         </SheetHeader>
         <div className="flex-1 space-y-1.5 p-3">
           {items.map((item) => {

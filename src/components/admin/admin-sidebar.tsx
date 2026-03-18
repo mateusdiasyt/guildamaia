@@ -3,19 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { BrandLogo } from "@/components/admin/brand-logo";
 import { adminNavigation } from "@/components/admin/navigation";
 import { SignOutButton } from "@/components/admin/sign-out-button";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 type AdminSidebarProps = {
-  userName?: string | null;
-  roleLabel: string;
   roleSlug: string;
   permissions: string[];
 };
 
-export function AdminSidebar({ userName, roleLabel, roleSlug, permissions }: AdminSidebarProps) {
+export function AdminSidebar({ roleSlug, permissions }: AdminSidebarProps) {
   const pathname = usePathname();
 
   const isAdmin = roleSlug === "administrador";
@@ -25,12 +23,7 @@ export function AdminSidebar({ userName, roleLabel, roleSlug, permissions }: Adm
     <aside className="sticky top-0 flex h-screen w-[18.5rem] shrink-0 flex-col border-r border-sidebar-border/80 bg-sidebar/95 text-sidebar-foreground backdrop-blur-xl">
       <div className="border-b border-sidebar-border/75 px-4 py-4">
         <div className="rounded-2xl border border-sidebar-border/80 bg-sidebar-accent/55 p-4 shadow-lg shadow-black/20">
-          <p className="text-[10px] uppercase tracking-[0.22em] text-sidebar-foreground/65">Guilda Maia</p>
-          <h1 className="mt-2 text-base font-semibold tracking-[-0.01em]">ERP + Guild Platform</h1>
-          <p className="mt-2 truncate text-sm text-sidebar-foreground/75">{userName ?? "Usuario"}</p>
-          <Badge className="mt-2 border border-emerald-400/20 bg-emerald-500/15 text-emerald-200 hover:bg-emerald-500/15">
-            {roleLabel}
-          </Badge>
+          <BrandLogo priority className="mx-auto max-w-[188px]" />
         </div>
       </div>
 

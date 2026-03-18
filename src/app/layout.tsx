@@ -21,9 +21,8 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Guilda Maia | ERP + Guild Platform",
-  description:
-    "Plataforma administrativa profissional para operacao ERP e evolucao do ecossistema Guilda.",
+  title: "Painel Maia | Sistema Administrativo",
+  description: "Sistema administrativo profissional para operacao, estoque, caixa e PDV.",
 };
 
 export default function RootLayout({

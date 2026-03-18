@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { BrandLogo } from "@/components/admin/brand-logo";
 import { LoginForm } from "@/components/admin/login-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getServerAuthSession } from "@/lib/auth";
@@ -16,8 +17,8 @@ export default async function LoginPage() {
       <section className="w-full max-w-md">
         <Card className="border-border/80 bg-card/88 shadow-xl shadow-zinc-900/10">
           <CardHeader className="space-y-3">
-            <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Guilda Maia</p>
-            <CardTitle className="text-2xl">Entrar no painel ERP + Guilda</CardTitle>
+            <BrandLogo priority className="mx-auto w-52" />
+            <CardTitle className="text-2xl">Entrar no painel administrativo</CardTitle>
             <CardDescription>
               Acesso protegido para operacao administrativa, cadastro e controle de estoque.
             </CardDescription>

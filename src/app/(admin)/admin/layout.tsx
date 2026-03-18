@@ -1,6 +1,5 @@
 import { AdminHeader } from "@/components/admin/admin-header";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
-import { roleSlugToLabel } from "@/domain/auth/roles";
 import { getServerAuthSession } from "@/lib/auth";
 
 export default async function AdminLayout({
@@ -14,16 +13,12 @@ export default async function AdminLayout({
     return null;
   }
 
-  const roleLabel = roleSlugToLabel(session.user.roleSlug);
-
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_15%,color-mix(in_oklab,var(--primary)_12%,transparent),transparent_30%),radial-gradient(circle_at_88%_4%,color-mix(in_oklab,var(--accent)_24%,transparent),transparent_36%),radial-gradient(circle_at_80%_88%,color-mix(in_oklab,var(--primary)_8%,transparent),transparent_30%)]" />
       <div className="relative flex min-h-screen">
         <div className="hidden md:block">
           <AdminSidebar
-            userName={session.user.name}
-            roleLabel={roleLabel}
             roleSlug={session.user.roleSlug}
             permissions={session.user.permissions}
           />
