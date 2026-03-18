@@ -21,8 +21,12 @@ function calculateMargin(costPrice: Prisma.Decimal, salePrice: Prisma.Decimal) {
   return salePrice.minus(costPrice).dividedBy(salePrice).times(100).toDecimalPlaces(2);
 }
 
-export async function getProducts(search?: string) {
-  return listProducts(search);
+export async function getProducts(filters?: {
+  search?: string;
+  status?: RecordStatus;
+  categoryId?: string;
+}) {
+  return listProducts(filters);
 }
 
 export async function getProductOptions() {

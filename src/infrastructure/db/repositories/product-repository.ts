@@ -2,16 +2,32 @@ import { Prisma, RecordStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 
-export async function listProducts(search?: string) {
+type ListProductsFilters = {
+  search?: string;
+  status?: RecordStatus;
+  categoryId?: string;
+};
+
+export async function listProducts(filters?: ListProductsFilters) {
+  const where: Prisma.ProductWhereInput = {};
+
+  if (filters?.search) {
+    where.OR = [
+      { name: { contains: filters.search, mode: "insensitive" } },
+      { sku: { contains: filters.search, mode: "insensitive" } },
+    ];
+  }
+
+  if (filters?.status) {
+    where.status = filters.status;
+  }
+
+  if (filters?.categoryId) {
+    where.categoryId = filters.categoryId;
+  }
+
   return prisma.product.findMany({
-    where: search
-      ? {
-          OR: [
-            { name: { contains: search, mode: "insensitive" } },
-            { sku: { contains: search, mode: "insensitive" } },
-          ],
-        }
-      : undefined,
+    where,
     include: {
       category: true,
       supplier: true,
