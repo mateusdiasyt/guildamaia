@@ -5,7 +5,7 @@ import { Download, Plus, Search, SlidersHorizontal } from "lucide-react";
 import { requirePermission } from "@/application/auth/guards";
 import { getProductFormOptions, getProducts } from "@/application/catalog/product-service";
 import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -28,6 +28,12 @@ const statusFilterOptions: Array<{ label: string; value: string }> = [
   { label: "Ativos", value: RecordStatus.ACTIVE },
   { label: "Inativos", value: RecordStatus.INACTIVE },
 ];
+
+const headerOutlineLinkClass =
+  "inline-flex h-8 items-center justify-center gap-1.5 rounded-xl border border-border/80 bg-background/85 px-3 text-[0.8rem] font-medium text-foreground shadow-sm transition-colors hover:border-border hover:bg-muted/70";
+
+const headerDefaultLinkClass =
+  "inline-flex h-8 items-center justify-center gap-1 rounded-xl bg-primary px-3 text-[0.8rem] font-medium text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:-translate-y-0.5 hover:bg-primary/92 hover:shadow-xl hover:shadow-primary/30";
 
 function productAvatarLabel(name: string) {
   return name
@@ -71,15 +77,12 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Link
-            href="/admin/products"
-            className={buttonVariants({ variant: "outline", size: "sm" })}
-          >
+          <Link href="/admin/products" className={headerOutlineLinkClass}>
             <Download className="h-4 w-4" />
             Atualizar
           </Link>
           {canManage ? (
-            <a href="#novo-produto" className={buttonVariants({ size: "sm" })}>
+            <a href="#novo-produto" className={headerDefaultLinkClass}>
               <Plus className="h-4 w-4" />
               Add Product
             </a>
@@ -133,7 +136,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
               Filtrar
             </Button>
 
-            <Link href="/admin/products" className={buttonVariants({ variant: "outline" })}>
+            <Link href="/admin/products" className={headerOutlineLinkClass}>
               Limpar
             </Link>
           </form>
