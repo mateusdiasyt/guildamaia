@@ -1,96 +1,250 @@
 import Link from "next/link";
-import { AlertTriangle, ArrowRight } from "lucide-react";
+import { AlertTriangle, ArrowRight, Goal, Ticket, Wallet } from "lucide-react";
 
 import { requirePermission } from "@/application/auth/guards";
 import { getDashboardSummary } from "@/application/dashboard/dashboard-service";
 import { MetricCard } from "@/components/admin/metric-card";
 import { PageHeader } from "@/components/admin/page-header";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PERMISSIONS } from "@/domain/auth/permissions";
+import { formatCurrency } from "@/lib/format";
+import { RevenueTrendChart } from "@/presentation/admin/dashboard/revenue-trend-chart";
 
 const quickActionClass =
-  "inline-flex h-8 w-full items-center justify-between rounded-lg border border-border bg-background px-2.5 text-sm font-medium hover:bg-muted";
+  "inline-flex h-8 w-full items-center justify-between rounded-lg border border-border bg-background px-2.5 text-sm font-medium transition-colors hover:bg-muted";
+
+function formatGrowth(value: number) {
+  if (value > 0) {
+    return `+${value.toFixed(1)}%`;
+  }
+
+  return `${value.toFixed(1)}%`;
+}
+
+function growthTone(value: number) {
+  if (value >= 0) {
+    return "text-emerald-400";
+  }
+
+  return "text-rose-400";
+}
+
+function percentOfTarget(actual: number, target: number) {
+  if (target <= 0) {
+    return 0;
+  }
+
+  return Math.min(Math.round((actual / target) * 100), 100);
+}
 
 export default async function AdminDashboardPage() {
   await requirePermission(PERMISSIONS.DASHBOARD_VIEW);
   const summary = await getDashboardSummary();
+  const averageTicket = summary.todaySalesCount > 0 ? summary.todayRevenue / summary.todaySalesCount : 0;
 
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Fundacao V1"
-        title="Dashboard Operacional"
-        description="Visao consolidada da base ERP para iniciar o ciclo de operacao com governanca e escalabilidade."
+        eyebrow="Controle operacional"
+        title="Dashboard"
+        description="Visao diaria de faturamento, volume de vendas, produtos lideres e progresso das metas de entrada e consumacao."
       />
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <MetricCard title="Usuarios" value={summary.users} />
-        <MetricCard title="Categorias" value={summary.categories} />
-        <MetricCard title="Fornecedores" value={summary.suppliers} />
-        <MetricCard title="Produtos" value={summary.products} />
-        <MetricCard title="Movimentacoes" value={summary.stockMovements} />
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          title="Faturamento hoje"
+          value={formatCurrency(summary.todayRevenue)}
+          helper={`${formatGrowth(summary.revenueGrowthPercent)} vs ontem`}
+        />
+        <MetricCard
+          title="Vendas hoje"
+          value={summary.todaySalesCount}
+          helper={`${formatGrowth(summary.salesGrowthPercent)} vs ontem`}
+        />
+        <MetricCard title="Ticket medio" value={formatCurrency(averageTicket)} helper="Media por venda no dia atual" />
+        <MetricCard
+          title="Faturamento do mes"
+          value={formatCurrency(summary.monthRevenue)}
+          helper={`${formatGrowth(summary.monthGrowthPercent)} vs mes anterior`}
+        />
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[2fr,1fr]">
-        <Card className="border-zinc-200/80 shadow-sm">
+        <Card>
           <CardHeader className="space-y-1">
-            <CardTitle>Produtos com alerta de estoque</CardTitle>
-            <CardDescription>Itens com estoque igual ou abaixo do minimo configurado.</CardDescription>
+            <CardTitle>Analise de vendas (ultimos 14 dias)</CardTitle>
+            <CardDescription>Curva de faturamento e volume de vendas para leitura rapida da operacao.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {summary.lowStockProducts.length === 0 ? (
-              <p className="text-sm text-zinc-600">Nenhum produto em situacao critica no momento.</p>
+          <CardContent>
+            {summary.chart.length === 0 ? (
+              <p className="rounded-xl border border-border/75 bg-muted/35 px-3 py-4 text-sm text-muted-foreground">
+                Ainda nao ha dados suficientes para exibir o grafico.
+              </p>
             ) : (
-              <ul className="space-y-2">
-                {summary.lowStockProducts.map((item) => (
-                  <li
-                    key={item.id}
-                    className="flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 px-3 py-2"
-                  >
-                    <div className="flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4 text-amber-600" />
-                      <div>
-                        <p className="text-sm font-medium text-zinc-900">{item.name}</p>
-                        <p className="text-xs text-zinc-600">{item.sku}</p>
-                      </div>
-                    </div>
-                    <p className="text-xs font-medium text-amber-700">
-                      {item.currentStock} / minimo {item.minStock}
-                    </p>
-                  </li>
-                ))}
-              </ul>
+              <RevenueTrendChart data={summary.chart} />
             )}
           </CardContent>
         </Card>
 
-        <Card className="border-zinc-200/80 shadow-sm">
+        <Card>
           <CardHeader className="space-y-1">
-            <CardTitle>Atalhos da fundacao</CardTitle>
-            <CardDescription>Fluxos prioritarios para iniciar operacao no painel.</CardDescription>
+            <CardTitle>Produtos mais vendidos</CardTitle>
+            <CardDescription>Ranking mensal por quantidade vendida.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            <Link
-              href="/admin/users"
-              className={quickActionClass}
-            >
-              Gerenciar usuarios
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/admin/products"
-              className={quickActionClass}
-            >
-              Cadastro de produtos
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/admin/stock#novo-registro"
-              className={quickActionClass}
-            >
-              Registrar movimentacao
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+            {summary.topProducts.length === 0 ? (
+              <p className="rounded-xl border border-border/75 bg-muted/35 px-3 py-4 text-sm text-muted-foreground">
+                Nenhuma venda registrada neste mes.
+              </p>
+            ) : (
+              summary.topProducts.map((item, index) => (
+                <div key={item.productId} className="rounded-xl border border-border/80 bg-background/55 p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">
+                        {index + 1}. {item.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{item.sku}</p>
+                    </div>
+                    <Badge variant="outline" className="border-border/80 bg-muted/30 text-foreground">
+                      {item.quantity} un.
+                    </Badge>
+                  </div>
+                  <p className="mt-2 text-sm text-muted-foreground">Faturamento: {formatCurrency(item.revenue)}</p>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-[1.4fr,1fr]">
+        <Card>
+          <CardHeader className="space-y-1">
+            <CardTitle>Metas de hoje</CardTitle>
+            <CardDescription>Comparativo entre meta e realizado para entrada e consumacao.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {!summary.goal ? (
+              <div className="space-y-3 rounded-xl border border-dashed border-border/80 bg-muted/30 p-4">
+                <p className="text-sm text-muted-foreground">Nenhuma meta diaria configurada para hoje.</p>
+                <Link href="/admin/metas" className={quickActionClass}>
+                  Configurar meta diaria
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            ) : (
+              <>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl border border-border/80 bg-background/55 p-3">
+                    <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Meta ingresso</p>
+                    <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <Ticket className="h-4 w-4 text-primary" />
+                      {summary.goal.entryCategoryName ?? "Todas categorias"}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-border/80 bg-background/55 p-3">
+                    <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Meta consumacao</p>
+                    <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <Wallet className="h-4 w-4 text-primary" />
+                      {summary.goal.consumptionCategoryName ?? "Todas categorias"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <p className="text-muted-foreground">Ingressos</p>
+                    <p className="font-semibold text-foreground">
+                      {summary.goal.entryTicketsActual} / {summary.goal.entryTicketsTarget}
+                    </p>
+                  </div>
+                  <div className="h-2 rounded-full bg-muted/70">
+                    <div
+                      className="h-2 rounded-full bg-primary transition-all"
+                      style={{ width: `${percentOfTarget(summary.goal.entryTicketsActual, summary.goal.entryTicketsTarget)}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">{summary.goal.entryPercent.toFixed(1)}% da meta de entrada</p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <p className="text-muted-foreground">Consumacao</p>
+                    <p className="font-semibold text-foreground">
+                      {formatCurrency(summary.goal.consumptionSalesActual)} / {formatCurrency(summary.goal.consumptionSalesTarget)}
+                    </p>
+                  </div>
+                  <div className="h-2 rounded-full bg-muted/70">
+                    <div
+                      className="h-2 rounded-full bg-chart-2 transition-all"
+                      style={{
+                        width: `${percentOfTarget(summary.goal.consumptionSalesActual, summary.goal.consumptionSalesTarget)}%`,
+                      }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {summary.goal.consumptionPercent.toFixed(1)}% da meta de consumacao
+                  </p>
+                </div>
+
+                <Link href="/admin/metas" className={quickActionClass}>
+                  Gerenciar metas
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="space-y-1">
+            <CardTitle>Alertas e atalhos</CardTitle>
+            <CardDescription>Produtos criticos e acessos rapidos do dia a dia.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-2">
+              {summary.lowStockProducts.length === 0 ? (
+                <p className="rounded-xl border border-border/75 bg-muted/35 px-3 py-2 text-sm text-muted-foreground">
+                  Nenhum produto com estoque critico no momento.
+                </p>
+              ) : (
+                summary.lowStockProducts.slice(0, 4).map((item) => (
+                  <div key={item.id} className="flex items-center justify-between rounded-xl border border-border/80 bg-background/55 px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-amber-400" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{item.name}</p>
+                        <p className="text-xs text-muted-foreground">{item.sku}</p>
+                      </div>
+                    </div>
+                    <p className="text-xs font-semibold text-amber-400">
+                      {item.currentStock} / min {item.minStock}
+                    </p>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="space-y-2 border-t border-border/75 pt-3">
+              <Link href="/admin/pdv" className={quickActionClass}>
+                Abrir PDV
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link href="/admin/cash" className={quickActionClass}>
+                Gerenciar caixa
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link href="/admin/metas" className={quickActionClass}>
+                Ajustar metas
+                <Goal className="h-4 w-4" />
+              </Link>
+            </div>
+
+            <div className={`text-xs ${growthTone(summary.revenueGrowthPercent)}`}>
+              Receita diaria: {formatGrowth(summary.revenueGrowthPercent)} em relacao a ontem.
+            </div>
           </CardContent>
         </Card>
       </section>

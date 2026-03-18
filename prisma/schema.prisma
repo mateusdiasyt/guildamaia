@@ -111,6 +111,7 @@ model User {
   sales          Sale[]          @relation("SaleOperator")
   cancelledSales Sale[]          @relation("SaleCancelledBy")
   directPermissions UserPermission[]
+  createdGoals   DailyGoal[]     @relation("GoalCreatedBy")
 
   @@index([status])
   @@index([roleId])
@@ -139,6 +140,8 @@ model ProductCategory {
 
   unit     BusinessUnit? @relation(fields: [unitId], references: [id], onDelete: SetNull)
   products Product[]
+  entryGoals DailyGoal[]       @relation("GoalEntryCategory")
+  consumptionGoals DailyGoal[] @relation("GoalConsumptionCategory")
 
   @@unique([slug, unitId])
   @@index([status])
@@ -345,4 +348,25 @@ model Payment {
 
   @@index([saleId])
   @@index([method])
+}
+
+model DailyGoal {
+  id                     String    @id @default(cuid())
+  goalDate               DateTime  @unique @db.Date
+  entryTicketsTarget     Int       @default(0)
+  consumptionSalesTarget Decimal   @default(0) @db.Decimal(12, 2)
+  entryCategoryId        String?
+  consumptionCategoryId  String?
+  notes                  String?
+  createdById            String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  entryCategory       ProductCategory? @relation("GoalEntryCategory", fields: [entryCategoryId], references: [id], onDelete: SetNull)
+  consumptionCategory ProductCategory? @relation("GoalConsumptionCategory", fields: [consumptionCategoryId], references: [id], onDelete: SetNull)
+  createdBy           User?            @relation("GoalCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([goalDate])
+  @@index([entryCategoryId])
+  @@index([consumptionCategoryId])
 }

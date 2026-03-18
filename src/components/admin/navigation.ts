@@ -8,6 +8,7 @@ import {
   PackagePlus,
   ShieldUser,
   Store,
+  Target,
   Warehouse,
 } from "lucide-react";
 
@@ -68,6 +69,12 @@ export const adminNavigation: AdminNavigationItem[] = [
     href: "/admin/pdv",
     icon: Receipt,
     permission: PERMISSIONS.PDV_VIEW,
+  },
+  {
+    label: "Metas",
+    href: "/admin/metas",
+    icon: Target,
+    permission: PERMISSIONS.DASHBOARD_VIEW,
   },
   {
     label: "Movimentar Estoque",
