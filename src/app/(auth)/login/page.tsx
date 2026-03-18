@@ -14,9 +14,9 @@ export default async function LoginPage() {
   return (
     <main className="grid min-h-screen place-items-center px-4 py-12">
       <section className="w-full max-w-md">
-        <Card className="border-zinc-200/80 shadow-xl shadow-zinc-900/5">
+        <Card className="border-border/80 bg-card/88 shadow-xl shadow-zinc-900/10">
           <CardHeader className="space-y-3">
-            <p className="text-xs uppercase tracking-[0.14em] text-zinc-500">Guilda Maia</p>
+            <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Guilda Maia</p>
             <CardTitle className="text-2xl">Entrar no painel ERP + Guilda</CardTitle>
             <CardDescription>
               Acesso protegido para operacao administrativa, cadastro e controle de estoque.

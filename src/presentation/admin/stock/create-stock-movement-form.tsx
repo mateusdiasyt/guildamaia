@@ -34,7 +34,7 @@ export function CreateStockMovementForm({ products }: CreateStockMovementFormPro
         <select
           id="productId"
           name="productId"
-          className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs"
+          className="admin-native-select"
           defaultValue={activeProducts[0]?.id}
           required
         >
@@ -51,7 +51,7 @@ export function CreateStockMovementForm({ products }: CreateStockMovementFormPro
         <select
           id="type"
           name="type"
-          className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs"
+          className="admin-native-select"
           defaultValue={StockMovementType.IN}
         >
           <option value={StockMovementType.IN}>Entrada</option>
@@ -82,3 +82,4 @@ export function CreateStockMovementForm({ products }: CreateStockMovementFormPro
     </form>
   );
 }
+

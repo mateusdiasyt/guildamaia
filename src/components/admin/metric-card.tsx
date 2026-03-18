@@ -8,13 +8,15 @@ type MetricCardProps = {
 
 export function MetricCard({ title, value, helper }: MetricCardProps) {
   return (
-    <Card className="border-zinc-200/80 shadow-sm">
+    <Card className="border-border/80 bg-card/85">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-zinc-500">{title}</CardTitle>
+        <CardTitle className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+          {title}
+        </CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-2xl font-semibold text-zinc-900">{value}</p>
-        {helper ? <p className="mt-1 text-xs text-zinc-500">{helper}</p> : null}
+        <p className="text-3xl font-semibold tracking-[-0.015em] text-foreground">{value}</p>
+        {helper ? <p className="mt-1.5 text-xs text-muted-foreground">{helper}</p> : null}
       </CardContent>
     </Card>
   );

@@ -35,7 +35,7 @@ export function CloseCashSessionForm({ openSessions }: CloseCashSessionFormProps
         <select
           id="cashSessionId-close"
           name="cashSessionId"
-          className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs"
+          className="admin-native-select"
           defaultValue={openSessions[0]?.id}
           required
         >
@@ -64,3 +64,4 @@ export function CloseCashSessionForm({ openSessions }: CloseCashSessionFormProps
     </form>
   );
 }
+

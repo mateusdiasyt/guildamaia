@@ -46,7 +46,7 @@ export function CreateProductForm({ categories, suppliers }: CreateProductFormPr
         <select
           id="categoryId"
           name="categoryId"
-          className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs"
+          className="admin-native-select"
           required
           defaultValue={categories[0]?.id}
         >
@@ -63,7 +63,7 @@ export function CreateProductForm({ categories, suppliers }: CreateProductFormPr
         <select
           id="supplierId"
           name="supplierId"
-          className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs"
+          className="admin-native-select"
           defaultValue=""
         >
           <option value="">Sem fornecedor</option>
@@ -90,7 +90,7 @@ export function CreateProductForm({ categories, suppliers }: CreateProductFormPr
           Estoque minimo
           <span
             title="Quantidade de alerta para reposicao. Quando o estoque atual atingir esse valor, o produto entra em nivel de atencao."
-            className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-zinc-300 text-[10px] font-semibold text-zinc-600"
+            className="admin-help-dot"
           >
             ?
           </span>
@@ -103,7 +103,7 @@ export function CreateProductForm({ categories, suppliers }: CreateProductFormPr
           Estoque atual
           <span
             title="Quantidade disponivel agora para venda. Esse valor diminui a cada venda e aumenta com entradas ou ajustes."
-            className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-zinc-300 text-[10px] font-semibold text-zinc-600"
+            className="admin-help-dot"
           >
             ?
           </span>
@@ -116,7 +116,7 @@ export function CreateProductForm({ categories, suppliers }: CreateProductFormPr
         <select
           id="status"
           name="status"
-          className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs"
+          className="admin-native-select"
           defaultValue={RecordStatus.ACTIVE}
         >
           <option value={RecordStatus.ACTIVE}>Ativo</option>
@@ -136,3 +136,4 @@ export function CreateProductForm({ categories, suppliers }: CreateProductFormPr
     </form>
   );
 }
+

@@ -64,14 +64,14 @@ export function CreateSaleForm({ openSessions, products }: CreateSaleFormProps) 
   }
 
   return (
-    <form action={formAction} className="space-y-5">
+    <form action={formAction} className="space-y-6">
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="space-y-2 md:col-span-2">
+        <div className="admin-form-section space-y-2 md:col-span-2">
           <Label htmlFor="cashSessionId">Sessao de caixa</Label>
           <select
             id="cashSessionId"
             name="cashSessionId"
-            className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs"
+            className="admin-native-select"
             defaultValue={openSessions[0]?.id}
             required
           >
@@ -81,22 +81,26 @@ export function CreateSaleForm({ openSessions, products }: CreateSaleFormProps) 
               </option>
             ))}
           </select>
+          <p className="text-xs text-muted-foreground">
+            A venda sera vinculada a sessao escolhida para conciliacao automatica de caixa.
+          </p>
         </div>
 
-        <div className="space-y-2">
+        <div className="admin-form-section space-y-2">
           <Label htmlFor="discountAmount">Desconto (R$)</Label>
           <Input id="discountAmount" name="discountAmount" defaultValue="0.00" required />
+          <p className="text-xs text-muted-foreground">Use desconto apenas em autorizacoes registradas.</p>
         </div>
 
-        <div className="space-y-2 md:col-span-3">
+        <div className="admin-form-section space-y-2 md:col-span-3">
           <Label htmlFor="customerName">Cliente (opcional)</Label>
           <Input id="customerName" name="customerName" placeholder="Nome do cliente" />
         </div>
       </div>
 
-      <div className="space-y-3 rounded-lg border border-zinc-200 p-4">
+      <div className="admin-form-section space-y-3">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-medium text-zinc-800">Itens da venda</p>
+          <p className="text-sm font-semibold text-foreground">Itens da venda</p>
           <Button type="button" size="sm" variant="outline" onClick={addItemRow} className="gap-2">
             <Plus className="h-4 w-4" />
             Adicionar item
@@ -105,10 +109,10 @@ export function CreateSaleForm({ openSessions, products }: CreateSaleFormProps) 
 
         <div className="space-y-3">
           {itemRows.map((rowId, index) => (
-            <div key={rowId} className="grid gap-3 md:grid-cols-[2fr,1fr,auto]">
+            <div key={rowId} className="grid gap-3 rounded-xl border border-border/75 bg-background/65 p-3 md:grid-cols-[2fr,1fr,auto]">
               <select
                 name="itemProductId"
-                className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs"
+                className="admin-native-select"
                 defaultValue={defaultProductId}
                 required
               >
@@ -122,9 +126,10 @@ export function CreateSaleForm({ openSessions, products }: CreateSaleFormProps) 
               <Button
                 type="button"
                 variant="ghost"
-                size="icon"
+                size="icon-sm"
                 onClick={() => removeItemRow(index)}
                 disabled={itemRows.length <= 1}
+                className="self-center text-rose-700 hover:bg-rose-100 hover:text-rose-700"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -133,9 +138,9 @@ export function CreateSaleForm({ openSessions, products }: CreateSaleFormProps) 
         </div>
       </div>
 
-      <div className="space-y-3 rounded-lg border border-zinc-200 p-4">
+      <div className="admin-form-section space-y-3">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-medium text-zinc-800">Pagamentos</p>
+          <p className="text-sm font-semibold text-foreground">Pagamentos</p>
           <Button type="button" size="sm" variant="outline" onClick={addPaymentRow} className="gap-2">
             <Plus className="h-4 w-4" />
             Adicionar pagamento
@@ -144,10 +149,10 @@ export function CreateSaleForm({ openSessions, products }: CreateSaleFormProps) 
 
         <div className="space-y-3">
           {paymentRows.map((rowId, index) => (
-            <div key={rowId} className="grid gap-3 md:grid-cols-[2fr,1fr,auto]">
+            <div key={rowId} className="grid gap-3 rounded-xl border border-border/75 bg-background/65 p-3 md:grid-cols-[2fr,1fr,auto]">
               <select
                 name="paymentMethod"
-                className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs"
+                className="admin-native-select"
                 defaultValue={PaymentMethod.CASH}
                 required
               >
@@ -161,9 +166,10 @@ export function CreateSaleForm({ openSessions, products }: CreateSaleFormProps) 
               <Button
                 type="button"
                 variant="ghost"
-                size="icon"
+                size="icon-sm"
                 onClick={() => removePaymentRow(index)}
                 disabled={paymentRows.length <= 1}
+                className="self-center text-rose-700 hover:bg-rose-100 hover:text-rose-700"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -179,3 +185,4 @@ export function CreateSaleForm({ openSessions, products }: CreateSaleFormProps) 
     </form>
   );
 }
+

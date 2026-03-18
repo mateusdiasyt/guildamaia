@@ -30,7 +30,7 @@ export function OpenCashSessionForm({ registers }: OpenCashSessionFormProps) {
         <select
           id="cashRegisterId"
           name="cashRegisterId"
-          className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs"
+          className="admin-native-select"
           defaultValue={registers[0]?.id}
           required
         >
@@ -59,3 +59,4 @@ export function OpenCashSessionForm({ registers }: OpenCashSessionFormProps) {
     </form>
   );
 }
+

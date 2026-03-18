@@ -12,25 +12,34 @@ type AdminHeaderProps = {
 
 export function AdminHeader({ userName, roleSlug, permissions }: AdminHeaderProps) {
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-zinc-200/70 bg-white/90 px-4 backdrop-blur-md md:px-6">
+    <header className="sticky top-0 z-30 border-b border-border/80 bg-background/78 px-4 py-3 backdrop-blur-xl md:px-8">
+      <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between">
       <div className="flex items-center gap-3">
         <div className="md:hidden">
           <AdminMobileNav roleSlug={roleSlug} permissions={permissions} />
         </div>
-        <div>
-          <p className="text-xs uppercase tracking-[0.12em] text-zinc-500">Painel Administrativo</p>
-          <h2 className="text-sm font-semibold text-zinc-900 md:text-base">Operacao ERP + Guilda</h2>
+        <div className="space-y-0.5">
+          <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+            Painel Administrativo
+          </p>
+          <h2 className="text-sm font-semibold tracking-[-0.01em] text-foreground md:text-base">
+            Operacao ERP + Guilda
+          </h2>
         </div>
       </div>
 
       <div className="flex items-center gap-3">
-        <Badge variant="outline" className="hidden border-zinc-300 text-zinc-700 sm:inline-flex">
+        <Badge
+          variant="outline"
+          className="hidden rounded-full border-border bg-card/85 px-2.5 text-foreground/85 shadow-sm sm:inline-flex"
+        >
           {userName ?? "Usuario"}
         </Badge>
-        <Button variant="ghost" size="icon" className="text-zinc-600 hover:text-zinc-900">
+        <Button variant="outline" size="icon-sm" className="rounded-full">
           <Bell className="h-4 w-4" />
           <span className="sr-only">Alertas</span>
         </Button>
+      </div>
       </div>
     </header>
   );

@@ -22,17 +22,19 @@ export function AdminSidebar({ userName, roleLabel, roleSlug, permissions }: Adm
   const items = adminNavigation.filter((item) => isAdmin || permissions.includes(item.permission));
 
   return (
-    <aside className="flex h-screen w-72 flex-col border-r border-zinc-800 bg-zinc-950 text-zinc-100">
-      <div className="border-b border-zinc-800 px-6 py-5">
-        <p className="text-xs uppercase tracking-[0.16em] text-zinc-400">Guilda Maia</p>
-        <h1 className="mt-2 text-lg font-semibold">ERP + Guild Platform</h1>
-        <p className="mt-2 text-sm text-zinc-400">{userName ?? "Usuario"}</p>
-        <Badge className="mt-2 bg-emerald-600/20 text-emerald-300 hover:bg-emerald-600/20">
-          {roleLabel}
-        </Badge>
+    <aside className="sticky top-0 flex h-screen w-[18.5rem] shrink-0 flex-col border-r border-sidebar-border/80 bg-sidebar/95 text-sidebar-foreground backdrop-blur-xl">
+      <div className="border-b border-sidebar-border/75 px-4 py-4">
+        <div className="rounded-2xl border border-sidebar-border/80 bg-sidebar-accent/55 p-4 shadow-lg shadow-black/20">
+          <p className="text-[10px] uppercase tracking-[0.22em] text-sidebar-foreground/65">Guilda Maia</p>
+          <h1 className="mt-2 text-base font-semibold tracking-[-0.01em]">ERP + Guild Platform</h1>
+          <p className="mt-2 truncate text-sm text-sidebar-foreground/75">{userName ?? "Usuario"}</p>
+          <Badge className="mt-2 border border-emerald-400/20 bg-emerald-500/15 text-emerald-200 hover:bg-emerald-500/15">
+            {roleLabel}
+          </Badge>
+        </div>
       </div>
 
-      <nav className="flex-1 space-y-1 px-3 py-4">
+      <nav className="flex-1 space-y-1.5 overflow-y-auto px-3 py-4">
         {items.map((item) => {
           const Icon = item.icon;
           const isActive =
@@ -45,20 +47,29 @@ export function AdminSidebar({ userName, roleLabel, roleSlug, permissions }: Adm
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all",
                 isActive
-                  ? "bg-zinc-800 text-zinc-100"
-                  : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200",
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-lg shadow-sidebar-primary/20"
+                  : "text-sidebar-foreground/75 hover:bg-sidebar-accent/80 hover:text-sidebar-foreground",
               )}
             >
-              <Icon className="h-4 w-4" />
+              <span
+                className={cn(
+                  "inline-flex h-7 w-7 items-center justify-center rounded-lg border border-transparent transition-colors",
+                  isActive
+                    ? "border-white/20 bg-white/12"
+                    : "border-sidebar-border/55 bg-sidebar-accent/55 group-hover:border-sidebar-border/80",
+                )}
+              >
+                <Icon className="h-4 w-4" />
+              </span>
               <span>{item.label}</span>
             </Link>
           );
         })}
       </nav>
 
-      <div className="border-t border-zinc-800 p-3">
+      <div className="border-t border-sidebar-border/75 p-3">
         <SignOutButton />
       </div>
     </aside>

@@ -31,7 +31,7 @@ export function CashWithdrawalForm({ openSessions }: CashWithdrawalFormProps) {
         <select
           id="cashSessionId-withdrawal"
           name="cashSessionId"
-          className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs"
+          className="admin-native-select"
           defaultValue={openSessions[0]?.id}
           required
         >
@@ -60,3 +60,4 @@ export function CashWithdrawalForm({ openSessions }: CashWithdrawalFormProps) {
     </form>
   );
 }
+

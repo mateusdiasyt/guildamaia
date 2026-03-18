@@ -31,9 +31,30 @@ export default async function PdvPage() {
         description="Registro de vendas com divisao de pagamentos e baixa automatica de estoque."
       />
 
+      <section className="grid gap-4 md:grid-cols-3">
+        <Card size="sm">
+          <CardHeader className="pb-0">
+            <CardDescription>Caixas abertos</CardDescription>
+            <CardTitle className="text-2xl">{openSessions.length}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card size="sm">
+          <CardHeader className="pb-0">
+            <CardDescription>Produtos ativos para venda</CardDescription>
+            <CardTitle className="text-2xl">{products.length}</CardTitle>
+          </CardHeader>
+        </Card>
+        <Card size="sm">
+          <CardHeader className="pb-0">
+            <CardDescription>Vendas no historico recente</CardDescription>
+            <CardTitle className="text-2xl">{sales.length}</CardTitle>
+          </CardHeader>
+        </Card>
+      </section>
+
       {canManage ? (
         <Card>
-          <CardHeader>
+          <CardHeader className="border-b border-border/70 pb-4">
             <CardTitle>Nova venda</CardTitle>
             <CardDescription>
               Fluxo de venda com multiplos itens, desconto e pagamentos divididos por metodo.
@@ -47,13 +68,15 @@ export default async function PdvPage() {
                 </p>
                 <Link
                   href="/admin/cash"
-                  className="inline-flex h-8 items-center justify-center rounded-lg bg-primary px-2.5 text-sm font-medium text-primary-foreground"
+                  className="inline-flex h-9 items-center justify-center rounded-xl bg-primary px-3 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/25"
                 >
                   Abrir caixa agora
                 </Link>
               </div>
             ) : products.length === 0 ? (
-              <p className="text-sm text-zinc-600">Cadastre produtos ativos antes de registrar vendas.</p>
+              <p className="rounded-xl border border-border/80 bg-muted/35 px-3 py-2 text-sm text-muted-foreground">
+                Cadastre produtos ativos antes de registrar vendas.
+              </p>
             ) : (
               <CreateSaleForm
                 openSessions={openSessions.map((openSession) => ({
@@ -77,7 +100,7 @@ export default async function PdvPage() {
       ) : null}
 
       <Card>
-        <CardHeader>
+        <CardHeader className="border-b border-border/70 pb-4">
           <CardTitle>Vendas recentes</CardTitle>
           <CardDescription>{sales.length} venda(s) encontrada(s).</CardDescription>
         </CardHeader>

@@ -50,7 +50,7 @@ export function UpdateUserAccessForm({ users, roles, permissions }: UpdateUserAc
           <select
             id="userId-access"
             name="userId"
-            className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs"
+            className="admin-native-select"
             value={selectedUser?.id ?? ""}
             onChange={(event) => setSelectedUserId(event.target.value)}
             required
@@ -68,7 +68,7 @@ export function UpdateUserAccessForm({ users, roles, permissions }: UpdateUserAc
           <select
             id="roleId-access"
             name="roleId"
-            className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs"
+            className="admin-native-select"
             defaultValue={selectedUser?.roleId}
             key={`role-${selectedUser?.id}`}
             required
@@ -83,13 +83,13 @@ export function UpdateUserAccessForm({ users, roles, permissions }: UpdateUserAc
       </div>
 
       <div className="space-y-2">
-        <p className="text-sm font-medium text-zinc-900">Permissoes adicionais</p>
-        <p className="text-xs text-zinc-600">
+        <p className="text-sm font-medium text-foreground">Permissoes adicionais</p>
+        <p className="text-xs text-muted-foreground">
           Essas permissoes complementam o perfil base para excecoes operacionais.
         </p>
       </div>
 
-      <div className="grid gap-3 rounded-lg border border-zinc-200 p-3 md:grid-cols-2">
+      <div className="grid gap-3 rounded-xl border border-border/80 bg-background/75 p-3 md:grid-cols-2">
         {permissions.map((permission) => {
           const fieldId = `permission-${permission.id}`;
           const isChecked = selectedUser?.directPermissionIds.includes(permission.id) ?? false;
@@ -98,7 +98,7 @@ export function UpdateUserAccessForm({ users, roles, permissions }: UpdateUserAc
             <label
               key={permission.id}
               htmlFor={fieldId}
-              className="flex cursor-pointer items-start gap-3 rounded-md border border-zinc-200 px-3 py-2"
+              className="flex cursor-pointer items-start gap-3 rounded-lg border border-border/75 bg-card/65 px-3 py-2.5 transition-colors hover:border-border hover:bg-card"
             >
               <input
                 id={fieldId}
@@ -109,9 +109,9 @@ export function UpdateUserAccessForm({ users, roles, permissions }: UpdateUserAc
                 className="mt-0.5 h-4 w-4 rounded border-zinc-300 text-primary focus:ring-primary"
               />
               <span className="space-y-0.5">
-                <span className="block text-sm font-medium text-zinc-900">{permission.key}</span>
+                <span className="block text-sm font-medium text-foreground">{permission.key}</span>
                 {permission.description ? (
-                  <span className="block text-xs text-zinc-600">{permission.description}</span>
+                  <span className="block text-xs text-muted-foreground">{permission.description}</span>
                 ) : null}
               </span>
             </label>
@@ -126,3 +126,4 @@ export function UpdateUserAccessForm({ users, roles, permissions }: UpdateUserAc
     </form>
   );
 }
+

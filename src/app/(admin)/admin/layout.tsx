@@ -17,23 +17,28 @@ export default async function AdminLayout({
   const roleLabel = roleSlugToLabel(session.user.roleSlug);
 
   return (
-    <div className="flex min-h-screen bg-zinc-100/50">
-      <div className="hidden md:block">
-        <AdminSidebar
-          userName={session.user.name}
-          roleLabel={roleLabel}
-          roleSlug={session.user.roleSlug}
-          permissions={session.user.permissions}
-        />
-      </div>
+    <div className="relative min-h-screen overflow-hidden bg-background">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_15%,color-mix(in_oklab,var(--primary)_12%,transparent),transparent_30%),radial-gradient(circle_at_88%_4%,color-mix(in_oklab,var(--accent)_24%,transparent),transparent_36%),radial-gradient(circle_at_80%_88%,color-mix(in_oklab,var(--primary)_8%,transparent),transparent_30%)]" />
+      <div className="relative flex min-h-screen">
+        <div className="hidden md:block">
+          <AdminSidebar
+            userName={session.user.name}
+            roleLabel={roleLabel}
+            roleSlug={session.user.roleSlug}
+            permissions={session.user.permissions}
+          />
+        </div>
 
-      <div className="flex min-h-screen flex-1 flex-col">
-        <AdminHeader
-          userName={session.user.name}
-          roleSlug={session.user.roleSlug}
-          permissions={session.user.permissions}
-        />
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+        <div className="flex min-h-screen flex-1 flex-col">
+          <AdminHeader
+            userName={session.user.name}
+            roleSlug={session.user.roleSlug}
+            permissions={session.user.permissions}
+          />
+          <main className="flex-1 px-4 pb-8 pt-5 md:px-8 md:pt-6">
+            <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-6">{children}</div>
+          </main>
+        </div>
       </div>
     </div>
   );
