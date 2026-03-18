@@ -18,6 +18,9 @@ const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
   timeStyle: "short",
 });
 
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+
 export default async function PdvPage() {
   const session = await requirePermission(PERMISSIONS.PDV_VIEW);
   const { openSessions, products, sales, customers, openComandas } = await getPdvData();
