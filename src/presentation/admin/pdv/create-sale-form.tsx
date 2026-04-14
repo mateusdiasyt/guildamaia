@@ -7,6 +7,7 @@ import { PaymentMethod } from "@prisma/client";
 import {
   Beef,
   Candy,
+  Check,
   Loader2,
   Package2,
   Plus,
@@ -22,7 +23,7 @@ import {
   GlassWater,
   Grid2x2,
 } from "lucide-react";
-import { useActionState, useDeferredValue, useState, useTransition } from "react";
+import { useActionState, useDeferredValue, useRef, useState, useTransition } from "react";
 
 import { ActionFeedback } from "@/components/admin/action-feedback";
 import { FormSubmitButton } from "@/components/admin/form-submit-button";
@@ -159,6 +160,10 @@ function formatMoneyInput(valueInCents: number) {
   return (valueInCents / 100).toFixed(2);
 }
 
+function normalizeDigits(value: string) {
+  return value.replace(/\D/g, "");
+}
+
 function productAvatarLabel(name: string) {
   return name
     .split(" ")
@@ -247,6 +252,8 @@ export function CreateSaleForm({
   canManage,
   onClose,
 }: CreateSaleFormProps) {
+  const currentCustomerLabel =
+    selectedComanda.customerName || (selectedComanda.isWalkIn ? "Comanda avulsa" : "Sem cliente");
   const [addState, setAddState] = useState(initialActionState);
   const [updateItemState, updateItemFormAction] = useActionState(updateComandaItemAction, initialActionState);
   const [removeItemState, removeItemFormAction] = useActionState(removeComandaItemAction, initialActionState);
@@ -264,6 +271,10 @@ export function CreateSaleForm({
   const [cashReceived, setCashReceived] = useState("");
   const [paymentLineSeed, setPaymentLineSeed] = useState(1);
   const [optimisticItems, setOptimisticItems] = useState(selectedComanda.items);
+  const [customerQuery, setCustomerQuery] = useState(currentCustomerLabel);
+  const [isCustomerSearchOpen, setIsCustomerSearchOpen] = useState(false);
+  const customerFormRef = useRef<HTMLFormElement>(null);
+  const customerIdInputRef = useRef<HTMLInputElement>(null);
   const [paymentLines, setPaymentLines] = useState<PaymentLine[]>([
     {
       id: 1,
@@ -292,8 +303,8 @@ export function CreateSaleForm({
   const cashReceivedInCents = Math.max(0, parseMoneyToCents(cashReceived));
   const changeInCents = Math.max(cashReceivedInCents - cashPaymentTotalInCents, 0);
   const paymentDifferenceInCents = totalInCents - paymentsTotalInCents;
-  const currentCustomerLabel =
-    selectedComanda.customerName || (selectedComanda.isWalkIn ? "Comanda avulsa" : "Sem cliente");
+  const normalizedCustomerQuery = customerQuery.trim().toLowerCase();
+  const normalizedCustomerQueryDigits = normalizeDigits(customerQuery);
   const categoryFilters = products.reduce<CategoryFilterOption[]>((categories, product) => {
     if (categories.some((category) => category.id === product.category.id)) {
       return categories;
@@ -332,6 +343,18 @@ export function CreateSaleForm({
       },
     ]),
   );
+  const filteredCustomers = customers
+    .filter((customer) => {
+      if (!normalizedCustomerQuery) {
+        return true;
+      }
+
+      const matchesName = customer.fullName.toLowerCase().includes(normalizedCustomerQuery);
+      const matchesDocument = normalizeDigits(customer.documentNumber).includes(normalizedCustomerQueryDigits);
+
+      return matchesName || (normalizedCustomerQueryDigits.length > 0 && matchesDocument);
+    })
+    .slice(0, 8);
 
   function updatePaymentLine(id: number, field: "method" | "amount", value: string) {
     setPaymentLines((currentLines) =>
@@ -433,6 +456,17 @@ export function CreateSaleForm({
     });
   }
 
+  function submitCustomerSelection(customerId: string | null, label: string) {
+    if (!customerIdInputRef.current || !customerFormRef.current) {
+      return;
+    }
+
+    customerIdInputRef.current.value = customerId ?? "";
+    setCustomerQuery(label);
+    setIsCustomerSearchOpen(false);
+    customerFormRef.current.requestSubmit();
+  }
+
   return (
     <div className="space-y-4">
       <header className="flex flex-wrap items-start justify-between gap-4 rounded-[1.4rem] border border-border/75 bg-background/38 px-4 py-3.5">
@@ -448,11 +482,83 @@ export function CreateSaleForm({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="inline-flex h-10 items-center gap-2 rounded-full border border-border/70 bg-background/68 px-3 text-sm font-medium text-foreground">
-            <UserRound className="h-4 w-4 text-primary" />
-            <span>Cliente da comanda</span>
-          </div>
+        <div className="flex w-full items-start justify-end gap-2 sm:w-auto">
+          {canManage ? (
+            <div className="relative w-full max-w-md">
+              <form ref={customerFormRef} action={customerFormAction}>
+                <input type="hidden" name="comandaId" value={selectedComanda.id} />
+                <input ref={customerIdInputRef} type="hidden" name="customerId" defaultValue={selectedComanda.customerId ?? ""} />
+                <div className="relative">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
+                  <Input
+                    value={customerQuery}
+                    onChange={(event) => {
+                      setCustomerQuery(event.target.value);
+                      setIsCustomerSearchOpen(true);
+                    }}
+                    onFocus={() => setIsCustomerSearchOpen(true)}
+                    onBlur={() => {
+                      window.setTimeout(() => setIsCustomerSearchOpen(false), 120);
+                    }}
+                    placeholder="Buscar cliente ou CPF"
+                    className="h-10 rounded-full border-border/70 bg-background/68 pl-9 pr-10 text-sm"
+                    disabled={isUpdatingCustomer}
+                    autoComplete="off"
+                  />
+                  {isUpdatingCustomer ? (
+                    <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+                  ) : null}
+                </div>
+              </form>
+
+              {isCustomerSearchOpen ? (
+                <div className="absolute right-0 top-[calc(100%+0.55rem)] z-20 w-full overflow-hidden rounded-[1.25rem] border border-border/80 bg-popover/96 shadow-2xl shadow-black/30 backdrop-blur">
+                  <div className="admin-scrollbar max-h-72 overflow-y-auto p-2">
+                    <button
+                      type="button"
+                      className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-background/55"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => submitCustomerSelection(null, "Comanda avulsa")}
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-foreground">Comanda avulsa</p>
+                        <p className="text-xs text-muted-foreground">Sem cliente vinculado</p>
+                      </div>
+                      {!selectedComanda.customerId ? <Check className="h-4 w-4 text-primary" /> : null}
+                    </button>
+
+                    {filteredCustomers.length === 0 ? (
+                      <div className="px-3 py-4 text-sm text-muted-foreground">Nenhum cliente encontrado.</div>
+                    ) : (
+                      filteredCustomers.map((customer) => (
+                        <button
+                          key={customer.id}
+                          type="button"
+                          className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-background/55"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => submitCustomerSelection(customer.id, customer.fullName)}
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium text-foreground">{customer.fullName}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {customer.documentType}: {customer.documentNumber}
+                            </p>
+                          </div>
+                          {selectedComanda.customerId === customer.id ? <Check className="h-4 w-4 text-primary" /> : null}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <div className="inline-flex h-10 items-center gap-2 rounded-full border border-border/70 bg-background/68 px-3 text-sm font-medium text-foreground">
+              <UserRound className="h-4 w-4 text-primary" />
+              <span>{currentCustomerLabel}</span>
+            </div>
+          )}
+
           <Button
             type="button"
             variant="ghost"
@@ -466,46 +572,10 @@ export function CreateSaleForm({
         </div>
       </header>
 
+      <ActionFeedback state={customerState} />
+
       <div className="grid gap-4 2xl:grid-cols-[minmax(0,1.18fr)_minmax(340px,368px)]">
         <div className="space-y-4">
-          <section className="admin-form-section space-y-4">
-            {!canManage ? (
-              <div className="space-y-2">
-                <Label>Cliente</Label>
-                <p className="text-sm text-muted-foreground">{currentCustomerLabel}</p>
-              </div>
-            ) : (
-              <form action={customerFormAction} className="space-y-3">
-                <input type="hidden" name="comandaId" value={selectedComanda.id} />
-
-                <div className="space-y-2">
-                  <Label htmlFor={`customerId-${selectedComanda.id}`}>Cliente</Label>
-                  <select
-                    id={`customerId-${selectedComanda.id}`}
-                    name="customerId"
-                    className="admin-native-select"
-                    defaultValue={selectedComanda.customerId ?? ""}
-                    disabled={isUpdatingCustomer}
-                    onChange={(event) => event.currentTarget.form?.requestSubmit()}
-                  >
-                    <option value="">Comanda avulsa</option>
-                    {customers.map((customer) => (
-                      <option key={customer.id} value={customer.id}>
-                        {customer.fullName} ({customer.documentType}: {customer.documentNumber})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {isUpdatingCustomer ? (
-                  <p className="text-xs text-muted-foreground">Salvando cliente...</p>
-                ) : null}
-
-                <ActionFeedback state={customerState} />
-              </form>
-            )}
-          </section>
-
           <section className="admin-form-section space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>

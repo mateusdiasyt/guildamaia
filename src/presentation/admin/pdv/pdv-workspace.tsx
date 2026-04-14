@@ -157,7 +157,7 @@ export function PdvWorkspace({
         <Card className="animate-in fade-in-0 slide-in-from-right-5 duration-300 xl:sticky xl:top-24">
           <CardContent className="pt-5">
             <CreateSaleForm
-              key={`${selectedComanda.id}-${selectedComanda.itemCount}-${selectedComanda.subtotalAmount}`}
+              key={`${selectedComanda.id}-${selectedComanda.customerId ?? "walkin"}-${selectedComanda.itemCount}-${selectedComanda.subtotalAmount}`}
               canManage={canManage}
               customers={customers}
               openSessions={openSessions}
