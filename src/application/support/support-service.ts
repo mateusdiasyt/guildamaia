@@ -4,6 +4,7 @@ import { createSupportTicketSchema, updateSupportTicketStatusSchema } from "@/do
 import { createAuditLog } from "@/infrastructure/db/repositories/audit-log-repository";
 import {
   createSupportTicket,
+  isMissingSupportTicketTableError,
   listSupportTickets,
   updateSupportTicketStatus,
 } from "@/infrastructure/db/repositories/support-ticket-repository";
@@ -17,11 +18,35 @@ function createTicketNumber() {
   return `SUP-${datePart}-${randomPart}`;
 }
 
+function ensureSupportStorageAvailable(error: unknown): never {
+  if (isMissingSupportTicketTableError(error)) {
+    throw new Error("Modulo de suporte aguardando sincronizacao do banco. Rode o db:push no ambiente atual.");
+  }
+
+  throw error instanceof Error ? error : new Error("Nao foi possivel carregar o modulo de suporte.");
+}
+
 export async function getSupportTickets(filters?: {
   search?: string;
   status?: SupportTicketStatus;
 }) {
-  return listSupportTickets(filters);
+  try {
+    const tickets = await listSupportTickets(filters);
+    return {
+      tickets,
+      setupPending: false,
+    };
+  } catch (error) {
+    if (isMissingSupportTicketTableError(error)) {
+      console.warn("[SUPPORT] Tabela SupportTicket ainda nao existe neste banco.");
+      return {
+        tickets: [],
+        setupPending: true,
+      };
+    }
+
+    throw error;
+  }
 }
 
 export async function createSupportTicketRecord(input: FormData, actor: { id?: string; name: string }) {
@@ -31,14 +56,20 @@ export async function createSupportTicketRecord(input: FormData, actor: { id?: s
     priority: input.get("priority"),
   });
 
-  const created = await createSupportTicket({
-    ticketNumber: createTicketNumber(),
-    title: parsed.title.trim(),
-    description: parsed.description.trim(),
-    priority: parsed.priority,
-    createdById: actor.id,
-    createdByName: actor.name,
-  });
+  let created: Awaited<ReturnType<typeof createSupportTicket>>;
+
+  try {
+    created = await createSupportTicket({
+      ticketNumber: createTicketNumber(),
+      title: parsed.title.trim(),
+      description: parsed.description.trim(),
+      priority: parsed.priority,
+      createdById: actor.id,
+      createdByName: actor.name,
+    });
+  } catch (error) {
+    ensureSupportStorageAvailable(error);
+  }
 
   await createAuditLog({
     userId: actor.id,
@@ -59,12 +90,18 @@ export async function updateSupportTicketStatusRecord(input: FormData, actor: { 
     status: input.get("status"),
   });
 
-  const updated = await updateSupportTicketStatus({
-    ticketId: parsed.ticketId,
-    status: parsed.status,
-    updatedById: actor.id,
-    updatedByName: actor.name,
-  });
+  let updated: Awaited<ReturnType<typeof updateSupportTicketStatus>>;
+
+  try {
+    updated = await updateSupportTicketStatus({
+      ticketId: parsed.ticketId,
+      status: parsed.status,
+      updatedById: actor.id,
+      updatedByName: actor.name,
+    });
+  } catch (error) {
+    ensureSupportStorageAvailable(error);
+  }
 
   await createAuditLog({
     userId: actor.id,

@@ -78,7 +78,7 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
   const { q, status } = await searchParams;
   const search = q?.trim() || undefined;
   const statusFilter = parseStatusFilter(status);
-  const tickets = await getSupportTickets({
+  const { tickets, setupPending } = await getSupportTickets({
     search,
     status: statusFilter,
   });
@@ -100,7 +100,14 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <CreateSupportTicketForm />
+            {setupPending ? (
+              <div className="rounded-2xl border border-amber-400/30 bg-amber-400/8 px-4 py-4 text-sm text-amber-100">
+                O modulo de suporte ja esta no painel, mas o banco deste ambiente ainda nao recebeu a tabela
+                `SupportTicket`. Depois do `db:push`, os tickets passam a funcionar aqui normalmente.
+              </div>
+            ) : (
+              <CreateSupportTicketForm />
+            )}
           </CardContent>
         </Card>
 
@@ -110,6 +117,12 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
             <CardDescription>{tickets.length} ticket(s) encontrado(s).</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {setupPending ? (
+              <div className="rounded-2xl border border-amber-400/30 bg-amber-400/8 px-4 py-4 text-sm text-amber-100">
+                Os tickets ainda nao podem ser consultados neste ambiente porque a tabela nao existe no banco atual.
+              </div>
+            ) : null}
+
             <form method="GET" className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px_auto_auto]">
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -142,11 +155,11 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
               </Link>
             </form>
 
-            {tickets.length === 0 ? (
+            {!setupPending && tickets.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border/75 bg-background/32 px-4 py-8 text-center text-sm text-muted-foreground">
                 Nenhum ticket registrado com este filtro.
               </div>
-            ) : (
+            ) : !setupPending ? (
               <div className="space-y-3">
                 {tickets.map((ticket) => (
                   <div
@@ -191,7 +204,7 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
                   </div>
                 ))}
               </div>
-            )}
+            ) : null}
           </CardContent>
         </Card>
       </section>

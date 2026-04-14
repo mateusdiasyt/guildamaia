@@ -1,4 +1,4 @@
-import { SupportTicketPriority, SupportTicketStatus } from "@prisma/client";
+import { Prisma, SupportTicketPriority, SupportTicketStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 
@@ -6,6 +6,19 @@ type ListSupportTicketsFilters = {
   search?: string;
   status?: SupportTicketStatus;
 };
+
+export function isMissingSupportTicketTableError(error: unknown) {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    return error.code === "P2021" && String(error.meta?.table ?? "").includes("SupportTicket");
+  }
+
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+    return message.includes("supportticket") && message.includes("does not exist");
+  }
+
+  return false;
+}
 
 export async function listSupportTickets(filters?: ListSupportTicketsFilters) {
   return prisma.supportTicket.findMany({
