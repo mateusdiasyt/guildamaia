@@ -6,7 +6,6 @@ import {
   ContactRound,
   Receipt,
   Package,
-  PackagePlus,
   ShieldUser,
   Store,
   Target,
@@ -89,11 +88,5 @@ export const adminNavigation: AdminNavigationItem[] = [
     href: "/admin/metas",
     icon: Target,
     permission: PERMISSIONS.DASHBOARD_VIEW,
-  },
-  {
-    label: "Movimentar Estoque",
-    href: "/admin/stock#novo-registro",
-    icon: PackagePlus,
-    permission: PERMISSIONS.STOCK_MANAGE,
   },
 ];
