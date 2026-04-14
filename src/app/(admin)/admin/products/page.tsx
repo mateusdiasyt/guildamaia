@@ -193,7 +193,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 min-[1750px]:grid-cols-5">
             {category.products.map((product) => {
               const isLowStock = product.currentStock <= product.minStock;
               const isOutOfStock = product.currentStock <= 0;

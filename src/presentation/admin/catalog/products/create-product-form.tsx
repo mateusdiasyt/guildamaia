@@ -3,10 +3,12 @@
 import Image from "next/image";
 import { RecordStatus } from "@prisma/client";
 import { ImageIcon } from "lucide-react";
+import type { ChangeEvent } from "react";
 import { useActionState, useEffect, useState } from "react";
 
 import { ActionFeedback } from "@/components/admin/action-feedback";
 import { FormSubmitButton } from "@/components/admin/form-submit-button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -79,6 +81,39 @@ function ProductImagePreview({
   );
 }
 
+async function buildImagePreviewDataUrl(file: File) {
+  const imageBitmapUrl = URL.createObjectURL(file);
+
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const nextImage = new window.Image();
+      nextImage.onload = () => resolve(nextImage);
+      nextImage.onerror = () => reject(new Error("Nao foi possivel carregar a imagem selecionada."));
+      nextImage.src = imageBitmapUrl;
+    });
+
+    const maxWidth = 1200;
+    const maxHeight = 1200;
+    const ratio = Math.min(maxWidth / image.width, maxHeight / image.height, 1);
+    const targetWidth = Math.max(1, Math.round(image.width * ratio));
+    const targetHeight = Math.max(1, Math.round(image.height * ratio));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+
+    const context = canvas.getContext("2d");
+    if (!context) {
+      throw new Error("Nao foi possivel preparar a imagem selecionada.");
+    }
+
+    context.drawImage(image, 0, 0, targetWidth, targetHeight);
+    return canvas.toDataURL("image/webp", 0.82);
+  } finally {
+    URL.revokeObjectURL(imageBitmapUrl);
+  }
+}
+
 export function CreateProductForm({
   action,
   categories,
@@ -89,6 +124,8 @@ export function CreateProductForm({
 }: ProductFormProps) {
   const [state, formAction] = useActionState(action, initialActionState);
   const [imagePreviewUrl, setImagePreviewUrl] = useState(initialData?.imageUrl ?? "");
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [fileInputKey, setFileInputKey] = useState(0);
 
   useEffect(() => {
     if (state.status === "success") {
@@ -96,21 +133,60 @@ export function CreateProductForm({
     }
   }, [onSuccess, state.status]);
 
+  async function handleImageFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      setImageError("Selecione um arquivo de imagem valido.");
+      return;
+    }
+
+    try {
+      setImageError(null);
+      const previewUrl = await buildImagePreviewDataUrl(file);
+
+      if (previewUrl.length > 900_000) {
+        throw new Error("A imagem ficou muito grande. Use um arquivo menor para continuar.");
+      }
+
+      setImagePreviewUrl(previewUrl);
+    } catch (error) {
+      setImageError(error instanceof Error ? error.message : "Nao foi possivel processar a imagem.");
+    }
+  }
+
+  function handleClearImage() {
+    setImagePreviewUrl("");
+    setImageError(null);
+    setFileInputKey((currentValue) => currentValue + 1);
+  }
+
   return (
     <form action={formAction} className="grid gap-5 xl:grid-cols-[280px_minmax(0,1fr)]">
       <aside className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="imageUrl">Imagem do produto</Label>
+          <Label htmlFor="imageFile">Imagem do produto</Label>
+          <input type="hidden" name="imageUrl" value={imagePreviewUrl} />
           <Input
-            id="imageUrl"
-            name="imageUrl"
-            placeholder="https://... ou /imagens/produto.png"
-            defaultValue={initialData?.imageUrl ?? ""}
-            onChange={(event) => setImagePreviewUrl(event.target.value)}
+            key={fileInputKey}
+            id="imageFile"
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/jpg"
+            onChange={handleImageFileChange}
           />
           <p className="text-xs text-muted-foreground">
-            Use uma URL publica ou um caminho local servido pelo projeto.
+            Envie um arquivo de imagem. A imagem sera otimizada automaticamente.
           </p>
+          {imageError ? <p className="text-xs text-destructive">{imageError}</p> : null}
+          {imagePreviewUrl ? (
+            <Button type="button" variant="outline" size="sm" onClick={handleClearImage}>
+              Remover imagem
+            </Button>
+          ) : null}
         </div>
 
         <ProductImagePreview imageUrl={imagePreviewUrl} name={initialData?.name ?? "Produto"} />

@@ -3,6 +3,7 @@ import { z } from "zod";
 
 const decimalRegex = /^\d+(\.\d{1,2})?$/;
 const imagePathRegex = /^(https?:\/\/.+|\/.+)$/i;
+const imageDataUrlRegex = /^data:image\/[a-zA-Z0-9.+-]+;base64,[a-zA-Z0-9+/=]+$/;
 
 export const createCategorySchema = z.object({
   name: z.string().min(2, "Nome da categoria obrigatorio"),
@@ -29,10 +30,13 @@ export const createProductSchema = z.object({
   description: z.string().max(800).optional().or(z.literal("")),
   imageUrl: z
     .string()
-    .max(500, "Imagem muito longa")
+    .max(4_000_000, "Imagem muito longa")
     .optional()
     .or(z.literal(""))
-    .refine((value) => !value || imagePathRegex.test(value), "Informe uma URL valida ou caminho iniciando com /"),
+    .refine(
+      (value) => !value || imagePathRegex.test(value) || imageDataUrlRegex.test(value),
+      "Informe uma imagem valida.",
+    ),
   categoryId: z.string().min(1, "Categoria obrigatoria"),
   supplierId: z.string().optional().or(z.literal("")),
   costPrice: z.string().regex(decimalRegex, "Custo invalido"),
