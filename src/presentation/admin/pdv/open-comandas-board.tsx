@@ -60,7 +60,7 @@ export function OpenComandasBoard({
                 disabled={!canManage}
                 onClick={() => onRequestCreateComanda(slotNumber)}
                 className={cn(
-                  "group flex aspect-[1/0.8] min-h-[4.5rem] flex-col rounded-[0.95rem] border border-dashed border-border/75 bg-background/24 p-2 text-left transition-all duration-200",
+                  "group flex h-[4.45rem] w-full flex-col rounded-[0.95rem] border border-dashed border-border/75 bg-background/24 p-2 text-left transition-all duration-200",
                   "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/25",
                   canManage
                     ? "hover:-translate-y-0.5 hover:border-primary/35 hover:bg-background/48"
@@ -88,10 +88,10 @@ export function OpenComandasBoard({
               aria-pressed={isSelected}
               onClick={() => onSelectComanda(comanda.id)}
               className={cn(
-                "group relative flex aspect-[1/0.8] min-h-[4.5rem] flex-col rounded-[0.95rem] border p-2 text-left transition-all duration-200",
+                "group relative flex h-[4.45rem] w-full flex-col rounded-[0.95rem] border p-2 text-left transition-all duration-200",
                 "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/25",
                 isSelected
-                  ? "border-primary/70 bg-primary/12 shadow-[0_18px_34px_-26px_color-mix(in_oklab,var(--primary)_82%,transparent)]"
+                  ? "border-primary/70 bg-primary/12 shadow-[0_12px_24px_-24px_color-mix(in_oklab,var(--primary)_82%,transparent)]"
                   : "border-border/75 bg-card/74 hover:-translate-y-0.5 hover:border-primary/30 hover:bg-card/92",
               )}
             >
@@ -134,7 +134,7 @@ export function OpenComandasBoard({
           <button
             type="button"
             onClick={onAddSlot}
-            className="group flex aspect-[1/0.8] min-h-[4.5rem] flex-col items-center justify-center rounded-[0.95rem] border border-dashed border-primary/35 bg-primary/6 p-2 text-center transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/25"
+            className="group flex h-[4.45rem] w-full flex-col items-center justify-center rounded-[0.95rem] border border-dashed border-primary/35 bg-primary/6 p-2 text-center transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/25"
           >
             <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-primary/28 bg-primary/12 text-primary">
               <Plus className="h-4 w-4" />
