@@ -40,7 +40,7 @@ function parseCashReceived(value?: string) {
 export default async function PdvPage({ searchParams }: PdvPageProps) {
   const session = await requirePermission(PERMISSIONS.PDV_VIEW);
   const { receipt, cashReceived } = await searchParams;
-  const { openSessions, products, sales, customers, openComandas } = await getPdvData();
+  const { openSessions, products, sales, customers, openComandas, issues } = await getPdvData();
   const receiptData = receipt ? await getSaleReceiptData(receipt) : null;
   const canManage = hasPermission(session.user.permissions, PERMISSIONS.PDV_MANAGE);
   const canCancel = hasPermission(session.user.permissions, PERMISSIONS.PDV_CANCEL);
@@ -104,6 +104,17 @@ export default async function PdvPage({ searchParams }: PdvPageProps) {
 
   return (
     <div className="space-y-6">
+      {issues.length > 0 ? (
+        <Card className="border-amber-400/30 bg-amber-400/8">
+          <CardContent className="space-y-2 pt-5">
+            <p className="text-sm font-semibold text-amber-100">O PDV carregou com dados parciais.</p>
+            <p className="text-sm text-amber-50/90">
+              Houve falha ao consultar: {issues.join(", ")}. A tela continua acessivel para evitar travamento total.
+            </p>
+          </CardContent>
+        </Card>
+      ) : null}
+
       {receiptData ? (
         <ReceiptPreviewCard sale={receiptData} cashReceived={parseCashReceived(cashReceived)} />
       ) : null}

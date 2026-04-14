@@ -96,20 +96,48 @@ function parsePayments(formData: FormData) {
   });
 }
 
+async function settlePdvSection<T>(label: string, loader: () => Promise<T>, fallback: T) {
+  try {
+    const data = await loader();
+    return { data, issue: null as string | null };
+  } catch (error) {
+    console.error(`[PDV] Falha ao carregar ${label}:`, error);
+    return { data: fallback, issue: label };
+  }
+}
+
 export async function getPdvData() {
-  const [openSessions, products, sales, customers, openComandas] = await Promise.all([
-    listPdvOpenSessions(),
-    listPdvProductOptions(),
-    listRecentSales(),
-    listCustomerOptions(),
-    listOpenComandas(),
+  const [openSessionsResult, productsResult, salesResult, customersResult, openComandasResult] = await Promise.all([
+    settlePdvSection("sessoes de caixa", () => listPdvOpenSessions(), []),
+    settlePdvSection("produtos", () => listPdvProductOptions(), []),
+    settlePdvSection("vendas recentes", () => listRecentSales(), []),
+    settlePdvSection("clientes", () => listCustomerOptions(), []),
+    settlePdvSection("comandas abertas", () => listOpenComandas(), []),
   ]);
 
-  return { openSessions, products, sales, customers, openComandas };
+  return {
+    openSessions: openSessionsResult.data,
+    products: productsResult.data,
+    sales: salesResult.data,
+    customers: customersResult.data,
+    openComandas: openComandasResult.data,
+    issues: [
+      openSessionsResult.issue,
+      productsResult.issue,
+      salesResult.issue,
+      customersResult.issue,
+      openComandasResult.issue,
+    ].filter(Boolean) as string[],
+  };
 }
 
 export async function getSaleReceiptData(saleId: string) {
-  return getSaleReceiptById(saleId);
+  try {
+    return await getSaleReceiptById(saleId);
+  } catch (error) {
+    console.error("[PDV] Falha ao carregar comprovante:", error);
+    return null;
+  }
 }
 
 export async function createSaleRecord(input: FormData, actorId: string) {
