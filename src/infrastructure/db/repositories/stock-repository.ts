@@ -72,12 +72,16 @@ export async function registerStockMovement(data: RegisterStockMovementInput) {
       },
     });
 
-    await tx.product.update({
+    const stockUpdate = await tx.product.updateMany({
       where: { id: product.id },
       data: {
         currentStock: resultingStock,
       },
     });
+
+    if (stockUpdate.count === 0) {
+      throw new Error("Produto nao encontrado para atualizar o estoque.");
+    }
 
     return movement;
   });
