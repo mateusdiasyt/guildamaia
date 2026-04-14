@@ -173,6 +173,28 @@ function ProductThumb({
   );
 }
 
+function ProductCardMedia({
+  name,
+  imageUrl,
+}: {
+  name: string;
+  imageUrl?: string | null;
+}) {
+  if (!imageUrl) {
+    return (
+      <div className="flex aspect-square w-full items-center justify-center rounded-[1.4rem] border border-dashed border-border/75 bg-background/38 text-xl font-semibold tracking-[-0.04em] text-muted-foreground">
+        {productAvatarLabel(name)}
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative aspect-square w-full overflow-hidden rounded-[1.4rem] border border-border/75 bg-background/30">
+      <Image src={imageUrl} alt={name} fill className="object-cover" unoptimized />
+    </div>
+  );
+}
+
 export function CreateSaleForm({
   customers,
   openSessions,
@@ -227,11 +249,7 @@ export function CreateSaleForm({
       return true;
     }
 
-    return [
-      product.name,
-      product.sku,
-      product.category.name,
-    ]
+    return [product.name, product.category.name]
       .join(" ")
       .toLowerCase()
       .includes(normalizedSearch);
@@ -378,16 +396,14 @@ export function CreateSaleForm({
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-foreground">Produtos</p>
-                <p className="text-xs text-muted-foreground">
-                  Lista por categoria, com imagem, estoque e adicao rapida na comanda.
-                </p>
+                <p className="text-xs text-muted-foreground">Cards visuais por categoria com adicao rapida na comanda.</p>
               </div>
               <div className="relative w-full max-w-sm">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   value={productSearch}
                   onChange={(event) => setProductSearch(event.target.value)}
-                  placeholder="Buscar produto, SKU ou categoria"
+                  placeholder="Buscar produto ou categoria"
                   className="pl-9"
                 />
               </div>
@@ -408,7 +424,7 @@ export function CreateSaleForm({
                       <span className="text-xs text-muted-foreground">{group.products.length} item(ns)</span>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                       {group.products.map((product) => {
                         const currentItem = comandaItemMap.get(product.id);
 
@@ -416,52 +432,50 @@ export function CreateSaleForm({
                           <form
                             key={product.id}
                             action={addFormAction}
-                            className="grid gap-3 rounded-[1.35rem] border border-border/75 bg-background/30 p-3 sm:grid-cols-[auto_minmax(0,1fr)_92px_auto] sm:items-center"
+                            className="group relative flex h-full flex-col gap-3 rounded-[1.45rem] border border-border/75 bg-background/30 p-3 transition-all duration-200 hover:border-primary/30 hover:bg-background/42"
                           >
                             <input type="hidden" name="comandaId" value={selectedComanda.id} />
                             <input type="hidden" name="productId" value={product.id} />
 
-                            <ProductThumb name={product.name} imageUrl={product.imageUrl} />
+                            {currentItem ? (
+                              <div className="absolute right-3 top-3 z-10 rounded-full border border-primary/30 bg-primary/12 px-2 py-0.5 text-[10px] font-medium text-primary">
+                                {currentItem.quantity} na comanda
+                              </div>
+                            ) : null}
 
-                            <div className="min-w-0">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <p className="truncate text-sm font-medium text-foreground">{product.name}</p>
-                                <span className="rounded-full border border-border/70 px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                                  {product.sku}
-                                </span>
-                              </div>
-                              <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                                <span>{formatCurrency(product.salePrice)}</span>
-                                <span>•</span>
-                                <span>{product.currentStock} em estoque</span>
-                                {currentItem ? (
-                                  <>
-                                    <span>•</span>
-                                    <span>{currentItem.quantity} na comanda</span>
-                                  </>
-                                ) : null}
-                              </div>
-                            </div>
+                            <ProductCardMedia name={product.name} imageUrl={product.imageUrl} />
 
                             <div className="space-y-1">
-                              <Label htmlFor={`add-quantity-${selectedComanda.id}-${product.id}`}>Qtd</Label>
-                              <Input
-                                id={`add-quantity-${selectedComanda.id}-${product.id}`}
-                                name="quantity"
-                                type="number"
-                                min={1}
-                                step={1}
-                                defaultValue={1}
-                                required
-                              />
+                              <p className="line-clamp-2 min-h-10 text-sm font-semibold leading-5 text-foreground">
+                                {product.name}
+                              </p>
+                              <div className="space-y-0.5 text-xs text-muted-foreground">
+                                <p className="font-medium text-foreground/88">{formatCurrency(product.salePrice)}</p>
+                                <p>{product.currentStock} em estoque</p>
+                              </div>
                             </div>
 
-                            <div className="sm:justify-self-end">
+                            <div className="mt-auto flex items-end gap-2">
+                              <div className="min-w-0 flex-1 space-y-1">
+                                <Label htmlFor={`add-quantity-${selectedComanda.id}-${product.id}`}>Qtd</Label>
+                                <Input
+                                  id={`add-quantity-${selectedComanda.id}-${product.id}`}
+                                  name="quantity"
+                                  type="number"
+                                  min={1}
+                                  step={1}
+                                  defaultValue={1}
+                                  required
+                                />
+                              </div>
                               {canManage ? (
-                                <FormSubmitButton>Adicionar</FormSubmitButton>
+                                <Button type="submit" size="icon-sm" className="shrink-0 rounded-2xl">
+                                  <Plus className="h-4 w-4" />
+                                  <span className="sr-only">Adicionar produto na comanda</span>
+                                </Button>
                               ) : (
-                                <Button type="button" variant="outline" disabled>
-                                  Somente leitura
+                                <Button type="button" variant="outline" size="icon-sm" className="shrink-0 rounded-2xl" disabled>
+                                  <Plus className="h-4 w-4" />
                                 </Button>
                               )}
                             </div>
