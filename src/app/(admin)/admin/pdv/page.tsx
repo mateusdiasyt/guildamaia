@@ -41,8 +41,18 @@ function parseCashReceived(value?: string) {
 export default async function PdvPage({ searchParams }: PdvPageProps) {
   const session = await requirePermission(PERMISSIONS.PDV_VIEW);
   const { receipt, cashReceived } = await searchParams;
-  const { openSessions, products, sales, customers, openComandas, issues } = await getPdvData();
   const receiptData = receipt ? await getSaleReceiptData(receipt) : null;
+
+  if (receipt && receiptData) {
+    return (
+      <div className="space-y-6">
+        <ReceiptPrintMode />
+        <ReceiptPreviewCard sale={receiptData} cashReceived={parseCashReceived(cashReceived)} />
+      </div>
+    );
+  }
+
+  const { openSessions, products, sales, customers, openComandas, issues } = await getPdvData();
   const canManage = hasPermission(session.user.permissions, PERMISSIONS.PDV_MANAGE);
   const canCancel = hasPermission(session.user.permissions, PERMISSIONS.PDV_CANCEL);
 
@@ -105,8 +115,6 @@ export default async function PdvPage({ searchParams }: PdvPageProps) {
 
   return (
     <div className="space-y-6">
-      {receiptData ? <ReceiptPrintMode /> : null}
-
       {issues.length > 0 ? (
         <Card className="border-amber-400/30 bg-amber-400/8">
           <CardContent className="space-y-2 pt-5">
@@ -118,11 +126,7 @@ export default async function PdvPage({ searchParams }: PdvPageProps) {
         </Card>
       ) : null}
 
-      {receiptData ? (
-        <ReceiptPreviewCard sale={receiptData} cashReceived={parseCashReceived(cashReceived)} />
-      ) : null}
-
-      <div className={receiptData ? "print:hidden" : undefined}>
+      <div>
         <PdvWorkspace
           canManage={canManage}
           customers={customerOptions}
@@ -132,7 +136,7 @@ export default async function PdvPage({ searchParams }: PdvPageProps) {
         />
       </div>
 
-      <div className={receiptData ? "print:hidden" : undefined}>
+      <div>
         <Card>
           <CardHeader className="border-b border-border/70 pb-4">
             <CardTitle>Vendas recentes</CardTitle>

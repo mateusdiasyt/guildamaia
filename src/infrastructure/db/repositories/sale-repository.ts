@@ -372,7 +372,7 @@ export async function cancelSaleAndRestock(data: {
     });
     const productMap = new Map(products.map((product) => [product.id, product]));
 
-    await tx.sale.update({
+    const cancelledSale = await tx.sale.update({
       where: { id: sale.id },
       data: {
         status: SaleStatus.CANCELLED,
@@ -415,6 +415,6 @@ export async function cancelSaleAndRestock(data: {
       });
     }
 
-    return sale;
+    return cancelledSale;
   });
 }
