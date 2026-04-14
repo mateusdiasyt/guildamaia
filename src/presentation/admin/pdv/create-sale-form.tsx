@@ -250,7 +250,10 @@ export function CreateSaleForm({
   const [addState, setAddState] = useState(initialActionState);
   const [updateItemState, updateItemFormAction] = useActionState(updateComandaItemAction, initialActionState);
   const [removeItemState, removeItemFormAction] = useActionState(removeComandaItemAction, initialActionState);
-  const [customerState, customerFormAction] = useActionState(updateComandaCustomerAction, initialActionState);
+  const [customerState, customerFormAction, isUpdatingCustomer] = useActionState(
+    updateComandaCustomerAction,
+    initialActionState,
+  );
   const [saleState, saleFormAction] = useActionState(closeComandaAction, initialActionState);
   const [cancelState, cancelFormAction] = useActionState(cancelComandaAction, initialActionState);
   const [isAddingItem, startAddTransition] = useTransition();
@@ -446,8 +449,9 @@ export function CreateSaleForm({
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="rounded-full border border-border/70 bg-background/68 px-3 py-1 text-sm font-semibold text-foreground">
-            {formatCurrency(totalInCents / 100)}
+          <div className="inline-flex h-10 items-center gap-2 rounded-full border border-border/70 bg-background/68 px-3 text-sm font-medium text-foreground">
+            <UserRound className="h-4 w-4 text-primary" />
+            <span>Cliente da comanda</span>
           </div>
           <Button
             type="button"
@@ -465,15 +469,13 @@ export function CreateSaleForm({
       <div className="grid gap-4 2xl:grid-cols-[minmax(0,1.18fr)_minmax(340px,368px)]">
         <div className="space-y-4">
           <section className="admin-form-section space-y-4">
-            <div className="flex items-center gap-2">
-              <UserRound className="h-4 w-4 text-primary" />
-              <p className="text-sm font-semibold text-foreground">Cliente da comanda</p>
-            </div>
-
             {!canManage ? (
-              <p className="text-sm text-muted-foreground">{currentCustomerLabel}</p>
+              <div className="space-y-2">
+                <Label>Cliente</Label>
+                <p className="text-sm text-muted-foreground">{currentCustomerLabel}</p>
+              </div>
             ) : (
-              <form action={customerFormAction} className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+              <form action={customerFormAction} className="space-y-3">
                 <input type="hidden" name="comandaId" value={selectedComanda.id} />
 
                 <div className="space-y-2">
@@ -483,6 +485,8 @@ export function CreateSaleForm({
                     name="customerId"
                     className="admin-native-select"
                     defaultValue={selectedComanda.customerId ?? ""}
+                    disabled={isUpdatingCustomer}
+                    onChange={(event) => event.currentTarget.form?.requestSubmit()}
                   >
                     <option value="">Comanda avulsa</option>
                     {customers.map((customer) => (
@@ -493,10 +497,11 @@ export function CreateSaleForm({
                   </select>
                 </div>
 
-                <FormSubmitButton>Salvar cliente</FormSubmitButton>
-                <div className="md:col-span-2">
-                  <ActionFeedback state={customerState} />
-                </div>
+                {isUpdatingCustomer ? (
+                  <p className="text-xs text-muted-foreground">Salvando cliente...</p>
+                ) : null}
+
+                <ActionFeedback state={customerState} />
               </form>
             )}
           </section>
