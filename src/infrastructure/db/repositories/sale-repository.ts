@@ -24,31 +24,79 @@ type CreateSaleWithStockAdjustmentInput = {
 
 type PrismaTx = Prisma.TransactionClient;
 
+function isMissingProductImageColumnError(error: unknown) {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    return error.code === "P2022" && String(error.meta?.column ?? "").toLowerCase().includes("imageurl");
+  }
+
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+    return message.includes("imageurl") && (message.includes("column") || message.includes("does not exist"));
+  }
+
+  return false;
+}
+
 export async function listPdvProductOptions() {
-  return prisma.product.findMany({
-    where: {
-      status: RecordStatus.ACTIVE,
-    },
-    select: {
-      id: true,
-      name: true,
-      sku: true,
-      imageUrl: true,
-      salePrice: true,
-      currentStock: true,
-      status: true,
-      category: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
+  try {
+    return await prisma.product.findMany({
+      where: {
+        status: RecordStatus.ACTIVE,
+      },
+      select: {
+        id: true,
+        name: true,
+        sku: true,
+        imageUrl: true,
+        salePrice: true,
+        currentStock: true,
+        status: true,
+        category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
         },
       },
-    },
-    orderBy: {
-      name: "asc",
-    },
-  });
+      orderBy: {
+        name: "asc",
+      },
+    });
+  } catch (error) {
+    if (!isMissingProductImageColumnError(error)) {
+      throw error;
+    }
+
+    const products = await prisma.product.findMany({
+      where: {
+        status: RecordStatus.ACTIVE,
+      },
+      select: {
+        id: true,
+        name: true,
+        sku: true,
+        salePrice: true,
+        currentStock: true,
+        status: true,
+        category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+      },
+      orderBy: {
+        name: "asc",
+      },
+    });
+
+    return products.map((product) => ({
+      ...product,
+      imageUrl: null,
+    }));
+  }
 }
 
 export async function listPdvOpenSessions() {

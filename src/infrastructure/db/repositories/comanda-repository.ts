@@ -3,6 +3,19 @@ import { ComandaStatus, Prisma, RecordStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { createSaleWithStockAdjustmentInTransaction } from "@/infrastructure/db/repositories/sale-repository";
 
+function isMissingProductImageColumnError(error: unknown) {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    return error.code === "P2022" && String(error.meta?.column ?? "").toLowerCase().includes("imageurl");
+  }
+
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+    return message.includes("imageurl") && (message.includes("column") || message.includes("does not exist"));
+  }
+
+  return false;
+}
+
 async function recalculateComandaSubtotal(tx: Prisma.TransactionClient, comandaId: string) {
   const aggregate = await tx.comandaItem.aggregate({
     where: {
@@ -26,51 +39,113 @@ async function recalculateComandaSubtotal(tx: Prisma.TransactionClient, comandaI
 }
 
 export async function listOpenComandas() {
-  return prisma.comanda.findMany({
-    where: {
-      status: ComandaStatus.OPEN,
-    },
-    include: {
-      customer: {
-        select: {
-          id: true,
-          fullName: true,
-          documentType: true,
-          documentNumber: true,
-        },
+  try {
+    return await prisma.comanda.findMany({
+      where: {
+        status: ComandaStatus.OPEN,
       },
-      items: {
-        include: {
-          product: {
-            select: {
-              id: true,
-              name: true,
-              sku: true,
-              imageUrl: true,
-              currentStock: true,
-              category: {
-                select: {
-                  id: true,
-                  name: true,
-                  slug: true,
+      include: {
+        customer: {
+          select: {
+            id: true,
+            fullName: true,
+            documentType: true,
+            documentNumber: true,
+          },
+        },
+        items: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                name: true,
+                sku: true,
+                imageUrl: true,
+                currentStock: true,
+                category: {
+                  select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                  },
                 },
               },
             },
           },
+          orderBy: {
+            createdAt: "asc",
+          },
         },
-        orderBy: {
-          createdAt: "asc",
+        openedBy: {
+          select: {
+            id: true,
+            name: true,
+          },
         },
       },
-      openedBy: {
-        select: {
-          id: true,
-          name: true,
+      orderBy: [{ number: "asc" }, { openedAt: "asc" }],
+    });
+  } catch (error) {
+    if (!isMissingProductImageColumnError(error)) {
+      throw error;
+    }
+
+    const comandas = await prisma.comanda.findMany({
+      where: {
+        status: ComandaStatus.OPEN,
+      },
+      include: {
+        customer: {
+          select: {
+            id: true,
+            fullName: true,
+            documentType: true,
+            documentNumber: true,
+          },
+        },
+        items: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                name: true,
+                sku: true,
+                currentStock: true,
+                category: {
+                  select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                  },
+                },
+              },
+            },
+          },
+          orderBy: {
+            createdAt: "asc",
+          },
+        },
+        openedBy: {
+          select: {
+            id: true,
+            name: true,
+          },
         },
       },
-    },
-    orderBy: [{ number: "asc" }, { openedAt: "asc" }],
-  });
+      orderBy: [{ number: "asc" }, { openedAt: "asc" }],
+    });
+
+    return comandas.map((comanda) => ({
+      ...comanda,
+      items: comanda.items.map((item) => ({
+        ...item,
+        product: {
+          ...item.product,
+          imageUrl: null,
+        },
+      })),
+    }));
+  }
 }
 
 export async function createComanda(data: {

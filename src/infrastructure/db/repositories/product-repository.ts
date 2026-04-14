@@ -8,6 +8,19 @@ type ListProductsFilters = {
   categoryId?: string;
 };
 
+function isMissingProductImageColumnError(error: unknown) {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    return error.code === "P2022" && String(error.meta?.column ?? "").toLowerCase().includes("imageurl");
+  }
+
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+    return message.includes("imageurl") && (message.includes("column") || message.includes("does not exist"));
+  }
+
+  return false;
+}
+
 export async function listProducts(filters?: ListProductsFilters) {
   const where: Prisma.ProductWhereInput = {};
 
@@ -26,16 +39,69 @@ export async function listProducts(filters?: ListProductsFilters) {
     where.categoryId = filters.categoryId;
   }
 
-  return prisma.product.findMany({
-    where,
-    include: {
-      category: true,
-      supplier: true,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+  try {
+    return await prisma.product.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        sku: true,
+        description: true,
+        imageUrl: true,
+        costPrice: true,
+        salePrice: true,
+        marginPercent: true,
+        minStock: true,
+        currentStock: true,
+        status: true,
+        categoryId: true,
+        supplierId: true,
+        unitId: true,
+        createdAt: true,
+        updatedAt: true,
+        category: true,
+        supplier: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  } catch (error) {
+    if (!isMissingProductImageColumnError(error)) {
+      throw error;
+    }
+
+    const products = await prisma.product.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        sku: true,
+        description: true,
+        costPrice: true,
+        salePrice: true,
+        marginPercent: true,
+        minStock: true,
+        currentStock: true,
+        status: true,
+        categoryId: true,
+        supplierId: true,
+        unitId: true,
+        createdAt: true,
+        updatedAt: true,
+        category: true,
+        supplier: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return products.map((product) => ({
+      ...product,
+      imageUrl: null,
+    }));
+  }
 }
 
 export async function createProduct(data: {
@@ -96,27 +162,59 @@ export async function countProducts() {
 }
 
 export async function listProductOptions() {
-  return prisma.product.findMany({
-    select: {
-      id: true,
-      name: true,
-      sku: true,
-      imageUrl: true,
-      currentStock: true,
-      status: true,
-      salePrice: true,
-      category: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
+  try {
+    return await prisma.product.findMany({
+      select: {
+        id: true,
+        name: true,
+        sku: true,
+        imageUrl: true,
+        currentStock: true,
+        status: true,
+        salePrice: true,
+        category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
         },
       },
-    },
-    orderBy: {
-      name: "asc",
-    },
-  });
+      orderBy: {
+        name: "asc",
+      },
+    });
+  } catch (error) {
+    if (!isMissingProductImageColumnError(error)) {
+      throw error;
+    }
+
+    const products = await prisma.product.findMany({
+      select: {
+        id: true,
+        name: true,
+        sku: true,
+        currentStock: true,
+        status: true,
+        salePrice: true,
+        category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+      },
+      orderBy: {
+        name: "asc",
+      },
+    });
+
+    return products.map((product) => ({
+      ...product,
+      imageUrl: null,
+    }));
+  }
 }
 
 export async function listLowStockProducts() {
