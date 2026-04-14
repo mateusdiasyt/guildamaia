@@ -154,28 +154,6 @@ function productAvatarLabel(name: string) {
     .toUpperCase();
 }
 
-function ProductThumb({
-  name,
-  imageUrl,
-}: {
-  name: string;
-  imageUrl?: string | null;
-}) {
-  if (!imageUrl) {
-    return (
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-dashed border-border/75 bg-background/40 text-sm font-semibold text-muted-foreground">
-        {productAvatarLabel(name)}
-      </div>
-    );
-  }
-
-  return (
-    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-2xl border border-border/75 bg-background/35">
-      <Image src={imageUrl} alt={name} fill className="object-cover" unoptimized />
-    </div>
-  );
-}
-
 function ProductCardMedia({
   name,
   imageUrl,
@@ -517,55 +495,49 @@ export function CreateSaleForm({
                     key={item.id}
                     className="rounded-[1.35rem] border border-border/75 bg-background/30 p-3"
                   >
-                    <div className="flex items-start gap-3">
-                      <ProductThumb name={item.product.name} imageUrl={item.product.imageUrl} />
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="min-w-0 truncate text-sm font-medium text-foreground">{item.product.name}</p>
+                      <p className="shrink-0 text-sm font-semibold text-foreground">{formatCurrency(item.lineTotal)}</p>
+                    </div>
 
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-medium text-foreground">{item.product.name}</p>
-                            <p className="text-xs text-muted-foreground">{item.product.sku}</p>
-                          </div>
-                          <p className="text-sm font-semibold text-foreground">{formatCurrency(item.lineTotal)}</p>
-                        </div>
+                    <div className="mt-3 flex flex-wrap items-end gap-2">
+                      {canManage ? (
+                        <>
+                          <form action={updateItemFormAction} className="flex flex-wrap items-end gap-2">
+                            <input type="hidden" name="comandaId" value={selectedComanda.id} />
+                            <input type="hidden" name="productId" value={item.productId} />
+                            <div className="space-y-1">
+                              <Label htmlFor={`item-quantity-${selectedComanda.id}-${item.productId}`}>Qtd</Label>
+                              <Input
+                                id={`item-quantity-${selectedComanda.id}-${item.productId}`}
+                                name="quantity"
+                                type="number"
+                                min={1}
+                                step={1}
+                                defaultValue={item.quantity}
+                                inputMode="numeric"
+                                className={`w-24 ${quantityInputClassName}`}
+                                required
+                              />
+                            </div>
+                            <Button type="submit" size="icon-sm" className="rounded-2xl">
+                              <Plus className="h-4 w-4" />
+                              <span className="sr-only">Atualizar quantidade do item</span>
+                            </Button>
+                          </form>
 
-                        <div className="mt-3 flex flex-wrap items-end gap-2">
-                          {canManage ? (
-                            <>
-                              <form action={updateItemFormAction} className="flex flex-wrap items-end gap-2">
-                                <input type="hidden" name="comandaId" value={selectedComanda.id} />
-                                <input type="hidden" name="productId" value={item.productId} />
-                                <div className="space-y-1">
-                                  <Label htmlFor={`item-quantity-${selectedComanda.id}-${item.productId}`}>Qtd</Label>
-                                  <Input
-                                    id={`item-quantity-${selectedComanda.id}-${item.productId}`}
-                                    name="quantity"
-                                    type="number"
-                                    min={1}
-                                    step={1}
-                                    defaultValue={item.quantity}
-                                    inputMode="numeric"
-                                    className={`w-24 ${quantityInputClassName}`}
-                                    required
-                                  />
-                                </div>
-                                <FormSubmitButton>Atualizar</FormSubmitButton>
-                              </form>
-
-                              <form action={removeItemFormAction}>
-                                <input type="hidden" name="comandaId" value={selectedComanda.id} />
-                                <input type="hidden" name="productId" value={item.productId} />
-                                <Button type="submit" variant="outline" className="gap-2">
-                                  <Trash2 className="h-4 w-4" />
-                                  Remover
-                                </Button>
-                              </form>
-                            </>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">{item.quantity} unidade(s)</span>
-                          )}
-                        </div>
-                      </div>
+                          <form action={removeItemFormAction}>
+                            <input type="hidden" name="comandaId" value={selectedComanda.id} />
+                            <input type="hidden" name="productId" value={item.productId} />
+                            <Button type="submit" variant="outline" size="icon-sm" className="rounded-2xl">
+                              <Trash2 className="h-4 w-4" />
+                              <span className="sr-only">Remover item da comanda</span>
+                            </Button>
+                          </form>
+                        </>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">{item.quantity} unidade(s)</span>
+                      )}
                     </div>
                   </div>
                 ))}

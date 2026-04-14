@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { CreateComandaDialog } from "@/presentation/admin/pdv/create-comanda-dialog";
 import { CreateSaleForm } from "@/presentation/admin/pdv/create-sale-form";
@@ -125,11 +125,11 @@ export function PdvWorkspace({
       )}
     >
       <Card className="border-border/80 bg-card/86">
-        <CardHeader className="space-y-3 border-b border-border/70 pb-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+        <CardContent className="space-y-4 pt-5">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/70 pb-4">
             <div>
               <CardTitle>Comandas abertas</CardTitle>
-              <CardDescription>{openComandas.length} ativas em {visibleSlotCount} slots.</CardDescription>
+              <p className="text-sm text-muted-foreground">{openComandas.length} ativas em {visibleSlotCount} slots.</p>
             </div>
             {canManage ? (
               <Button type="button" size="sm" className="gap-2" onClick={handleOpenManualCreateDialog}>
@@ -138,9 +138,7 @@ export function PdvWorkspace({
               </Button>
             ) : null}
           </div>
-        </CardHeader>
 
-        <CardContent className="space-y-4 pt-5">
           <OpenComandasBoard
             canManage={canManage}
             openComandas={openComandas}
@@ -155,10 +153,6 @@ export function PdvWorkspace({
 
       {selectedComanda ? (
         <Card className="animate-in fade-in-0 slide-in-from-right-5 duration-300 xl:sticky xl:top-24">
-          <CardHeader className="border-b border-border/70 pb-4">
-            <CardTitle>Nova venda</CardTitle>
-            <CardDescription>Comanda em atendimento.</CardDescription>
-          </CardHeader>
           <CardContent className="pt-5">
             <CreateSaleForm
               key={`${selectedComanda.id}-${selectedComanda.itemCount}-${selectedComanda.subtotalAmount}`}
