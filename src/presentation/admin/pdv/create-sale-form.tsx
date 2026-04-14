@@ -116,6 +116,9 @@ const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
   timeStyle: "short",
 });
 
+const quantityInputClassName =
+  "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
+
 function parseMoneyToCents(value: string) {
   const trimmed = value.trim();
   if (!trimmed) {
@@ -465,6 +468,8 @@ export function CreateSaleForm({
                                   min={1}
                                   step={1}
                                   defaultValue={1}
+                                  inputMode="numeric"
+                                  className={quantityInputClassName}
                                   required
                                 />
                               </div>
@@ -539,7 +544,8 @@ export function CreateSaleForm({
                                     min={1}
                                     step={1}
                                     defaultValue={item.quantity}
-                                    className="w-24"
+                                    inputMode="numeric"
+                                    className={`w-24 ${quantityInputClassName}`}
                                     required
                                   />
                                 </div>
