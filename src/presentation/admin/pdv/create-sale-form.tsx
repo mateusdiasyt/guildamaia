@@ -371,8 +371,8 @@ export function CreateSaleForm({
   }
 
   return (
-    <div className="space-y-5">
-      <header className="flex flex-wrap items-start justify-between gap-4 rounded-[1.5rem] border border-border/75 bg-background/38 px-4 py-4">
+    <div className="space-y-4">
+      <header className="flex flex-wrap items-start justify-between gap-4 rounded-[1.4rem] border border-border/75 bg-background/38 px-4 py-3.5">
         <div className="flex min-w-0 items-center gap-3">
           <div className="inline-flex h-12 min-w-12 items-center justify-center rounded-2xl border border-primary/28 bg-primary/10 px-3 font-mono text-lg font-semibold tracking-[-0.04em] text-foreground">
             #{selectedComanda.number}
@@ -402,7 +402,7 @@ export function CreateSaleForm({
         </div>
       </header>
 
-      <div className="grid gap-4 2xl:grid-cols-[minmax(0,1.15fr)_380px]">
+      <div className="grid gap-4 2xl:grid-cols-[minmax(0,1.18fr)_minmax(340px,368px)]">
         <div className="space-y-4">
           <section className="admin-form-section space-y-4">
             <div className="flex items-center gap-2">
@@ -463,9 +463,9 @@ export function CreateSaleForm({
                 Nenhum produto encontrado com este filtro.
               </p>
             ) : (
-              <div className="admin-scrollbar max-h-[44rem] space-y-5 overflow-y-auto pr-1">
+              <div className="admin-scrollbar max-h-[43rem] space-y-4 overflow-y-auto pr-1">
                 {productGroups.map((group) => (
-                  <div key={group.id} className="space-y-2.5">
+                  <div key={group.id} className="space-y-2">
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                         {group.name}
@@ -473,7 +473,7 @@ export function CreateSaleForm({
                       <span className="text-xs text-muted-foreground">{group.products.length} item(ns)</span>
                     </div>
 
-                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                       {group.products.map((product) => {
                         const currentItem = comandaItemMap.get(product.id);
 
@@ -481,7 +481,7 @@ export function CreateSaleForm({
                           <form
                             key={product.id}
                             onSubmit={(event) => handleAddItemSubmit(event, product)}
-                            className="group relative flex h-full flex-col gap-3 rounded-[1.45rem] border border-border/75 bg-background/30 p-3 transition-all duration-200 hover:border-primary/30 hover:bg-background/42"
+                            className="group relative flex h-full flex-col gap-2.5 rounded-[1.3rem] border border-border/75 bg-background/30 p-3 transition-all duration-200 hover:border-primary/30 hover:bg-background/42"
                           >
                             <input type="hidden" name="comandaId" value={selectedComanda.id} />
                             <input type="hidden" name="productId" value={product.id} />

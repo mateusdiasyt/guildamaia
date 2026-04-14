@@ -120,13 +120,15 @@ export function PdvWorkspace({
   return (
     <section
       className={cn(
-        "grid items-start gap-6",
-        selectedComanda ? "xl:grid-cols-[minmax(340px,420px)_minmax(0,1fr)]" : "grid-cols-1",
+        "grid items-start gap-5",
+        selectedComanda
+          ? "xl:grid-cols-[minmax(320px,360px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(340px,388px)_minmax(0,1fr)]"
+          : "grid-cols-1",
       )}
     >
       <Card className="border-border/80 bg-card/86">
-        <CardContent className="space-y-4 pt-5">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/70 pb-4">
+        <CardContent className="space-y-3.5 pt-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/70 pb-3.5">
             <div>
               <CardTitle>Comandas abertas</CardTitle>
               <p className="text-sm text-muted-foreground">{openComandas.length} ativas em {visibleSlotCount} slots.</p>

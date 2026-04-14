@@ -31,11 +31,11 @@ export default async function AdminLayout({
             roleSlug={session.user.roleSlug}
             permissions={session.user.permissions}
           />
-          <main className="flex-1 px-4 pb-8 pt-5 md:px-8 md:pt-6">
-            <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-6">{children}</div>
+          <main className="flex-1 px-3 pb-8 pt-4 md:px-5 md:pt-5 xl:px-6">
+            <div className="mx-auto flex w-full max-w-[1660px] flex-col gap-6">{children}</div>
           </main>
-          <footer className="border-t border-border/70 px-4 py-3 md:px-8">
-            <div className="mx-auto w-full max-w-[1400px]">
+          <footer className="border-t border-border/70 px-3 py-3 md:px-5 xl:px-6">
+            <div className="mx-auto w-full max-w-[1660px]">
               <FooterCredit />
             </div>
           </footer>
