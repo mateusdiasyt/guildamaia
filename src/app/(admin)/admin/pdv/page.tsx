@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { SaleStatus } from "@prisma/client";
 
 import { requirePermission } from "@/application/auth/guards";
@@ -9,9 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { hasPermission, PERMISSIONS } from "@/domain/auth/permissions";
 import { formatCurrency } from "@/lib/format";
 import { CancelSaleForm } from "@/presentation/admin/pdv/cancel-sale-form";
-import { CreateComandaDialog } from "@/presentation/admin/pdv/create-comanda-dialog";
-import { OpenComandasBoard } from "@/presentation/admin/pdv/open-comandas-board";
-import { CreateSaleForm } from "@/presentation/admin/pdv/create-sale-form";
+import { PdvWorkspace } from "@/presentation/admin/pdv/pdv-workspace";
 
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",
@@ -70,71 +67,13 @@ export default async function PdvPage() {
 
   return (
     <div className="space-y-6">
-      <div
-        className={
-          canManage ? "grid gap-6 lg:grid-cols-[minmax(0,30%)_minmax(0,1fr)] lg:items-start" : "space-y-6"
-        }
-      >
-        <Card className="h-fit">
-          <CardHeader className="space-y-3 border-b border-border/70 pb-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <CardTitle>Comandas abertas</CardTitle>
-                <CardDescription>{openComandasView.length} comanda(s) ativa(s).</CardDescription>
-              </div>
-              {canManage ? <CreateComandaDialog customers={customerOptions} /> : null}
-            </div>
-          </CardHeader>
-          <CardContent>
-            <OpenComandasBoard
-              openComandas={openComandasView}
-              canManage={canManage}
-            />
-          </CardContent>
-        </Card>
-
-        {canManage ? (
-          <Card className="h-fit">
-            <CardHeader className="border-b border-border/70 pb-4">
-              <CardTitle>Nova venda</CardTitle>
-              <CardDescription>
-                Fluxo de balcao com adicao de itens, ajuste de quantidade e validacao de pagamentos em tempo real.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {openSessions.length === 0 ? (
-                <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
-                  <p className="text-sm text-amber-800">
-                    Nenhum caixa aberto. Abra uma sessao para habilitar o registro de vendas no PDV.
-                  </p>
-                  <Link
-                    href="/admin/cash"
-                    className="inline-flex h-9 items-center justify-center rounded-xl bg-primary px-3 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/25"
-                  >
-                    Abrir caixa agora
-                  </Link>
-                </div>
-              ) : openComandasView.length === 0 ? (
-                <p className="rounded-xl border border-border/80 bg-muted/35 px-3 py-2 text-sm text-muted-foreground">
-                  Abra e monte ao menos uma comanda antes de registrar a venda.
-                </p>
-              ) : (
-                <CreateSaleForm
-                  openSessions={openSessionOptions}
-                  openComandas={openComandasView.map((comanda) => ({
-                    id: comanda.id,
-                    number: comanda.number,
-                    customerName: comanda.customerName,
-                    subtotalAmount: comanda.subtotalAmount,
-                    itemCount: comanda.itemCount,
-                  }))}
-                  products={productOptions}
-                />
-              )}
-            </CardContent>
-          </Card>
-        ) : null}
-      </div>
+      <PdvWorkspace
+        canManage={canManage}
+        customers={customerOptions}
+        openSessions={openSessionOptions}
+        openComandas={openComandasView}
+        products={productOptions}
+      />
 
       <Card>
         <CardHeader className="border-b border-border/70 pb-4">

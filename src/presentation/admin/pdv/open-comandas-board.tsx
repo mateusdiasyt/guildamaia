@@ -1,23 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
-
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/format";
-import { removeComandaItemAction } from "@/presentation/admin/pdv/actions";
-
-type ComandaItemView = {
-  id: string;
-  productId: string;
-  quantity: number;
-  lineTotal: number;
-  product: {
-    name: string;
-    sku: string;
-  };
-};
+import { cn } from "@/lib/utils";
 
 type OpenComandaView = {
   id: string;
@@ -27,39 +12,26 @@ type OpenComandaView = {
   subtotalAmount: number;
   itemCount: number;
   openedAt: string;
-  items: ComandaItemView[];
 };
 
 type OpenComandasBoardProps = {
   openComandas: OpenComandaView[];
-  canManage: boolean;
+  selectedComandaId: string | null;
+  onSelectComanda: (comandaId: string) => void;
 };
 
 const openedAtFormatter = new Intl.DateTimeFormat("pt-BR", {
-  dateStyle: "short",
-  timeStyle: "short",
+  day: "2-digit",
+  month: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
 });
 
 export function OpenComandasBoard({
   openComandas,
-  canManage,
+  selectedComandaId,
+  onSelectComanda,
 }: OpenComandasBoardProps) {
-  const [selectedComandaId, setSelectedComandaId] = useState("");
-
-  const resolvedSelectedComandaId = useMemo(() => {
-    if (openComandas.length === 0) {
-      return "";
-    }
-
-    const selectedExists = openComandas.some((comanda) => comanda.id === selectedComandaId);
-    return selectedExists ? selectedComandaId : openComandas[0].id;
-  }, [openComandas, selectedComandaId]);
-
-  const selectedComanda = useMemo(
-    () => openComandas.find((comanda) => comanda.id === resolvedSelectedComandaId) ?? null,
-    [openComandas, resolvedSelectedComandaId],
-  );
-
   if (openComandas.length === 0) {
     return (
       <p className="rounded-xl border border-dashed border-border/80 bg-muted/35 px-3 py-4 text-sm text-muted-foreground">
@@ -69,128 +41,82 @@ export function OpenComandasBoard({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-3">
-        <p className="text-xs text-muted-foreground">
-          Selecione uma comanda para abrir os detalhes no painel abaixo.
-        </p>
-        <div className="max-h-[360px] overflow-auto pr-1">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-            {openComandas.map((comanda) => {
-              const isActive = comanda.id === resolvedSelectedComandaId;
+    <div className="space-y-3">
+      <p className="text-xs text-muted-foreground">
+        Toque em uma comanda para abrir o atendimento com animacao lateral.
+      </p>
 
-              return (
-                <button
-                  key={comanda.id}
-                  type="button"
-                  onClick={() => setSelectedComandaId(comanda.id)}
-                  className={`rounded-xl border p-3 text-left transition-all ${
-                    isActive
-                      ? "border-primary/70 bg-primary/10 shadow-[0_0_0_1px_color-mix(in_oklab,var(--primary)_42%,transparent)]"
-                      : "border-border/70 bg-card/70 hover:border-primary/40 hover:bg-card"
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">Comanda #{comanda.number}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {comanda.isWalkIn ? "Avulsa" : comanda.customerName}
-                      </p>
-                    </div>
-                    <Badge className="border border-border/70 bg-background/70 text-[11px] text-foreground hover:bg-background/70">
-                      {comanda.itemCount} item(ns)
-                    </Badge>
-                  </div>
-                  <div className="mt-3 flex items-center justify-between">
-                    <span className="text-[11px] text-muted-foreground">Subtotal</span>
-                    <span className="text-sm font-semibold text-foreground">
-                      {formatCurrency(comanda.subtotalAmount)}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+      <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-2 2xl:grid-cols-3">
+        {openComandas.map((comanda) => {
+          const isActive = comanda.id === selectedComandaId;
+          const hasItems = comanda.itemCount > 0;
 
-      <div className="rounded-2xl border border-border/75 bg-card/85 p-4">
-        {!selectedComanda ? (
-          <p className="rounded-xl border border-dashed border-border/80 bg-muted/35 px-3 py-4 text-sm text-muted-foreground">
-            Nenhuma comanda selecionada.
-          </p>
-        ) : (
-          <div className="space-y-4">
-            <div className="border-b border-border/70 pb-3">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="text-base font-semibold text-foreground">
-                    Detalhes da comanda #{selectedComanda.number}
+          return (
+            <button
+              key={comanda.id}
+              type="button"
+              aria-pressed={isActive}
+              onClick={() => onSelectComanda(comanda.id)}
+              className={cn(
+                "group relative aspect-square overflow-hidden rounded-[1.6rem] border text-left transition-all duration-300",
+                "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/25",
+                isActive
+                  ? "border-primary/70 bg-primary/12 shadow-[0_22px_40px_-26px_color-mix(in_oklab,var(--primary)_82%,transparent)]"
+                  : hasItems
+                    ? "border-border/75 bg-card/70 hover:-translate-y-1 hover:border-primary/35 hover:bg-card/90"
+                    : "border-border/75 bg-background/45 hover:-translate-y-1 hover:border-border hover:bg-card/72",
+              )}
+            >
+              <div
+                className={cn(
+                  "absolute inset-0 opacity-0 transition-opacity duration-300",
+                  hasItems &&
+                    "bg-[radial-gradient(circle_at_top_right,color-mix(in_oklab,var(--primary)_15%,transparent),transparent_55%)]",
+                  isActive && "opacity-100",
+                )}
+              />
+
+              <div className="relative flex h-full flex-col justify-between p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <Badge
+                    className={cn(
+                      "rounded-full border px-2.5 py-1 text-[11px]",
+                      isActive
+                        ? "border-primary/45 bg-primary/15 text-primary hover:bg-primary/15"
+                        : "border-border/70 bg-background/65 text-foreground/85 hover:bg-background/65",
+                    )}
+                  >
+                    {comanda.itemCount} item(ns)
+                  </Badge>
+
+                  <span className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+                    {comanda.isWalkIn ? "Avulsa" : "Cliente"}
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="font-mono text-[2rem] font-semibold tracking-[-0.04em] text-foreground">
+                    #{comanda.number}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    {selectedComanda.isWalkIn ? "Comanda avulsa" : selectedComanda.customerName}
+                  <p className="line-clamp-2 text-sm font-medium text-foreground/88">
+                    {comanda.isWalkIn ? "Cliente nao informado" : comanda.customerName}
                   </p>
                 </div>
-                <Badge className="bg-primary/15 text-primary hover:bg-primary/15">
-                  {formatCurrency(selectedComanda.subtotalAmount)}
-                </Badge>
-              </div>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Aberta em {openedAtFormatter.format(new Date(selectedComanda.openedAt))}
-              </p>
-            </div>
 
-            {selectedComanda.items.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-border px-3 py-4 text-sm text-muted-foreground">
-                Nenhum item adicionado nesta comanda.
-              </p>
-            ) : (
-              <div className="max-h-[240px] overflow-auto rounded-xl border border-border/70">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Produto</TableHead>
-                      <TableHead className="text-right">Qtd</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                      <TableHead className="text-right">Acoes</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {selectedComanda.items.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell>
-                          <p className="text-sm text-foreground">{item.product.name}</p>
-                          <p className="text-xs text-muted-foreground">{item.product.sku}</p>
-                        </TableCell>
-                        <TableCell className="text-right">{item.quantity}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(item.lineTotal)}</TableCell>
-                        <TableCell className="text-right">
-                          {canManage ? (
-                            <form action={removeComandaItemAction}>
-                              <input type="hidden" name="comandaId" value={selectedComanda.id} />
-                              <input type="hidden" name="productId" value={item.productId} />
-                              <Button type="submit" variant="outline" size="sm">
-                                Remover
-                              </Button>
-                            </form>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                    <span>Subtotal</span>
+                    <span className="font-semibold text-foreground">{formatCurrency(comanda.subtotalAmount)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                    <span>Abertura</span>
+                    <span>{openedAtFormatter.format(new Date(comanda.openedAt))}</span>
+                  </div>
+                </div>
               </div>
-            )}
-
-            {canManage ? (
-              <p className="rounded-xl border border-dashed border-border px-3 py-3 text-xs text-muted-foreground">
-                Para lancar pedidos e registrar venda, use a area de caixa ao lado selecionando o numero da comanda.
-              </p>
-            ) : null}
-          </div>
-        )}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
