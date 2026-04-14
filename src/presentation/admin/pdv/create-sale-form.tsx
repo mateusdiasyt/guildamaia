@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { PaymentMethod } from "@prisma/client";
 import {
+  Loader2,
   Plus,
   Receipt,
   Search,
@@ -13,7 +14,7 @@ import {
   Wallet,
   X,
 } from "lucide-react";
-import { useActionState, useDeferredValue, useState } from "react";
+import { useActionState, useDeferredValue, useState, useTransition } from "react";
 
 import { ActionFeedback } from "@/components/admin/action-feedback";
 import { FormSubmitButton } from "@/components/admin/form-submit-button";
@@ -24,7 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency } from "@/lib/format";
 import { initialActionState } from "@/presentation/admin/common/action-state";
 import {
-  addComandaItemAction,
+  addComandaItemRequest,
   cancelComandaAction,
   closeComandaAction,
   removeComandaItemAction,
@@ -184,17 +185,19 @@ export function CreateSaleForm({
   canManage,
   onClose,
 }: CreateSaleFormProps) {
-  const [addState, addFormAction] = useActionState(addComandaItemAction, initialActionState);
+  const [addState, setAddState] = useState(initialActionState);
   const [updateItemState, updateItemFormAction] = useActionState(updateComandaItemAction, initialActionState);
   const [removeItemState, removeItemFormAction] = useActionState(removeComandaItemAction, initialActionState);
   const [customerState, customerFormAction] = useActionState(updateComandaCustomerAction, initialActionState);
   const [saleState, saleFormAction] = useActionState(closeComandaAction, initialActionState);
   const [cancelState, cancelFormAction] = useActionState(cancelComandaAction, initialActionState);
+  const [isAddingItem, startAddTransition] = useTransition();
   const [productSearch, setProductSearch] = useState("");
   const deferredProductSearch = useDeferredValue(productSearch);
   const [discountAmount, setDiscountAmount] = useState("0.00");
   const [cashReceived, setCashReceived] = useState("");
   const [paymentLineSeed, setPaymentLineSeed] = useState(1);
+  const [optimisticItems, setOptimisticItems] = useState(selectedComanda.items);
   const [paymentLines, setPaymentLines] = useState<PaymentLine[]>([
     {
       id: 1,
@@ -203,7 +206,8 @@ export function CreateSaleForm({
     },
   ]);
 
-  const subtotalInCents = Math.round(selectedComanda.subtotalAmount * 100);
+  const optimisticSubtotalAmount = optimisticItems.reduce((sum, item) => sum + item.lineTotal, 0);
+  const subtotalInCents = Math.round(optimisticSubtotalAmount * 100);
   const discountInCents = Math.max(0, parseMoneyToCents(discountAmount));
   const totalInCents = Math.max(subtotalInCents - discountInCents, 0);
   const paymentsTotalInCents = paymentLines.reduce(
@@ -257,7 +261,7 @@ export function CreateSaleForm({
     return groups;
   }, []);
   const comandaItemMap = new Map(
-    selectedComanda.items.map((item) => [
+    optimisticItems.map((item) => [
       item.productId,
       {
         quantity: item.quantity,
@@ -292,6 +296,70 @@ export function CreateSaleForm({
     ]);
   }
 
+  function handleAddItemSubmit(event: React.FormEvent<HTMLFormElement>, product: ProductOption) {
+    event.preventDefault();
+
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const quantity = Number(formData.get("quantity") ?? 0);
+
+    if (!Number.isFinite(quantity) || quantity < 1) {
+      setAddState({
+        status: "error",
+        message: "Informe uma quantidade valida.",
+      });
+      return;
+    }
+
+    const previousItems = optimisticItems;
+
+    setAddState(initialActionState);
+    setOptimisticItems((currentItems) => {
+      const existingItem = currentItems.find((item) => item.productId === product.id);
+
+      if (existingItem) {
+        return currentItems.map((item) =>
+          item.productId === product.id
+            ? {
+                ...item,
+                quantity: item.quantity + quantity,
+                lineTotal: item.lineTotal + product.salePrice * quantity,
+              }
+            : item,
+        );
+      }
+
+      return [
+        ...currentItems,
+        {
+          id: `optimistic-${product.id}`,
+          productId: product.id,
+          quantity,
+          lineTotal: product.salePrice * quantity,
+          product: {
+            name: product.name,
+            sku: product.sku,
+            imageUrl: product.imageUrl,
+            currentStock: product.currentStock,
+            category: product.category,
+          },
+        },
+      ];
+    });
+
+    startAddTransition(async () => {
+      const result = await addComandaItemRequest(formData);
+
+      if (result.status === "error") {
+        setOptimisticItems(previousItems);
+      } else {
+        form.reset();
+      }
+
+      setAddState(result);
+    });
+  }
+
   function removePaymentLine(id: number) {
     setPaymentLines((currentLines) => {
       if (currentLines.length === 1) {
@@ -312,7 +380,7 @@ export function CreateSaleForm({
           <div className="min-w-0">
             <p className="truncate text-base font-semibold text-foreground">{currentCustomerLabel}</p>
             <p className="text-xs text-muted-foreground">
-              {selectedComanda.items.length} item(ns) • aberta em {dateFormatter.format(new Date(selectedComanda.openedAt))}
+              {optimisticItems.length} item(ns) - aberta em {dateFormatter.format(new Date(selectedComanda.openedAt))}
             </p>
           </div>
         </div>
@@ -412,7 +480,7 @@ export function CreateSaleForm({
                         return (
                           <form
                             key={product.id}
-                            action={addFormAction}
+                            onSubmit={(event) => handleAddItemSubmit(event, product)}
                             className="group relative flex h-full flex-col gap-3 rounded-[1.45rem] border border-border/75 bg-background/30 p-3 transition-all duration-200 hover:border-primary/30 hover:bg-background/42"
                           >
                             <input type="hidden" name="comandaId" value={selectedComanda.id} />
@@ -452,8 +520,8 @@ export function CreateSaleForm({
                                 />
                               </div>
                               {canManage ? (
-                                <Button type="submit" size="icon-sm" className="shrink-0 rounded-2xl">
-                                  <Plus className="h-4 w-4" />
+                                <Button type="submit" size="icon-sm" className="shrink-0 rounded-2xl" disabled={isAddingItem}>
+                                  {isAddingItem ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                                   <span className="sr-only">Adicionar produto na comanda</span>
                                 </Button>
                               ) : (
@@ -480,17 +548,17 @@ export function CreateSaleForm({
             <div className="flex items-center justify-between gap-3">
               <p className="text-sm font-semibold text-foreground">Itens da comanda</p>
               <span className="rounded-full border border-border/70 bg-background/70 px-2.5 py-1 text-xs font-medium text-foreground">
-                {selectedComanda.items.length}
+                {optimisticItems.length}
               </span>
             </div>
 
-            {selectedComanda.items.length === 0 ? (
+            {optimisticItems.length === 0 ? (
               <p className="rounded-2xl border border-dashed border-border/75 bg-background/32 px-4 py-6 text-sm text-muted-foreground">
                 Adicione produtos para montar esta comanda.
               </p>
             ) : (
               <div className="space-y-2.5">
-                {selectedComanda.items.map((item) => (
+                {optimisticItems.map((item) => (
                   <div
                     key={item.id}
                     className="rounded-[1.35rem] border border-border/75 bg-background/30 p-3"

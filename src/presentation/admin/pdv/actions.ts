@@ -75,11 +75,14 @@ export async function addComandaItemAction(
   formData: FormData,
 ): Promise<ActionState> {
   void prevState;
+  return addComandaItemRequest(formData);
+}
+
+export async function addComandaItemRequest(formData: FormData): Promise<ActionState> {
   try {
     const session = await requirePermission(PERMISSIONS.PDV_MANAGE);
     await addComandaItemRecord(formData, session.user.id);
     revalidatePath("/admin/pdv");
-    revalidatePath("/admin/products");
     return { status: "success", message: "Item adicionado na comanda." };
   } catch (error) {
     return { status: "error", message: toActionErrorMessage(error) };
