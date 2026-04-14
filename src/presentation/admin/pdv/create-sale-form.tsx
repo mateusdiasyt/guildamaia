@@ -417,7 +417,7 @@ export function CreateSaleForm({
                 Nenhum produto encontrado com este filtro.
               </p>
             ) : (
-              <div className="max-h-[44rem] space-y-5 overflow-y-auto pr-1">
+              <div className="admin-scrollbar max-h-[44rem] space-y-5 overflow-y-auto pr-1">
                 {productGroups.map((group) => (
                   <div key={group.id} className="space-y-2.5">
                     <div className="flex items-center justify-between gap-3">

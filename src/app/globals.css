@@ -169,4 +169,38 @@
   .admin-help-dot {
     @apply inline-flex h-4 w-4 items-center justify-center rounded-full border border-border bg-background text-[10px] font-semibold text-muted-foreground;
   }
+
+  .admin-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--primary) 58%, var(--border)) transparent;
+  }
+
+  .admin-scrollbar::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  .admin-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .admin-scrollbar::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--primary) 78%, white 6%),
+      color-mix(in oklab, var(--primary) 42%, var(--border))
+    );
+    background-clip: padding-box;
+  }
+
+  .admin-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--primary) 92%, white 8%),
+      color-mix(in oklab, var(--primary) 58%, var(--border))
+    );
+    background-clip: padding-box;
+  }
 }
