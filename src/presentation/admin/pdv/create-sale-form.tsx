@@ -252,6 +252,7 @@ export function CreateSaleForm({
   canManage,
   onClose,
 }: CreateSaleFormProps) {
+  const selectedCustomerInputValue = selectedComanda.customerId ? (selectedComanda.customerName ?? "") : "";
   const currentCustomerLabel =
     selectedComanda.customerName || (selectedComanda.isWalkIn ? "Comanda avulsa" : "Sem cliente");
   const [addState, setAddState] = useState(initialActionState);
@@ -271,7 +272,7 @@ export function CreateSaleForm({
   const [cashReceived, setCashReceived] = useState("");
   const [paymentLineSeed, setPaymentLineSeed] = useState(1);
   const [optimisticItems, setOptimisticItems] = useState(selectedComanda.items);
-  const [customerQuery, setCustomerQuery] = useState(selectedComanda.customerName ?? "");
+  const [customerQuery, setCustomerQuery] = useState(selectedCustomerInputValue);
   const [isCustomerSearchOpen, setIsCustomerSearchOpen] = useState(false);
   const customerFormRef = useRef<HTMLFormElement>(null);
   const customerIdInputRef = useRef<HTMLInputElement>(null);
@@ -462,13 +463,13 @@ export function CreateSaleForm({
     }
 
     customerIdInputRef.current.value = customerId ?? "";
-    setCustomerQuery(label);
+    setCustomerQuery(customerId ? label : "");
     setIsCustomerSearchOpen(false);
     customerFormRef.current.requestSubmit();
   }
 
   function resetCustomerSearch() {
-    setCustomerQuery(selectedComanda.customerName ?? "");
+    setCustomerQuery(selectedCustomerInputValue);
     setIsCustomerSearchOpen(false);
   }
 
