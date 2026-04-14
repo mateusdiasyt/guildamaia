@@ -39,11 +39,7 @@ export function OpenComandasBoard({
   const compactGrid = Boolean(selectedComandaId);
 
   return (
-    <div className="space-y-3">
-      <p className="text-xs text-muted-foreground">
-        Ativas ficam destacadas; inativas mostram que o slot ainda esta livre para abrir atendimento.
-      </p>
-
+    <div>
       <div
         className={cn(
           "grid gap-2.5",
@@ -64,26 +60,21 @@ export function OpenComandasBoard({
                 disabled={!canManage}
                 onClick={() => onRequestCreateComanda(slotNumber)}
                 className={cn(
-                  "group flex aspect-square flex-col rounded-[1.15rem] border border-dashed border-border/75 bg-background/28 p-2.5 text-left transition-all duration-200",
+                  "group flex aspect-square flex-col rounded-[1.05rem] border border-dashed border-border/75 bg-background/24 p-2.5 text-left transition-all duration-200",
                   "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/25",
                   canManage
                     ? "hover:-translate-y-0.5 hover:border-primary/35 hover:bg-background/48"
                     : "cursor-not-allowed opacity-65",
                 )}
               >
-                <div className="flex items-start justify-between gap-2">
-                  <Badge className="rounded-full border border-border/65 bg-background/70 px-2 py-0.5 text-[10px] text-muted-foreground hover:bg-background/70">
-                    Inativa
-                  </Badge>
-                  <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground/85">Livre</span>
+                <div className="flex items-center justify-between">
+                  <span className="h-2.5 w-2.5 rounded-full bg-border/80" />
+                  <span className="text-[10px] text-muted-foreground/40"> </span>
                 </div>
 
-                <div className="mt-auto space-y-1">
-                  <p className="font-mono text-[1.35rem] font-semibold tracking-[-0.05em] text-foreground/88">
+                <div className="mt-auto">
+                  <p className="font-mono text-[1.35rem] font-semibold tracking-[-0.05em] text-foreground/86">
                     #{slotNumber}
-                  </p>
-                  <p className="text-[11px] leading-snug text-muted-foreground">
-                    {canManage ? "Clique para abrir esta comanda." : "Slot disponivel sem permissao de abertura."}
                   </p>
                 </div>
               </button>
@@ -97,7 +88,7 @@ export function OpenComandasBoard({
               aria-pressed={isSelected}
               onClick={() => onSelectComanda(comanda.id)}
               className={cn(
-                "group relative flex aspect-square flex-col rounded-[1.15rem] border p-2.5 text-left transition-all duration-200",
+                "group relative flex aspect-square flex-col rounded-[1.05rem] border p-2.5 text-left transition-all duration-200",
                 "focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/25",
                 isSelected
                   ? "border-primary/70 bg-primary/12 shadow-[0_18px_34px_-26px_color-mix(in_oklab,var(--primary)_82%,transparent)]"
@@ -113,28 +104,25 @@ export function OpenComandasBoard({
               />
 
               <div className="relative flex h-full flex-col">
-                <div className="flex items-start justify-between gap-2">
-                  <Badge
+                <div className="flex items-center justify-between">
+                  <span
                     className={cn(
-                      "rounded-full border px-2 py-0.5 text-[10px]",
-                      isSelected
-                        ? "border-primary/40 bg-primary/12 text-primary hover:bg-primary/12"
-                        : "border-border/70 bg-background/68 text-foreground/88 hover:bg-background/68",
+                      "h-2.5 w-2.5 rounded-full",
+                      isSelected ? "bg-primary" : "bg-emerald-400",
                     )}
-                  >
-                    Ativa
-                  </Badge>
-                  <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-                    {comanda.itemCount} item(ns)
-                  </span>
+                  />
+                  {comanda.itemCount > 0 ? (
+                    <Badge className="rounded-full border border-border/70 bg-background/68 px-2 py-0.5 text-[10px] text-foreground/82 hover:bg-background/68">
+                      {comanda.itemCount}
+                    </Badge>
+                  ) : (
+                    <span className="text-[10px] text-muted-foreground/40"> </span>
+                  )}
                 </div>
 
-                <div className="mt-auto space-y-1">
+                <div className="mt-auto">
                   <p className="font-mono text-[1.35rem] font-semibold tracking-[-0.05em] text-foreground">
                     #{comanda.number}
-                  </p>
-                  <p className="line-clamp-2 text-[11px] leading-snug text-foreground/88">
-                    {comanda.isWalkIn ? "Cliente nao informado" : comanda.customerName}
                   </p>
                 </div>
               </div>
@@ -146,13 +134,12 @@ export function OpenComandasBoard({
           <button
             type="button"
             onClick={onAddSlot}
-            className="group flex aspect-square flex-col items-center justify-center rounded-[1.15rem] border border-dashed border-primary/35 bg-primary/6 p-2.5 text-center transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/25"
+            className="group flex aspect-square flex-col items-center justify-center rounded-[1.05rem] border border-dashed border-primary/35 bg-primary/6 p-2.5 text-center transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/25"
           >
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-primary/28 bg-primary/12 text-primary">
               <Plus className="h-4 w-4" />
             </span>
-            <p className="mt-2 text-xs font-medium text-foreground">Adicionar</p>
-            <p className="text-[11px] text-muted-foreground">Liberar #{slotCount + 1}</p>
+            <p className="mt-2 text-[11px] text-muted-foreground">#{slotCount + 1}</p>
           </button>
         ) : null}
       </div>

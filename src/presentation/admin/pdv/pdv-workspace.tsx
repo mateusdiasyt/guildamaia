@@ -113,9 +113,7 @@ export function PdvWorkspace({
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <CardTitle>Comandas abertas</CardTitle>
-              <CardDescription>
-                {openComandas.length} comanda(s) ativa(s) em {visibleSlotCount} slot(s) visiveis.
-              </CardDescription>
+              <CardDescription>{openComandas.length} ativas em {visibleSlotCount} slots.</CardDescription>
             </div>
             {canManage ? (
               <Button type="button" size="sm" className="gap-2" onClick={handleOpenManualCreateDialog}>
@@ -136,17 +134,6 @@ export function PdvWorkspace({
             onRequestCreateComanda={handleOpenPresetCreateDialog}
             onSelectComanda={handleSelectComanda}
           />
-
-          <div className="rounded-2xl border border-dashed border-border/75 bg-background/35 px-4 py-3">
-            <p className="text-sm font-medium text-foreground">
-              {selectedComanda
-                ? `Comanda #${selectedComanda.number} selecionada. O atendimento foi aberto ao lado.`
-                : "Slots inativos podem ser abertos com um clique; slots ativos revelam o atendimento ao lado."}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              O botao final com `+` expande o mapa quando voce precisar ir alem das 50 comandas iniciais.
-            </p>
-          </div>
         </CardContent>
       </Card>
 
@@ -154,9 +141,7 @@ export function PdvWorkspace({
         <Card className="animate-in fade-in-0 slide-in-from-right-5 duration-300 xl:sticky xl:top-24">
           <CardHeader className="border-b border-border/70 pb-4">
             <CardTitle>Nova venda</CardTitle>
-            <CardDescription>
-              Fluxo contextual aberto somente quando uma comanda e colocada em foco.
-            </CardDescription>
+            <CardDescription>Comanda em atendimento.</CardDescription>
           </CardHeader>
           <CardContent className="pt-5">
             <CreateSaleForm
