@@ -204,3 +204,41 @@
     background-clip: padding-box;
   }
 }
+
+@media print {
+  @page {
+    size: 57mm auto;
+    margin: 0;
+  }
+
+  html.receipt-print-mode,
+  body.receipt-print-mode {
+    width: 57mm;
+    min-width: 57mm;
+    background: white !important;
+  }
+
+  body.receipt-print-mode aside,
+  body.receipt-print-mode > div > div > div > header,
+  body.receipt-print-mode footer {
+    display: none !important;
+  }
+
+  body.receipt-print-mode main {
+    padding: 0 !important;
+  }
+
+  body.receipt-print-mode .receipt-print-card {
+    width: 57mm !important;
+    max-width: 57mm !important;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  body.receipt-print-mode .receipt-print-content {
+    width: 57mm !important;
+    min-height: 40mm !important;
+  }
+}

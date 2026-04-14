@@ -11,6 +11,7 @@ import { hasPermission, PERMISSIONS } from "@/domain/auth/permissions";
 import { formatCurrency } from "@/lib/format";
 import { CancelSaleForm } from "@/presentation/admin/pdv/cancel-sale-form";
 import { PdvWorkspace } from "@/presentation/admin/pdv/pdv-workspace";
+import { ReceiptPrintMode } from "@/presentation/admin/pdv/receipt-print-mode";
 import { ReceiptPreviewCard } from "@/presentation/admin/pdv/receipt-preview-card";
 
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
@@ -104,6 +105,8 @@ export default async function PdvPage({ searchParams }: PdvPageProps) {
 
   return (
     <div className="space-y-6">
+      {receiptData ? <ReceiptPrintMode /> : null}
+
       {issues.length > 0 ? (
         <Card className="border-amber-400/30 bg-amber-400/8">
           <CardContent className="space-y-2 pt-5">
