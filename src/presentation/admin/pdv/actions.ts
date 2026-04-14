@@ -98,11 +98,6 @@ export async function closeComandaAction(
   try {
     const session = await requirePermission(PERMISSIONS.PDV_MANAGE);
     result = await closeComandaRecord(formData, session.user.id);
-    revalidatePath("/admin/pdv");
-    revalidatePath("/admin/stock");
-    revalidatePath("/admin/products");
-    revalidatePath("/admin/cash");
-    revalidatePath("/admin");
   } catch (error) {
     return { status: "error", message: toActionErrorMessage(error) };
   }

@@ -507,36 +507,6 @@ export async function closeComandaWithSale(data: {
       throw new Error("Adicione itens na comanda antes de fechar a venda.");
     }
 
-    const productIds = [...new Set(comanda.items.map((item) => item.productId))];
-    const products = await tx.product.findMany({
-      where: {
-        id: {
-          in: productIds,
-        },
-      },
-      select: {
-        id: true,
-        salePrice: true,
-      },
-    });
-    const productMap = new Map(products.map((product) => [product.id, product]));
-
-    const subtotalAmount = comanda.items.reduce((acc, item) => {
-      const product = productMap.get(item.productId);
-      if (!product) {
-        throw new Error("Produto da comanda nao encontrado.");
-      }
-      return acc.plus(product.salePrice.times(item.quantity));
-    }, new Prisma.Decimal(0));
-
-    if (data.discountAmount.lessThan(0)) {
-      throw new Error("Desconto invalido.");
-    }
-
-    if (data.discountAmount.greaterThan(subtotalAmount)) {
-      throw new Error("Desconto nao pode ser maior que o subtotal da comanda.");
-    }
-
     const sale = await createSaleWithStockAdjustmentInTransaction(tx, {
       saleNumber: data.saleNumber,
       cashSessionId: data.cashSessionId,
