@@ -97,16 +97,16 @@ export default async function PdvPage() {
             <TableBody>
               {sales.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-sm text-zinc-500">
+                  <TableCell colSpan={8} className="text-center text-sm text-muted-foreground">
                     Nenhuma venda registrada.
                   </TableCell>
                 </TableRow>
               ) : null}
               {sales.map((sale) => (
                 <TableRow key={sale.id}>
-                  <TableCell className="font-medium text-zinc-900">
+                  <TableCell className="font-medium text-foreground">
                     {sale.saleNumber}
-                    {sale.customerName ? <p className="text-xs text-zinc-500">{sale.customerName}</p> : null}
+                    {sale.customerName ? <p className="text-xs text-muted-foreground">{sale.customerName}</p> : null}
                   </TableCell>
                   <TableCell>{dateFormatter.format(sale.createdAt)}</TableCell>
                   <TableCell>{sale.cashSession.cashRegister.name}</TableCell>
@@ -128,7 +128,7 @@ export default async function PdvPage() {
                     {canCancel && sale.status === SaleStatus.COMPLETED ? (
                       <CancelSaleForm saleId={sale.id} />
                     ) : (
-                      <span className="text-xs text-zinc-500">-</span>
+                      <span className="text-xs text-muted-foreground">-</span>
                     )}
                   </TableCell>
                 </TableRow>
