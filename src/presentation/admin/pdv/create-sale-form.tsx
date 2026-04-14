@@ -5,14 +5,22 @@ import Link from "next/link";
 
 import { PaymentMethod } from "@prisma/client";
 import {
+  Beef,
+  Candy,
   Loader2,
+  Package2,
   Plus,
+  Pizza,
   Receipt,
   Search,
+  Sandwich,
   Trash2,
   UserRound,
   Wallet,
   X,
+  Coffee,
+  GlassWater,
+  Grid2x2,
 } from "lucide-react";
 import { useActionState, useDeferredValue, useState, useTransition } from "react";
 
@@ -105,6 +113,12 @@ type PaymentLine = {
   amount: string;
 };
 
+type CategoryFilterOption = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
 const paymentLabels: Record<PaymentMethod, string> = {
   CASH: "Dinheiro",
   PIX: "Pix",
@@ -155,6 +169,54 @@ function productAvatarLabel(name: string) {
     .toUpperCase();
 }
 
+function getCategoryIcon(slug: string, name: string) {
+  const normalized = `${slug} ${name}`.toLowerCase();
+
+  if (
+    normalized.includes("bebida") ||
+    normalized.includes("drink") ||
+    normalized.includes("refrigerante") ||
+    normalized.includes("suco") ||
+    normalized.includes("agua") ||
+    normalized.includes("water")
+  ) {
+    return GlassWater;
+  }
+
+  if (normalized.includes("cafe") || normalized.includes("coffee")) {
+    return Coffee;
+  }
+
+  if (
+    normalized.includes("doce") ||
+    normalized.includes("sobremesa") ||
+    normalized.includes("candy") ||
+    normalized.includes("chocolate")
+  ) {
+    return Candy;
+  }
+
+  if (
+    normalized.includes("lanche") ||
+    normalized.includes("burger") ||
+    normalized.includes("hamburg") ||
+    normalized.includes("sandu") ||
+    normalized.includes("sandwich")
+  ) {
+    return Sandwich;
+  }
+
+  if (normalized.includes("pizza")) {
+    return Pizza;
+  }
+
+  if (normalized.includes("carne") || normalized.includes("beef") || normalized.includes("churrasco")) {
+    return Beef;
+  }
+
+  return Package2;
+}
+
 function ProductCardMedia({
   name,
   imageUrl,
@@ -193,6 +255,7 @@ export function CreateSaleForm({
   const [cancelState, cancelFormAction] = useActionState(cancelComandaAction, initialActionState);
   const [isAddingItem, startAddTransition] = useTransition();
   const [productSearch, setProductSearch] = useState("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("all");
   const deferredProductSearch = useDeferredValue(productSearch);
   const [discountAmount, setDiscountAmount] = useState("0.00");
   const [cashReceived, setCashReceived] = useState("");
@@ -228,8 +291,26 @@ export function CreateSaleForm({
   const paymentDifferenceInCents = totalInCents - paymentsTotalInCents;
   const currentCustomerLabel =
     selectedComanda.customerName || (selectedComanda.isWalkIn ? "Comanda avulsa" : "Sem cliente");
+  const categoryFilters = products.reduce<CategoryFilterOption[]>((categories, product) => {
+    if (categories.some((category) => category.id === product.category.id)) {
+      return categories;
+    }
+
+    categories.push({
+      id: product.category.id,
+      name: product.category.name,
+      slug: product.category.slug,
+    });
+
+    return categories;
+  }, []);
+  categoryFilters.sort((firstCategory, secondCategory) => firstCategory.name.localeCompare(secondCategory.name));
   const normalizedSearch = deferredProductSearch.trim().toLowerCase();
   const filteredProducts = products.filter((product) => {
+    if (selectedCategoryId !== "all" && product.category.id !== selectedCategoryId) {
+      return false;
+    }
+
     if (!normalizedSearch) {
       return true;
     }
@@ -239,27 +320,6 @@ export function CreateSaleForm({
       .toLowerCase()
       .includes(normalizedSearch);
   });
-  const productGroups = filteredProducts.reduce<
-    Array<{
-      id: string;
-      name: string;
-      products: ProductOption[];
-    }>
-  >((groups, product) => {
-    const existingGroup = groups.find((group) => group.id === product.category.id);
-
-    if (existingGroup) {
-      existingGroup.products.push(product);
-      return groups;
-    }
-
-    groups.push({
-      id: product.category.id,
-      name: product.category.name,
-      products: [product],
-    });
-    return groups;
-  }, []);
   const comandaItemMap = new Map(
     optimisticItems.map((item) => [
       item.productId,
@@ -445,97 +505,132 @@ export function CreateSaleForm({
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-foreground">Produtos</p>
-                <p className="text-xs text-muted-foreground">Cards visuais por categoria com adicao rapida na comanda.</p>
+                <p className="text-xs text-muted-foreground">Filtre por categoria e lance o item direto na comanda.</p>
               </div>
               <div className="relative w-full max-w-sm">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   value={productSearch}
                   onChange={(event) => setProductSearch(event.target.value)}
-                  placeholder="Buscar produto ou categoria"
+                  placeholder="Buscar produto"
                   className="pl-9"
                 />
               </div>
             </div>
 
-            {productGroups.length === 0 ? (
+            <div className="admin-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+              <button
+                type="button"
+                onClick={() => setSelectedCategoryId("all")}
+                className={`inline-flex h-11 shrink-0 items-center gap-2 rounded-2xl border px-3 text-sm font-medium transition-all duration-200 ${
+                  selectedCategoryId === "all"
+                    ? "border-primary/60 bg-primary/12 text-foreground shadow-[0_10px_20px_-18px_color-mix(in_oklab,var(--primary)_80%,transparent)]"
+                    : "border-border/75 bg-background/26 text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                }`}
+              >
+                <Grid2x2 className="h-4 w-4" />
+                <span>Todos</span>
+              </button>
+
+              {categoryFilters.map((category) => {
+                const CategoryIcon = getCategoryIcon(category.slug, category.name);
+
+                return (
+                  <button
+                    key={category.id}
+                    type="button"
+                    onClick={() => setSelectedCategoryId(category.id)}
+                    className={`inline-flex h-11 shrink-0 items-center gap-2 rounded-2xl border px-3 text-sm font-medium transition-all duration-200 ${
+                      selectedCategoryId === category.id
+                        ? "border-primary/60 bg-primary/12 text-foreground shadow-[0_10px_20px_-18px_color-mix(in_oklab,var(--primary)_80%,transparent)]"
+                        : "border-border/75 bg-background/26 text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                    }`}
+                  >
+                    <CategoryIcon className="h-4 w-4" />
+                    <span>{category.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {filteredProducts.length === 0 ? (
               <p className="rounded-2xl border border-dashed border-border/75 bg-background/32 px-4 py-6 text-sm text-muted-foreground">
                 Nenhum produto encontrado com este filtro.
               </p>
             ) : (
-              <div className="admin-scrollbar max-h-[43rem] space-y-4 overflow-y-auto pr-1">
-                {productGroups.map((group) => (
-                  <div key={group.id} className="space-y-2">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                        {group.name}
-                      </p>
-                      <span className="text-xs text-muted-foreground">{group.products.length} item(ns)</span>
-                    </div>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    {selectedCategoryId === "all"
+                      ? "Catalogo completo"
+                      : categoryFilters.find((category) => category.id === selectedCategoryId)?.name ?? "Categoria"}
+                  </p>
+                  <span className="text-xs text-muted-foreground">{filteredProducts.length} item(ns)</span>
+                </div>
 
-                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-                      {group.products.map((product) => {
-                        const currentItem = comandaItemMap.get(product.id);
+                <div className="admin-scrollbar max-h-[43rem] overflow-y-auto pr-1">
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+                    {filteredProducts.map((product) => {
+                      const currentItem = comandaItemMap.get(product.id);
 
-                        return (
-                          <form
-                            key={product.id}
-                            onSubmit={(event) => handleAddItemSubmit(event, product)}
-                            className="group relative flex h-full flex-col gap-2.5 rounded-[1.3rem] border border-border/75 bg-background/30 p-3 transition-all duration-200 hover:border-primary/30 hover:bg-background/42"
-                          >
-                            <input type="hidden" name="comandaId" value={selectedComanda.id} />
-                            <input type="hidden" name="productId" value={product.id} />
+                      return (
+                        <form
+                          key={product.id}
+                          onSubmit={(event) => handleAddItemSubmit(event, product)}
+                          className="group relative flex h-full flex-col gap-2.5 rounded-[1.3rem] border border-border/75 bg-background/30 p-3 transition-all duration-200 hover:border-primary/30 hover:bg-background/42"
+                        >
+                          <input type="hidden" name="comandaId" value={selectedComanda.id} />
+                          <input type="hidden" name="productId" value={product.id} />
 
-                            {currentItem ? (
-                              <div className="absolute right-3 top-3 z-10 rounded-full border border-primary/30 bg-primary/12 px-2 py-0.5 text-[10px] font-medium text-primary">
-                                {currentItem.quantity} na comanda
-                              </div>
-                            ) : null}
-
-                            <ProductCardMedia name={product.name} imageUrl={product.imageUrl} />
-
-                            <div className="space-y-1">
-                              <p className="line-clamp-2 min-h-10 text-sm font-semibold leading-5 text-foreground">
-                                {product.name}
-                              </p>
-                              <div className="space-y-0.5 text-xs text-muted-foreground">
-                                <p className="font-medium text-foreground/88">{formatCurrency(product.salePrice)}</p>
-                                <p>{product.currentStock} em estoque</p>
-                              </div>
+                          {currentItem ? (
+                            <div className="absolute right-3 top-3 z-10 rounded-full border border-primary/30 bg-primary/12 px-2 py-0.5 text-[10px] font-medium text-primary">
+                              {currentItem.quantity} na comanda
                             </div>
+                          ) : null}
 
-                            <div className="mt-auto flex items-end gap-2">
-                              <div className="min-w-0 flex-1 space-y-1">
-                                <Label htmlFor={`add-quantity-${selectedComanda.id}-${product.id}`}>Qtd</Label>
-                                <Input
-                                  id={`add-quantity-${selectedComanda.id}-${product.id}`}
-                                  name="quantity"
-                                  type="number"
-                                  min={1}
-                                  step={1}
-                                  defaultValue={1}
-                                  inputMode="numeric"
-                                  className={quantityInputClassName}
-                                  required
-                                />
-                              </div>
-                              {canManage ? (
-                                <Button type="submit" size="icon-sm" className="shrink-0 rounded-2xl" disabled={isAddingItem}>
-                                  {isAddingItem ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                                  <span className="sr-only">Adicionar produto na comanda</span>
-                                </Button>
-                              ) : (
-                                <Button type="button" variant="outline" size="icon-sm" className="shrink-0 rounded-2xl" disabled>
-                                  <Plus className="h-4 w-4" />
-                                </Button>
-                              )}
+                          <ProductCardMedia name={product.name} imageUrl={product.imageUrl} />
+
+                          <div className="space-y-1">
+                            <p className="line-clamp-2 min-h-10 text-sm font-semibold leading-5 text-foreground">
+                              {product.name}
+                            </p>
+                            <div className="space-y-0.5 text-xs text-muted-foreground">
+                              <p className="font-medium text-foreground/88">{formatCurrency(product.salePrice)}</p>
+                              <p>{product.currentStock} em estoque</p>
                             </div>
-                          </form>
-                        );
-                      })}
-                    </div>
+                          </div>
+
+                          <div className="mt-auto flex items-end gap-2">
+                            <div className="min-w-0 flex-1 space-y-1">
+                              <Label htmlFor={`add-quantity-${selectedComanda.id}-${product.id}`}>Qtd</Label>
+                              <Input
+                                id={`add-quantity-${selectedComanda.id}-${product.id}`}
+                                name="quantity"
+                                type="number"
+                                min={1}
+                                step={1}
+                                defaultValue={1}
+                                inputMode="numeric"
+                                className={quantityInputClassName}
+                                required
+                              />
+                            </div>
+                            {canManage ? (
+                              <Button type="submit" size="icon-sm" className="shrink-0 rounded-2xl" disabled={isAddingItem}>
+                                {isAddingItem ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                                <span className="sr-only">Adicionar produto na comanda</span>
+                              </Button>
+                            ) : (
+                              <Button type="button" variant="outline" size="icon-sm" className="shrink-0 rounded-2xl" disabled>
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </form>
+                      );
+                    })}
                   </div>
-                ))}
+                </div>
               </div>
             )}
 
