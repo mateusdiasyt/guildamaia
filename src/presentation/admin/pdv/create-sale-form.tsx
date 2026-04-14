@@ -529,7 +529,7 @@ export function CreateSaleForm({
                 }`}
               >
                 <Grid2x2 className="h-4 w-4" />
-                <span>Todos</span>
+                <span className="uppercase tracking-[0.12em]">Todos</span>
               </button>
 
               {categoryFilters.map((category) => {
@@ -547,7 +547,7 @@ export function CreateSaleForm({
                     }`}
                   >
                     <CategoryIcon className="h-4 w-4" />
-                    <span>{category.name}</span>
+                    <span className="uppercase tracking-[0.12em]">{category.name}</span>
                   </button>
                 );
               })}
