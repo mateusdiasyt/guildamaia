@@ -50,6 +50,19 @@ enum ComandaStatus {
   CANCELLED
 }
 
+enum SupportTicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum SupportTicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
 model BusinessUnit {
   id        String   @id @default(cuid())
   name      String
@@ -466,4 +479,23 @@ model MonthlyGoalPlan {
   createdBy User? @relation("MonthlyGoalPlanCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@index([monthStart])
+}
+
+model SupportTicket {
+  id            String               @id @default(cuid())
+  ticketNumber  String               @unique
+  title         String
+  description   String
+  priority      SupportTicketPriority @default(MEDIUM)
+  status        SupportTicketStatus   @default(OPEN)
+  createdById   String?
+  createdByName String
+  updatedById   String?
+  updatedByName String?
+  resolvedAt    DateTime?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  @@index([status, createdAt])
+  @@index([priority])
 }

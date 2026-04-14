@@ -10,6 +10,7 @@ import {
   ShieldUser,
   Store,
   Target,
+  LifeBuoy,
   Warehouse,
 } from "lucide-react";
 
@@ -76,6 +77,12 @@ export const adminNavigation: AdminNavigationItem[] = [
     href: "/admin/cash",
     icon: Calculator,
     permission: PERMISSIONS.CASH_VIEW,
+  },
+  {
+    label: "Suporte",
+    href: "/admin/support",
+    icon: LifeBuoy,
+    permission: PERMISSIONS.DASHBOARD_VIEW,
   },
   {
     label: "Metas",
