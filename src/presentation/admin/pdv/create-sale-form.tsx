@@ -129,7 +129,7 @@ export function CreateSaleForm({
               <p className="text-lg font-semibold tracking-[-0.02em] text-foreground">{customerLabel}</p>
               <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 <span>Aberta em {openedAtFormatter.format(new Date(selectedComanda.openedAt))}</span>
-                <span className="text-border">•</span>
+                <span className="text-border">|</span>
                 <span>{selectedComanda.itemCount} item(ns)</span>
               </div>
             </div>
@@ -150,6 +150,24 @@ export function CreateSaleForm({
             <X className="h-4 w-4" />
             <span className="sr-only">Fechar painel da comanda</span>
           </Button>
+        </div>
+      </div>
+
+      <div className="grid gap-3 rounded-[1.5rem] border border-border/75 bg-background/32 p-4 md:grid-cols-[180px_minmax(0,1fr)]">
+        <div className="space-y-2">
+          <Label htmlFor={`selected-comanda-${selectedComanda.id}`}>Numero da comanda</Label>
+          <Input
+            id={`selected-comanda-${selectedComanda.id}`}
+            value={`#${selectedComanda.number}`}
+            readOnly
+            disabled
+          />
+        </div>
+        <div className="space-y-1 self-end pb-0.5">
+          <p className="text-sm font-medium text-foreground">Slot selecionado no mapa</p>
+          <p className="text-sm text-muted-foreground">
+            A comanda ja entra definida pelo clique no quadro e nao pode ser trocada por aqui.
+          </p>
         </div>
       </div>
 

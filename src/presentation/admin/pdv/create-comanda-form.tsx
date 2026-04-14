@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 
 import { ActionFeedback } from "@/components/admin/action-feedback";
 import { FormSubmitButton } from "@/components/admin/form-submit-button";
@@ -18,11 +18,25 @@ type CustomerOption = {
 
 type CreateComandaFormProps = {
   customers: CustomerOption[];
+  presetNumber?: number;
+  lockNumber?: boolean;
+  onSuccess?: () => void;
 };
 
-export function CreateComandaForm({ customers }: CreateComandaFormProps) {
+export function CreateComandaForm({
+  customers,
+  presetNumber,
+  lockNumber = false,
+  onSuccess,
+}: CreateComandaFormProps) {
   const [state, formAction] = useActionState(createComandaAction, initialActionState);
   const [isWalkIn, setIsWalkIn] = useState(customers.length === 0);
+
+  useEffect(() => {
+    if (state.status === "success") {
+      onSuccess?.();
+    }
+  }, [onSuccess, state.status]);
 
   const customerOptions = useMemo(
     () =>
@@ -37,7 +51,23 @@ export function CreateComandaForm({ customers }: CreateComandaFormProps) {
     <form action={formAction} className="grid gap-4 md:grid-cols-3">
       <div className="space-y-2">
         <Label htmlFor="number">Numero da comanda</Label>
-        <Input id="number" name="number" type="number" min={0} max={200} placeholder="0 a 200" required />
+        <Input
+          key={`number-${presetNumber ?? "manual"}-${lockNumber ? "locked" : "free"}`}
+          id="number"
+          name="number"
+          type="number"
+          min={1}
+          max={200}
+          placeholder="1 a 200"
+          defaultValue={presetNumber ? String(presetNumber) : ""}
+          readOnly={lockNumber}
+          required
+        />
+        {lockNumber ? (
+          <p className="text-xs text-muted-foreground">
+            Numero definido pelo slot escolhido no mapa de comandas.
+          </p>
+        ) : null}
       </div>
 
       <div className="space-y-2 md:col-span-2">

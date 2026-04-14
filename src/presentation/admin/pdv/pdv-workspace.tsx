@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { Plus } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { CreateComandaDialog } from "@/presentation/admin/pdv/create-comanda-dialog";
@@ -57,6 +59,8 @@ type PdvWorkspaceProps = {
   canManage: boolean;
 };
 
+const DEFAULT_SLOT_COUNT = 50;
+
 export function PdvWorkspace({
   customers,
   openSessions,
@@ -65,11 +69,36 @@ export function PdvWorkspace({
   canManage,
 }: PdvWorkspaceProps) {
   const [selectedComandaId, setSelectedComandaId] = useState<string | null>(null);
+  const [manualSlotCount, setManualSlotCount] = useState(DEFAULT_SLOT_COUNT);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [createDialogPresetNumber, setCreateDialogPresetNumber] = useState<number | undefined>(undefined);
+  const [lockCreateDialogNumber, setLockCreateDialogNumber] = useState(false);
 
   const selectedComanda = openComandas.find((comanda) => comanda.id === selectedComandaId) ?? null;
+  const highestActiveNumber = openComandas.reduce(
+    (currentMax, comanda) => Math.max(currentMax, comanda.number),
+    DEFAULT_SLOT_COUNT,
+  );
+  const visibleSlotCount = Math.max(manualSlotCount, highestActiveNumber, DEFAULT_SLOT_COUNT);
 
   function handleSelectComanda(comandaId: string) {
     setSelectedComandaId((currentValue) => (currentValue === comandaId ? null : comandaId));
+  }
+
+  function handleOpenManualCreateDialog() {
+    setCreateDialogPresetNumber(undefined);
+    setLockCreateDialogNumber(false);
+    setIsCreateDialogOpen(true);
+  }
+
+  function handleOpenPresetCreateDialog(slotNumber: number) {
+    setCreateDialogPresetNumber(slotNumber);
+    setLockCreateDialogNumber(true);
+    setIsCreateDialogOpen(true);
+  }
+
+  function handleAddSlot() {
+    setManualSlotCount((currentValue) => Math.max(currentValue, visibleSlotCount) + 1);
   }
 
   return (
@@ -84,16 +113,27 @@ export function PdvWorkspace({
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <CardTitle>Comandas abertas</CardTitle>
-              <CardDescription>{openComandas.length} comanda(s) ativa(s).</CardDescription>
+              <CardDescription>
+                {openComandas.length} comanda(s) ativa(s) em {visibleSlotCount} slot(s) visiveis.
+              </CardDescription>
             </div>
-            {canManage ? <CreateComandaDialog customers={customers} /> : null}
+            {canManage ? (
+              <Button type="button" size="sm" className="gap-2" onClick={handleOpenManualCreateDialog}>
+                <Plus className="h-4 w-4" />
+                Nova comanda
+              </Button>
+            ) : null}
           </div>
         </CardHeader>
 
         <CardContent className="space-y-4 pt-5">
           <OpenComandasBoard
+            canManage={canManage}
             openComandas={openComandas}
+            slotCount={visibleSlotCount}
             selectedComandaId={selectedComandaId}
+            onAddSlot={handleAddSlot}
+            onRequestCreateComanda={handleOpenPresetCreateDialog}
             onSelectComanda={handleSelectComanda}
           />
 
@@ -101,10 +141,10 @@ export function PdvWorkspace({
             <p className="text-sm font-medium text-foreground">
               {selectedComanda
                 ? `Comanda #${selectedComanda.number} selecionada. O atendimento foi aberto ao lado.`
-                : "Selecione uma comanda no mapa para abrir o painel de atendimento."}
+                : "Slots inativos podem ser abertos com um clique; slots ativos revelam o atendimento ao lado."}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Clique novamente na mesma comanda para recolher o painel e voltar ao mapa.
+              O botao final com `+` expande o mapa quando voce precisar ir alem das 50 comandas iniciais.
             </p>
           </div>
         </CardContent>
@@ -130,6 +170,14 @@ export function PdvWorkspace({
           </CardContent>
         </Card>
       ) : null}
+
+      <CreateComandaDialog
+        customers={customers}
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        presetNumber={createDialogPresetNumber}
+        lockNumber={lockCreateDialogNumber}
+      />
     </section>
   );
 }
