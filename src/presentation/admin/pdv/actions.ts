@@ -1,15 +1,19 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { requirePermission } from "@/application/auth/guards";
 import {
   addComandaItemRecord,
+  cancelComandaRecord,
   cancelSaleRecord,
   closeComandaRecord,
   createComandaRecord,
   createSaleRecord,
   removeComandaItemRecord,
+  updateComandaCustomerRecord,
+  updateComandaItemRecord,
 } from "@/application/pdv/pdv-service";
 import { PERMISSIONS } from "@/domain/auth/permissions";
 import { initialActionState, toActionErrorMessage, type ActionState } from "@/presentation/admin/common/action-state";
@@ -87,26 +91,91 @@ export async function closeComandaAction(
   formData: FormData,
 ): Promise<ActionState> {
   void prevState;
+  let result: Awaited<ReturnType<typeof closeComandaRecord>> | null = null;
   try {
     const session = await requirePermission(PERMISSIONS.PDV_MANAGE);
-    await closeComandaRecord(formData, session.user.id);
+    result = await closeComandaRecord(formData, session.user.id);
     revalidatePath("/admin/pdv");
     revalidatePath("/admin/stock");
     revalidatePath("/admin/products");
     revalidatePath("/admin/cash");
     revalidatePath("/admin");
-    return { status: "success", message: "Comanda fechada e venda registrada." };
+  } catch (error) {
+    return { status: "error", message: toActionErrorMessage(error) };
+  }
+
+  if (!result) {
+    return { status: "error", message: "Nao foi possivel concluir o fechamento da comanda." };
+  }
+
+  const params = new URLSearchParams({
+    receipt: result.saleId,
+  });
+
+  if (result.cashReceived) {
+    params.set("cashReceived", result.cashReceived);
+  }
+
+  redirect(`/admin/pdv?${params.toString()}`);
+}
+
+export async function removeComandaItemAction(
+  prevState: ActionState = initialActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  void prevState;
+  try {
+    const session = await requirePermission(PERMISSIONS.PDV_MANAGE);
+    await removeComandaItemRecord(formData, session.user.id);
+    revalidatePath("/admin/pdv");
+    return { status: "success", message: "Item removido da comanda." };
   } catch (error) {
     return { status: "error", message: toActionErrorMessage(error) };
   }
 }
 
-export async function removeComandaItemAction(formData: FormData) {
+export async function updateComandaItemAction(
+  prevState: ActionState = initialActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  void prevState;
   try {
     const session = await requirePermission(PERMISSIONS.PDV_MANAGE);
-    await removeComandaItemRecord(formData, session.user.id);
+    await updateComandaItemRecord(formData, session.user.id);
+    revalidatePath("/admin/pdv");
+    return { status: "success", message: "Item atualizado." };
   } catch (error) {
-    console.error("Falha ao remover item da comanda", error);
+    return { status: "error", message: toActionErrorMessage(error) };
   }
-  revalidatePath("/admin/pdv");
+}
+
+export async function updateComandaCustomerAction(
+  prevState: ActionState = initialActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  void prevState;
+  try {
+    const session = await requirePermission(PERMISSIONS.PDV_MANAGE);
+    await updateComandaCustomerRecord(formData, session.user.id);
+    revalidatePath("/admin/pdv");
+    return { status: "success", message: "Cliente da comanda atualizado." };
+  } catch (error) {
+    return { status: "error", message: toActionErrorMessage(error) };
+  }
+}
+
+export async function cancelComandaAction(
+  prevState: ActionState = initialActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  void prevState;
+  try {
+    const session = await requirePermission(PERMISSIONS.PDV_MANAGE);
+    await cancelComandaRecord(formData, session.user.id);
+    revalidatePath("/admin/pdv");
+    revalidatePath("/admin");
+    return { status: "success", message: "Comanda cancelada." };
+  } catch (error) {
+    return { status: "error", message: toActionErrorMessage(error) };
+  }
 }

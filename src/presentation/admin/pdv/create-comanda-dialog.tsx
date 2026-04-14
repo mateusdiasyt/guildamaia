@@ -35,7 +35,7 @@ export function CreateComandaDialog({
           <DialogDescription>
             {lockNumber
               ? "Este numero foi escolhido direto no mapa e ja vem travado para evitar troca acidental."
-              : "Abra comandas numeradas de 1 a 200 e vincule um cliente cadastrado ou atendimento avulso."}
+              : "Abra comandas numeradas de 1 a 999 e vincule um cliente cadastrado ou atendimento avulso."}
           </DialogDescription>
         </DialogHeader>
         <div className="max-h-[78vh] overflow-y-auto p-5">

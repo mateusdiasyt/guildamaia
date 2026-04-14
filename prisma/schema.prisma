@@ -185,6 +185,7 @@ model Product {
   name          String
   sku           String       @unique
   description   String?
+  imageUrl      String?
   costPrice     Decimal      @db.Decimal(12, 2)
   salePrice     Decimal      @db.Decimal(12, 2)
   marginPercent Decimal      @default(0) @db.Decimal(5, 2)

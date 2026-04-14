@@ -1,7 +1,6 @@
 import { Prisma, RecordStatus } from "@prisma/client";
-import { z } from "zod";
 
-import { createProductSchema } from "@/domain/catalog/schemas";
+import { createProductSchema, updateProductSchema } from "@/domain/catalog/schemas";
 import { emptyToUndefined } from "@/domain/shared/normalizers";
 import { createAuditLog } from "@/infrastructure/db/repositories/audit-log-repository";
 import { listCategoryOptions } from "@/infrastructure/db/repositories/category-repository";
@@ -9,6 +8,7 @@ import {
   createProduct,
   listProductOptions,
   listProducts,
+  updateProduct,
   updateProductStatus,
 } from "@/infrastructure/db/repositories/product-repository";
 import { listSupplierOptions } from "@/infrastructure/db/repositories/supplier-repository";
@@ -43,6 +43,7 @@ export async function createProductRecord(input: FormData, actorId?: string) {
     name: input.get("name"),
     sku: input.get("sku"),
     description: input.get("description"),
+    imageUrl: input.get("imageUrl"),
     categoryId: input.get("categoryId"),
     supplierId: input.get("supplierId"),
     costPrice: input.get("costPrice"),
@@ -60,6 +61,7 @@ export async function createProductRecord(input: FormData, actorId?: string) {
     name: parsed.name.trim(),
     sku: parsed.sku.trim(),
     description: emptyToUndefined(parsed.description),
+    imageUrl: emptyToUndefined(parsed.imageUrl),
     categoryId: parsed.categoryId,
     supplierId: emptyToUndefined(parsed.supplierId),
     costPrice,
@@ -77,19 +79,68 @@ export async function createProductRecord(input: FormData, actorId?: string) {
     entityId: created.id,
     metadata: {
       sku: created.sku,
+      imageUrl: created.imageUrl,
       categoryId: created.categoryId,
       supplierId: created.supplierId,
     },
   });
 }
 
-const updateProductStatusSchema = z.object({
-  productId: z.string().min(1, "Produto obrigatorio"),
-  status: z.nativeEnum(RecordStatus),
-});
+export async function updateProductRecord(input: FormData, actorId?: string) {
+  const parsed = updateProductSchema.parse({
+    productId: input.get("productId"),
+    name: input.get("name"),
+    sku: input.get("sku"),
+    description: input.get("description"),
+    imageUrl: input.get("imageUrl"),
+    categoryId: input.get("categoryId"),
+    supplierId: input.get("supplierId"),
+    costPrice: input.get("costPrice"),
+    salePrice: input.get("salePrice"),
+    minStock: input.get("minStock"),
+    currentStock: input.get("currentStock"),
+    status: input.get("status"),
+  });
+
+  const costPrice = new Prisma.Decimal(parsed.costPrice);
+  const salePrice = new Prisma.Decimal(parsed.salePrice);
+  const marginPercent = calculateMargin(costPrice, salePrice);
+
+  const updated = await updateProduct({
+    productId: parsed.productId,
+    name: parsed.name.trim(),
+    sku: parsed.sku.trim(),
+    description: emptyToUndefined(parsed.description),
+    imageUrl: emptyToUndefined(parsed.imageUrl),
+    categoryId: parsed.categoryId,
+    supplierId: emptyToUndefined(parsed.supplierId),
+    costPrice,
+    salePrice,
+    marginPercent,
+    minStock: parsed.minStock,
+    currentStock: parsed.currentStock,
+    status: parsed.status,
+  });
+
+  await createAuditLog({
+    userId: actorId,
+    action: "products.update",
+    entity: "Product",
+    entityId: updated.id,
+    metadata: {
+      sku: updated.sku,
+      imageUrl: updated.imageUrl,
+      categoryId: updated.categoryId,
+      supplierId: updated.supplierId,
+    },
+  });
+}
 
 export async function updateProductStatusRecord(input: FormData, actorId?: string) {
-  const parsed = updateProductStatusSchema.parse({
+  const parsed = updateProductSchema.pick({
+    productId: true,
+    status: true,
+  }).parse({
     productId: input.get("productId"),
     status: input.get("status"),
   });

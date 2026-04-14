@@ -17,6 +17,7 @@ import {
   openCashSession,
   registerCashWithdrawal,
 } from "@/infrastructure/db/repositories/cash-repository";
+import { listCashAuditLogs as listCashAuditLogsRepository } from "@/infrastructure/db/repositories/audit-log-repository";
 
 export async function getCashManagementData() {
   const [registers, sessions, openSessions] = await Promise.all([
@@ -26,6 +27,30 @@ export async function getCashManagementData() {
   ]);
 
   return { registers, sessions, openSessions };
+}
+
+export async function getCashAuditLogs(search?: string) {
+  const logs = await listCashAuditLogsRepository();
+  const normalizedSearch = search?.trim().toLowerCase();
+
+  if (!normalizedSearch) {
+    return logs;
+  }
+
+  return logs.filter((log) => {
+    const metadataText = log.metadata ? JSON.stringify(log.metadata).toLowerCase() : "";
+    return [
+      log.action,
+      log.entity,
+      log.entityId ?? "",
+      log.user?.name ?? "",
+      log.user?.email ?? "",
+      metadataText,
+    ]
+      .join(" ")
+      .toLowerCase()
+      .includes(normalizedSearch);
+  });
 }
 
 export async function openCashSessionRecord(input: FormData, actorId: string) {

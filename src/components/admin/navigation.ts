@@ -30,6 +30,12 @@ export const adminNavigation: AdminNavigationItem[] = [
     permission: PERMISSIONS.DASHBOARD_VIEW,
   },
   {
+    label: "PDV",
+    href: "/admin/pdv",
+    icon: Receipt,
+    permission: PERMISSIONS.PDV_VIEW,
+  },
+  {
     label: "Usuarios",
     href: "/admin/users",
     icon: ShieldUser,
@@ -70,12 +76,6 @@ export const adminNavigation: AdminNavigationItem[] = [
     href: "/admin/cash",
     icon: Calculator,
     permission: PERMISSIONS.CASH_VIEW,
-  },
-  {
-    label: "PDV",
-    href: "/admin/pdv",
-    icon: Receipt,
-    permission: PERMISSIONS.PDV_VIEW,
   },
   {
     label: "Metas",

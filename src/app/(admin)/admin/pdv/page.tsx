@@ -1,7 +1,9 @@
+import Link from "next/link";
+
 import { SaleStatus } from "@prisma/client";
 
 import { requirePermission } from "@/application/auth/guards";
-import { getPdvData } from "@/application/pdv/pdv-service";
+import { getPdvData, getSaleReceiptData } from "@/application/pdv/pdv-service";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -9,18 +11,37 @@ import { hasPermission, PERMISSIONS } from "@/domain/auth/permissions";
 import { formatCurrency } from "@/lib/format";
 import { CancelSaleForm } from "@/presentation/admin/pdv/cancel-sale-form";
 import { PdvWorkspace } from "@/presentation/admin/pdv/pdv-workspace";
+import { ReceiptPreviewCard } from "@/presentation/admin/pdv/receipt-preview-card";
 
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",
   timeStyle: "short",
 });
 
+type PdvPageProps = {
+  searchParams: Promise<{
+    receipt?: string;
+    cashReceived?: string;
+  }>;
+};
+
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
-export default async function PdvPage() {
+function parseCashReceived(value?: string) {
+  if (!value) {
+    return undefined;
+  }
+
+  const parsed = Number(value.replace(",", "."));
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+export default async function PdvPage({ searchParams }: PdvPageProps) {
   const session = await requirePermission(PERMISSIONS.PDV_VIEW);
+  const { receipt, cashReceived } = await searchParams;
   const { openSessions, products, sales, customers, openComandas } = await getPdvData();
+  const receiptData = receipt ? await getSaleReceiptData(receipt) : null;
   const canManage = hasPermission(session.user.permissions, PERMISSIONS.PDV_MANAGE);
   const canCancel = hasPermission(session.user.permissions, PERMISSIONS.PDV_CANCEL);
 
@@ -43,13 +64,22 @@ export default async function PdvPage() {
     id: product.id,
     name: product.name,
     sku: product.sku,
+    imageUrl: product.imageUrl,
+    salePrice: Number(product.salePrice),
+    currentStock: product.currentStock,
+    category: {
+      id: product.category.id,
+      name: product.category.name,
+      slug: product.category.slug,
+    },
   }));
 
   const openComandasView = openComandas.map((comanda) => ({
     id: comanda.id,
     number: comanda.number,
     isWalkIn: comanda.isWalkIn,
-    customerName: comanda.customer?.fullName ?? comanda.customerNameSnapshot ?? "Cliente nao informado",
+    customerId: comanda.customerId,
+    customerName: comanda.customer?.fullName ?? comanda.customerNameSnapshot ?? "Comanda avulsa",
     subtotalAmount: Number(comanda.subtotalAmount),
     itemCount: comanda.items.length,
     openedAt: comanda.openedAt.toISOString(),
@@ -61,82 +91,105 @@ export default async function PdvPage() {
       product: {
         name: item.product.name,
         sku: item.product.sku,
+        imageUrl: item.product.imageUrl,
+        currentStock: item.product.currentStock,
+        category: {
+          id: item.product.category.id,
+          name: item.product.category.name,
+          slug: item.product.category.slug,
+        },
       },
     })),
   }));
 
   return (
     <div className="space-y-6">
-      <PdvWorkspace
-        canManage={canManage}
-        customers={customerOptions}
-        openSessions={openSessionOptions}
-        openComandas={openComandasView}
-        products={productOptions}
-      />
+      {receiptData ? (
+        <ReceiptPreviewCard sale={receiptData} cashReceived={parseCashReceived(cashReceived)} />
+      ) : null}
 
-      <Card>
-        <CardHeader className="border-b border-border/70 pb-4">
-          <CardTitle>Vendas recentes</CardTitle>
-          <CardDescription>{sales.length} venda(s) encontrada(s).</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Venda</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead>Caixa</TableHead>
-                <TableHead>Operador</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Itens</TableHead>
-                <TableHead className="text-right">Total (R$)</TableHead>
-                <TableHead>Acoes</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sales.length === 0 ? (
+      <div className={receiptData ? "print:hidden" : undefined}>
+        <PdvWorkspace
+          canManage={canManage}
+          customers={customerOptions}
+          openSessions={openSessionOptions}
+          openComandas={openComandasView}
+          products={productOptions}
+        />
+      </div>
+
+      <div className={receiptData ? "print:hidden" : undefined}>
+        <Card>
+          <CardHeader className="border-b border-border/70 pb-4">
+            <CardTitle>Vendas recentes</CardTitle>
+            <CardDescription>{sales.length} venda(s) encontrada(s).</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-sm text-muted-foreground">
-                    Nenhuma venda registrada.
-                  </TableCell>
+                  <TableHead>Venda</TableHead>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Caixa</TableHead>
+                  <TableHead>Operador</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Itens</TableHead>
+                  <TableHead className="text-right">Total (R$)</TableHead>
+                  <TableHead>Acoes</TableHead>
                 </TableRow>
-              ) : null}
-              {sales.map((sale) => (
-                <TableRow key={sale.id}>
-                  <TableCell className="font-medium text-foreground">
-                    {sale.saleNumber}
-                    {sale.customerName ? <p className="text-xs text-muted-foreground">{sale.customerName}</p> : null}
-                  </TableCell>
-                  <TableCell>{dateFormatter.format(sale.createdAt)}</TableCell>
-                  <TableCell>{sale.cashSession.cashRegister.name}</TableCell>
-                  <TableCell>{sale.operator.name}</TableCell>
-                  <TableCell>
-                    <Badge
-                      className={
-                        sale.status === SaleStatus.COMPLETED
-                          ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
-                          : "bg-rose-100 text-rose-700 hover:bg-rose-100"
-                      }
-                    >
-                      {sale.status === SaleStatus.COMPLETED ? "Concluida" : "Cancelada"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">{sale.items.length}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(Number(sale.totalAmount))}</TableCell>
-                  <TableCell>
-                    {canCancel && sale.status === SaleStatus.COMPLETED ? (
-                      <CancelSaleForm saleId={sale.id} />
-                    ) : (
-                      <span className="text-xs text-muted-foreground">-</span>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              </TableHeader>
+              <TableBody>
+                {sales.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center text-sm text-muted-foreground">
+                      Nenhuma venda registrada.
+                    </TableCell>
+                  </TableRow>
+                ) : null}
+                {sales.map((sale) => (
+                  <TableRow key={sale.id}>
+                    <TableCell className="font-medium text-foreground">
+                      {sale.saleNumber}
+                      {sale.customerName ? <p className="text-xs text-muted-foreground">{sale.customerName}</p> : null}
+                    </TableCell>
+                    <TableCell>{dateFormatter.format(sale.createdAt)}</TableCell>
+                    <TableCell>{sale.cashSession.cashRegister.name}</TableCell>
+                    <TableCell>{sale.operator.name}</TableCell>
+                    <TableCell>
+                      <Badge
+                        className={
+                          sale.status === SaleStatus.COMPLETED
+                            ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+                            : "bg-rose-100 text-rose-700 hover:bg-rose-100"
+                        }
+                      >
+                        {sale.status === SaleStatus.COMPLETED ? "Concluida" : "Cancelada"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">{sale.items.length}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(Number(sale.totalAmount))}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Link
+                          href={`/admin/pdv?receipt=${sale.id}`}
+                          className="inline-flex h-8 items-center justify-center rounded-xl border border-border/80 bg-background/85 px-3 text-[0.8rem] font-medium text-foreground shadow-sm transition-colors hover:border-border hover:bg-muted/70"
+                        >
+                          Comprovante
+                        </Link>
+                        {canCancel && sale.status === SaleStatus.COMPLETED ? (
+                          <CancelSaleForm saleId={sale.id} />
+                        ) : (
+                          <span className="text-xs text-muted-foreground">-</span>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

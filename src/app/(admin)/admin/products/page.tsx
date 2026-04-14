@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { RecordStatus } from "@prisma/client";
 import { Download, Search, SlidersHorizontal } from "lucide-react";
@@ -8,11 +9,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { hasPermission, PERMISSIONS } from "@/domain/auth/permissions";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { CreateProductDialog } from "@/presentation/admin/catalog/products/create-product-dialog";
+import { EditProductDialog } from "@/presentation/admin/catalog/products/edit-product-dialog";
 import { toggleProductStatusAction } from "@/presentation/admin/catalog/products/actions";
 
 type ProductsPageProps = {
@@ -42,6 +43,30 @@ function productAvatarLabel(name: string) {
     .toUpperCase();
 }
 
+function ProductImageCard({
+  name,
+  imageUrl,
+}: {
+  name: string;
+  imageUrl?: string | null;
+}) {
+  if (!imageUrl) {
+    return (
+      <div className="flex aspect-[4/3] items-center justify-center rounded-2xl border border-dashed border-border/75 bg-background/35">
+        <span className="text-2xl font-semibold tracking-[-0.04em] text-muted-foreground">
+          {productAvatarLabel(name)}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-border/75 bg-background/35">
+      <Image src={imageUrl} alt={name} fill className="object-cover" unoptimized />
+    </div>
+  );
+}
+
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
   const session = await requirePermission(PERMISSIONS.PRODUCTS_VIEW);
   const { q, status, categoryId } = await searchParams;
@@ -62,14 +87,34 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const canManage = hasPermission(session.user.permissions, PERMISSIONS.PRODUCTS_MANAGE);
   const hasFilters = Boolean(search || statusFilter || categoryFilter);
 
+  const groupedProducts = options.categories
+    .map((category) => ({
+      id: category.id,
+      name: category.name,
+      products: products.filter((product) => product.categoryId === category.id),
+    }))
+    .filter((category) => category.products.length > 0);
+
+  const uncategorizedProducts = products.filter(
+    (product) => !options.categories.some((category) => category.id === product.categoryId),
+  );
+
+  if (uncategorizedProducts.length > 0) {
+    groupedProducts.push({
+      id: "sem-categoria",
+      name: "Outras categorias",
+      products: uncategorizedProducts,
+    });
+  }
+
   return (
     <div className="space-y-6">
       <section className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-1">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">Modulo ERP</p>
-          <h1 className="text-3xl font-semibold tracking-[-0.01em] text-foreground">Lista de produtos</h1>
+          <h1 className="text-3xl font-semibold tracking-[-0.01em] text-foreground">Catalogo de produtos</h1>
           <p className="text-sm text-muted-foreground">
-            Listagem operacional de produtos com filtros por status e categoria.
+            Produtos organizados por categoria, com imagem, estoque e edicao direta.
           </p>
         </div>
 
@@ -84,10 +129,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
       <Card>
         <CardContent className="space-y-4 pt-4">
-          <form
-            method="GET"
-            className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_170px_220px_auto_auto]"
-          >
+          <form method="GET" className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_170px_220px_auto_auto]">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -98,11 +140,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
               />
             </div>
 
-            <select
-              name="status"
-              className="admin-native-select"
-              defaultValue={statusFilter ?? "all"}
-            >
+            <select name="status" className="admin-native-select" defaultValue={statusFilter ?? "all"}>
               {statusFilterOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
@@ -110,11 +148,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
               ))}
             </select>
 
-            <select
-              name="categoryId"
-              className="admin-native-select"
-              defaultValue={categoryFilter ?? "all"}
-            >
+            <select name="categoryId" className="admin-native-select" defaultValue={categoryFilter ?? "all"}>
               <option value="all">Categoria</option>
               {options.categories.map((category) => (
                 <option key={category.id} value={category.id}>
@@ -133,56 +167,82 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             </Link>
           </form>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-8">
-                  <input type="checkbox" className="h-4 w-4 rounded border-border/80 bg-background" />
-                </TableHead>
-                <TableHead>Produto</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead>Estoque</TableHead>
-                <TableHead className="text-right">Preco</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Acao</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {products.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center text-sm text-muted-foreground">
-                    Nenhum produto encontrado com os filtros atuais.
-                  </TableCell>
-                </TableRow>
-              ) : null}
-              {products.map((product) => {
-                const isLowStock = product.currentStock <= product.minStock;
-                const isOutOfStock = product.currentStock <= 0;
-                const stockLabel = isOutOfStock ? "Sem estoque" : isLowStock ? "Estoque baixo" : "Disponivel";
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/70 pt-3 text-xs text-muted-foreground">
+            <p>
+              {products.length} produto(s) encontrado(s)
+            </p>
+            <p>Filtros ativos: {hasFilters ? "sim" : "nao"}</p>
+          </div>
+        </CardContent>
+      </Card>
 
-                return (
-                  <TableRow key={product.id}>
-                    <TableCell className="w-8">
-                      <input type="checkbox" className="h-4 w-4 rounded border-border/80 bg-background" />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border/75 bg-muted/35 text-xs font-semibold text-muted-foreground">
-                          {productAvatarLabel(product.name)}
-                        </div>
+      {groupedProducts.length === 0 ? (
+        <Card>
+          <CardContent className="py-10 text-center text-sm text-muted-foreground">
+            Nenhum produto encontrado com os filtros atuais.
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {groupedProducts.map((category) => (
+        <section key={category.id} className="space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">{category.name}</h2>
+              <p className="text-sm text-muted-foreground">{category.products.length} produto(s)</p>
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {category.products.map((product) => {
+              const isLowStock = product.currentStock <= product.minStock;
+              const isOutOfStock = product.currentStock <= 0;
+              const stockLabel = isOutOfStock ? "Sem estoque" : isLowStock ? "Estoque baixo" : "Disponivel";
+
+              return (
+                <Card key={product.id} className="overflow-hidden">
+                  <CardContent className="space-y-4 pt-4">
+                    <ProductImageCard name={product.name} imageUrl={product.imageUrl} />
+
+                    <div className="space-y-2">
+                      <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="font-semibold text-foreground">{product.name}</p>
+                          <p className="text-base font-semibold text-foreground">{product.name}</p>
                           <p className="text-xs text-muted-foreground">{product.sku}</p>
                         </div>
+                        <Badge
+                          className={
+                            product.status === RecordStatus.ACTIVE
+                              ? "border border-emerald-400/20 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/15"
+                              : "border border-rose-400/20 bg-rose-500/15 text-rose-300 hover:bg-rose-500/15"
+                          }
+                        >
+                          {product.status === RecordStatus.ACTIVE ? "Ativo" : "Inativo"}
+                        </Badge>
                       </div>
-                    </TableCell>
-                    <TableCell>{product.category.name}</TableCell>
-                    <TableCell>
-                      <div className="space-y-0.5">
-                        <p className="font-semibold text-foreground">{product.currentStock}</p>
+
+                      <p className="line-clamp-2 text-sm text-muted-foreground">
+                        {product.description || "Sem descricao cadastrada."}
+                      </p>
+                    </div>
+
+                    <div className="grid gap-3 rounded-2xl border border-border/75 bg-background/32 p-4 sm:grid-cols-3">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Categoria</p>
+                        <p className="mt-1 text-sm font-medium text-foreground">{product.category.name}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Preco</p>
+                        <p className="mt-1 text-sm font-medium text-foreground">
+                          {formatCurrency(Number(product.salePrice))}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">Estoque</p>
+                        <p className="mt-1 text-sm font-medium text-foreground">{product.currentStock}</p>
                         <p
                           className={cn(
-                            "text-xs font-medium",
+                            "text-xs",
                             isOutOfStock
                               ? "text-rose-400"
                               : isLowStock
@@ -193,55 +253,53 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                           {stockLabel}
                         </p>
                       </div>
-                    </TableCell>
-                    <TableCell className="text-right">{formatCurrency(Number(product.salePrice))}</TableCell>
-                    <TableCell>
-                      <Badge
-                        className={
-                          product.status === RecordStatus.ACTIVE
-                            ? "border border-emerald-400/20 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/15"
-                            : "border border-rose-400/20 bg-rose-500/15 text-rose-300 hover:bg-rose-500/15"
-                        }
-                      >
-                        {product.status === RecordStatus.ACTIVE ? "Ativo" : "Inativo"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-end gap-2">
                       {canManage ? (
-                        <form action={toggleProductStatusAction} className="inline-flex">
-                          <input type="hidden" name="productId" value={product.id} />
-                          <input
-                            type="hidden"
-                            name="status"
-                            value={
-                              product.status === RecordStatus.ACTIVE ? RecordStatus.INACTIVE : RecordStatus.ACTIVE
-                            }
+                        <>
+                          <EditProductDialog
+                            categories={options.categories}
+                            suppliers={options.suppliers}
+                            product={{
+                              id: product.id,
+                              name: product.name,
+                              sku: product.sku,
+                              description: product.description,
+                              imageUrl: product.imageUrl,
+                              categoryId: product.categoryId,
+                              supplierId: product.supplierId,
+                              costPrice: Number(product.costPrice).toFixed(2),
+                              salePrice: Number(product.salePrice).toFixed(2),
+                              minStock: product.minStock,
+                              currentStock: product.currentStock,
+                              status: product.status,
+                            }}
                           />
-                          <Button type="submit" variant="outline" size="sm">
-                            {product.status === RecordStatus.ACTIVE ? "Desativar" : "Reativar"}
-                          </Button>
-                        </form>
+
+                          <form action={toggleProductStatusAction} className="inline-flex">
+                            <input type="hidden" name="productId" value={product.id} />
+                            <input
+                              type="hidden"
+                              name="status"
+                              value={product.status === RecordStatus.ACTIVE ? RecordStatus.INACTIVE : RecordStatus.ACTIVE}
+                            />
+                            <Button type="submit" variant="outline" size="sm">
+                              {product.status === RecordStatus.ACTIVE ? "Desativar" : "Reativar"}
+                            </Button>
+                          </form>
+                        </>
                       ) : (
-                        <span className="text-xs text-muted-foreground">Sem permissao</span>
+                        <span className="text-xs text-muted-foreground">Sem permissao de edicao</span>
                       )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border/70 pt-3 text-xs text-muted-foreground">
-            <p>
-              Resultado 1-{products.length} de {products.length}
-            </p>
-            <p>
-              Filtros ativos: {hasFilters ? "sim" : "nao"}
-            </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
-        </CardContent>
-      </Card>
-
+        </section>
+      ))}
     </div>
   );
 }

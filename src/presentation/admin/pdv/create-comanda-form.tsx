@@ -57,8 +57,8 @@ export function CreateComandaForm({
           name="number"
           type="number"
           min={1}
-          max={200}
-          placeholder="1 a 200"
+          max={999}
+          placeholder="1 a 999"
           defaultValue={presetNumber ? String(presetNumber) : ""}
           readOnly={lockNumber}
           required

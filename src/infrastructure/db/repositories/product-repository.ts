@@ -42,6 +42,7 @@ export async function createProduct(data: {
   name: string;
   sku: string;
   description?: string;
+  imageUrl?: string;
   categoryId: string;
   supplierId?: string;
   costPrice: Prisma.Decimal;
@@ -56,6 +57,40 @@ export async function createProduct(data: {
   });
 }
 
+export async function updateProduct(data: {
+  productId: string;
+  name: string;
+  sku: string;
+  description?: string;
+  imageUrl?: string;
+  categoryId: string;
+  supplierId?: string;
+  costPrice: Prisma.Decimal;
+  salePrice: Prisma.Decimal;
+  marginPercent: Prisma.Decimal;
+  minStock: number;
+  currentStock: number;
+  status: RecordStatus;
+}) {
+  return prisma.product.update({
+    where: { id: data.productId },
+    data: {
+      name: data.name,
+      sku: data.sku,
+      description: data.description,
+      imageUrl: data.imageUrl,
+      categoryId: data.categoryId,
+      supplierId: data.supplierId,
+      costPrice: data.costPrice,
+      salePrice: data.salePrice,
+      marginPercent: data.marginPercent,
+      minStock: data.minStock,
+      currentStock: data.currentStock,
+      status: data.status,
+    },
+  });
+}
+
 export async function countProducts() {
   return prisma.product.count();
 }
@@ -66,8 +101,17 @@ export async function listProductOptions() {
       id: true,
       name: true,
       sku: true,
+      imageUrl: true,
       currentStock: true,
       status: true,
+      salePrice: true,
+      category: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+        },
+      },
     },
     orderBy: {
       name: "asc",

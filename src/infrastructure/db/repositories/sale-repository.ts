@@ -33,6 +33,7 @@ export async function listPdvProductOptions() {
       id: true,
       name: true,
       sku: true,
+      imageUrl: true,
       salePrice: true,
       currentStock: true,
       status: true,
@@ -97,6 +98,45 @@ export async function listRecentSales() {
       createdAt: "desc",
     },
     take: 100,
+  });
+}
+
+export async function getSaleReceiptById(saleId: string) {
+  return prisma.sale.findUnique({
+    where: {
+      id: saleId,
+    },
+    include: {
+      operator: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      cashSession: {
+        include: {
+          cashRegister: true,
+        },
+      },
+      items: {
+        select: {
+          id: true,
+          productNameSnapshot: true,
+          skuSnapshot: true,
+          quantity: true,
+          unitPrice: true,
+          lineTotal: true,
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+      },
+      payments: {
+        orderBy: {
+          createdAt: "asc",
+        },
+      },
+    },
   });
 }
 

@@ -35,8 +35,8 @@ export const createComandaSchema = z.object({
     z
       .number({ message: "Informe o numero da comanda." })
       .int("Numero da comanda deve ser inteiro.")
-      .min(0, "Numero da comanda invalido.")
-      .max(200, "Numero maximo da comanda: 200."),
+      .min(1, "Numero da comanda invalido.")
+      .max(999, "Numero maximo da comanda: 999."),
   ),
   customerId: z.preprocess(
     (value) => {
@@ -69,11 +69,35 @@ export const removeComandaItemSchema = z.object({
   productId: z.string().min(1, "Produto obrigatorio"),
 });
 
+export const updateComandaItemSchema = z.object({
+  comandaId: z.string().min(1, "Comanda obrigatoria"),
+  productId: z.string().min(1, "Produto obrigatorio"),
+  quantity: z.coerce.number().int().positive("Quantidade invalida"),
+});
+
+export const updateComandaCustomerSchema = z.object({
+  comandaId: z.string().min(1, "Comanda obrigatoria"),
+  customerId: z.preprocess(
+    (value) => {
+      if (value === null || value === undefined) {
+        return "";
+      }
+
+      if (typeof value === "string") {
+        return value.trim();
+      }
+
+      return "";
+    },
+    z.union([z.literal(""), z.string().cuid("Cliente selecionado invalido.")]),
+  ),
+});
+
 export const closeComandaSchema = z.object({
   comandaId: z.string().min(1, "Comanda obrigatoria"),
   cashSessionId: z.string().min(1, "Sessao de caixa obrigatoria"),
-  paymentMethod: z.nativeEnum(PaymentMethod),
   discountAmount: z.string().regex(decimalRegex, "Desconto invalido"),
+  cashReceived: z.string().regex(decimalRegex, "Valor recebido invalido").optional().or(z.literal("")),
 });
 
 export const saleItemSchema = z.object({
@@ -88,5 +112,10 @@ export const salePaymentSchema = z.object({
 
 export const cancelSaleSchema = z.object({
   saleId: z.string().min(1, "Venda obrigatoria"),
+  cancelReason: z.string().min(3, "Informe o motivo do cancelamento").max(280, "Motivo muito longo"),
+});
+
+export const cancelComandaSchema = z.object({
+  comandaId: z.string().min(1, "Comanda obrigatoria"),
   cancelReason: z.string().min(3, "Informe o motivo do cancelamento").max(280, "Motivo muito longo"),
 });

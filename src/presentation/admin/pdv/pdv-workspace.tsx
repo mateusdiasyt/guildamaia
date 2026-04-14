@@ -29,12 +29,21 @@ type ProductOption = {
   id: string;
   name: string;
   sku: string;
+  imageUrl?: string | null;
+  salePrice: number;
+  currentStock: number;
+  category: {
+    id: string;
+    name: string;
+    slug: string;
+  };
 };
 
 type OpenComandaView = {
   id: string;
   number: number;
   isWalkIn: boolean;
+  customerId: string | null;
   customerName: string;
   subtotalAmount: number;
   itemCount: number;
@@ -47,6 +56,13 @@ type OpenComandaView = {
     product: {
       name: string;
       sku: string;
+      imageUrl?: string | null;
+      currentStock: number;
+      category: {
+        id: string;
+        name: string;
+        slug: string;
+      };
     };
   }>;
 };
@@ -145,8 +161,9 @@ export function PdvWorkspace({
           </CardHeader>
           <CardContent className="pt-5">
             <CreateSaleForm
-              key={selectedComanda.id}
+              key={`${selectedComanda.id}-${selectedComanda.itemCount}-${selectedComanda.subtotalAmount}`}
               canManage={canManage}
+              customers={customers}
               openSessions={openSessions}
               products={products}
               selectedComanda={selectedComanda}

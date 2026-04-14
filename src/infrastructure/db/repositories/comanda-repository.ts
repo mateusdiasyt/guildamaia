@@ -1,4 +1,4 @@
-import { ComandaStatus, PaymentMethod, Prisma, RecordStatus } from "@prisma/client";
+import { ComandaStatus, Prisma, RecordStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { createSaleWithStockAdjustmentInTransaction } from "@/infrastructure/db/repositories/sale-repository";
@@ -46,7 +46,15 @@ export async function listOpenComandas() {
               id: true,
               name: true,
               sku: true,
+              imageUrl: true,
               currentStock: true,
+              category: {
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                },
+              },
             },
           },
         },
@@ -204,6 +212,68 @@ export async function addItemToComanda(data: {
   });
 }
 
+export async function updateComandaItemQuantity(data: {
+  comandaId: string;
+  productId: string;
+  quantity: number;
+}) {
+  return prisma.$transaction(async (tx) => {
+    const comanda = await tx.comanda.findUnique({
+      where: {
+        id: data.comandaId,
+      },
+      select: {
+        id: true,
+        status: true,
+      },
+    });
+
+    if (!comanda || comanda.status !== ComandaStatus.OPEN) {
+      throw new Error("A comanda selecionada nao esta aberta.");
+    }
+
+    const item = await tx.comandaItem.findUnique({
+      where: {
+        comandaId_productId: {
+          comandaId: data.comandaId,
+          productId: data.productId,
+        },
+      },
+      include: {
+        product: {
+          select: {
+            id: true,
+            status: true,
+            salePrice: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    if (!item) {
+      throw new Error("Item da comanda nao encontrado.");
+    }
+
+    if (item.product.status !== RecordStatus.ACTIVE) {
+      throw new Error(`Produto ${item.product.name} inativo para venda.`);
+    }
+
+    await tx.comandaItem.update({
+      where: {
+        id: item.id,
+      },
+      data: {
+        quantity: data.quantity,
+        unitPrice: item.product.salePrice,
+        lineTotal: item.product.salePrice.times(data.quantity),
+      },
+    });
+
+    await recalculateComandaSubtotal(tx, data.comandaId);
+  });
+}
+
 export async function removeItemFromComanda(data: { comandaId: string; productId: string }) {
   return prisma.$transaction(async (tx) => {
     const comanda = await tx.comanda.findUnique({
@@ -233,10 +303,103 @@ export async function removeItemFromComanda(data: { comandaId: string; productId
   });
 }
 
+export async function updateComandaCustomer(data: { comandaId: string; customerId?: string }) {
+  return prisma.$transaction(async (tx) => {
+    const comanda = await tx.comanda.findUnique({
+      where: {
+        id: data.comandaId,
+      },
+      select: {
+        id: true,
+        status: true,
+      },
+    });
+
+    if (!comanda || comanda.status !== ComandaStatus.OPEN) {
+      throw new Error("A comanda selecionada nao esta aberta.");
+    }
+
+    let customerNameSnapshot: string | null = null;
+    let isWalkIn = true;
+
+    if (data.customerId) {
+      const customer = await tx.customer.findUnique({
+        where: {
+          id: data.customerId,
+        },
+        select: {
+          id: true,
+          fullName: true,
+          status: true,
+        },
+      });
+
+      if (!customer) {
+        throw new Error("Cliente selecionado nao encontrado.");
+      }
+
+      if (customer.status !== RecordStatus.ACTIVE) {
+        throw new Error("Cliente selecionado esta inativo.");
+      }
+
+      customerNameSnapshot = customer.fullName;
+      isWalkIn = false;
+    }
+
+    return tx.comanda.update({
+      where: {
+        id: data.comandaId,
+      },
+      data: {
+        customerId: data.customerId ?? null,
+        customerNameSnapshot,
+        isWalkIn,
+      },
+    });
+  });
+}
+
+export async function cancelComanda(data: {
+  comandaId: string;
+  cancelledById: string;
+  cancelReason: string;
+}) {
+  return prisma.$transaction(async (tx) => {
+    const comanda = await tx.comanda.findUnique({
+      where: {
+        id: data.comandaId,
+      },
+      select: {
+        id: true,
+        status: true,
+      },
+    });
+
+    if (!comanda || comanda.status !== ComandaStatus.OPEN) {
+      throw new Error("A comanda selecionada nao esta aberta.");
+    }
+
+    return tx.comanda.update({
+      where: {
+        id: data.comandaId,
+      },
+      data: {
+        status: ComandaStatus.CANCELLED,
+        closedById: data.cancelledById,
+        closedAt: new Date(),
+        notes: data.cancelReason,
+      },
+    });
+  });
+}
+
 export async function closeComandaWithSale(data: {
   comandaId: string;
   cashSessionId: string;
-  paymentMethod: PaymentMethod;
+  payments: Array<{
+    method: import("@prisma/client").PaymentMethod;
+    amount: Prisma.Decimal;
+  }>;
   discountAmount: Prisma.Decimal;
   operatorId: string;
   saleNumber: string;
@@ -299,8 +462,6 @@ export async function closeComandaWithSale(data: {
       throw new Error("Desconto nao pode ser maior que o subtotal da comanda.");
     }
 
-    const totalAmount = subtotalAmount.minus(data.discountAmount);
-
     const sale = await createSaleWithStockAdjustmentInTransaction(tx, {
       saleNumber: data.saleNumber,
       cashSessionId: data.cashSessionId,
@@ -311,12 +472,7 @@ export async function closeComandaWithSale(data: {
         productId: item.productId,
         quantity: item.quantity,
       })),
-      payments: [
-        {
-          method: data.paymentMethod,
-          amount: totalAmount,
-        },
-      ],
+      payments: data.payments,
     });
 
     await tx.comanda.update({

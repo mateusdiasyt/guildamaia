@@ -1,7 +1,8 @@
-import { PaymentMethod, SaleStatus } from "@prisma/client";
+import { PaymentMethod, Prisma, SaleStatus } from "@prisma/client";
 
 import {
   addComandaItemSchema,
+  cancelComandaSchema,
   cancelSaleSchema,
   closeComandaSchema,
   createComandaSchema,
@@ -9,21 +10,27 @@ import {
   removeComandaItemSchema,
   saleItemSchema,
   salePaymentSchema,
+  updateComandaCustomerSchema,
+  updateComandaItemSchema,
 } from "@/domain/pdv/schemas";
 import { emptyToUndefined } from "@/domain/shared/normalizers";
 import { parseDecimalInput } from "@/lib/decimal";
 import { createAuditLog } from "@/infrastructure/db/repositories/audit-log-repository";
 import {
   addItemToComanda,
+  cancelComanda,
   closeComandaWithSale,
   createComanda,
   listOpenComandas,
   removeItemFromComanda,
+  updateComandaCustomer,
+  updateComandaItemQuantity,
 } from "@/infrastructure/db/repositories/comanda-repository";
 import { listCustomerOptions } from "@/infrastructure/db/repositories/customer-repository";
 import {
   cancelSaleAndRestock,
   createSaleWithStockAdjustment,
+  getSaleReceiptById,
   listPdvOpenSessions,
   listPdvProductOptions,
   listRecentSales,
@@ -99,6 +106,10 @@ export async function getPdvData() {
   ]);
 
   return { openSessions, products, sales, customers, openComandas };
+}
+
+export async function getSaleReceiptData(saleId: string) {
+  return getSaleReceiptById(saleId);
 }
 
 export async function createSaleRecord(input: FormData, actorId: string) {
@@ -212,23 +223,82 @@ export async function removeComandaItemRecord(input: FormData, actorId: string) 
   });
 }
 
+export async function updateComandaItemRecord(input: FormData, actorId: string) {
+  const parsed = updateComandaItemSchema.parse({
+    comandaId: input.get("comandaId"),
+    productId: input.get("productId"),
+    quantity: input.get("quantity"),
+  });
+
+  await updateComandaItemQuantity(parsed);
+
+  await createAuditLog({
+    userId: actorId,
+    action: "pdv.comanda.item.update",
+    entity: "Comanda",
+    entityId: parsed.comandaId,
+    metadata: {
+      productId: parsed.productId,
+      quantity: parsed.quantity,
+    },
+  });
+}
+
+export async function updateComandaCustomerRecord(input: FormData, actorId: string) {
+  const parsed = updateComandaCustomerSchema.parse({
+    comandaId: input.get("comandaId"),
+    customerId: input.get("customerId"),
+  });
+
+  const updated = await updateComandaCustomer({
+    comandaId: parsed.comandaId,
+    customerId: emptyToUndefined(parsed.customerId),
+  });
+
+  await createAuditLog({
+    userId: actorId,
+    action: "pdv.comanda.customer.update",
+    entity: "Comanda",
+    entityId: parsed.comandaId,
+    metadata: {
+      customerId: updated.customerId,
+      isWalkIn: updated.isWalkIn,
+    },
+  });
+}
+
 export async function closeComandaRecord(input: FormData, actorId: string) {
   const parsed = closeComandaSchema.parse({
     comandaId: input.get("comandaId"),
     cashSessionId: input.get("cashSessionId"),
-    paymentMethod: input.get("paymentMethod"),
     discountAmount: input.get("discountAmount") ?? "0",
+    cashReceived: input.get("cashReceived") ?? "",
   });
 
+  const payments = parsePayments(input);
   const discountAmount = parseDecimalInput(parsed.discountAmount || "0");
   if (discountAmount.lessThan(0)) {
     throw new Error("Desconto invalido.");
   }
 
+  const cashPaymentTotal = payments
+    .filter((payment) => payment.method === PaymentMethod.CASH)
+    .reduce((acc, payment) => acc.plus(payment.amount), new Prisma.Decimal(0));
+
+  const cashReceived = parsed.cashReceived ? parseDecimalInput(parsed.cashReceived) : undefined;
+
+  if (cashReceived && cashPaymentTotal.equals(0)) {
+    throw new Error("Valor recebido em dinheiro so pode ser informado quando houver pagamento em dinheiro.");
+  }
+
+  if (cashReceived && cashReceived.lessThan(cashPaymentTotal)) {
+    throw new Error("Valor recebido em dinheiro nao pode ser menor que a parte paga em dinheiro.");
+  }
+
   const sale = await closeComandaWithSale({
     comandaId: parsed.comandaId,
     cashSessionId: parsed.cashSessionId,
-    paymentMethod: parsed.paymentMethod,
+    payments,
     discountAmount,
     operatorId: actorId,
     saleNumber: createSaleNumber(),
@@ -242,8 +312,15 @@ export async function closeComandaRecord(input: FormData, actorId: string) {
     metadata: {
       saleId: sale.id,
       saleNumber: sale.saleNumber,
+      paymentCount: payments.length,
+      cashReceived: cashReceived?.toString(),
     },
   });
+
+  return {
+    saleId: sale.id,
+    cashReceived: cashReceived?.toString(),
+  };
 }
 
 export async function cancelSaleRecord(input: FormData, actorId: string) {
@@ -269,6 +346,29 @@ export async function cancelSaleRecord(input: FormData, actorId: string) {
     entityId: cancelled.id,
     metadata: {
       saleNumber: cancelled.saleNumber,
+      cancelReason: parsed.cancelReason,
+    },
+  });
+}
+
+export async function cancelComandaRecord(input: FormData, actorId: string) {
+  const parsed = cancelComandaSchema.parse({
+    comandaId: input.get("comandaId"),
+    cancelReason: input.get("cancelReason"),
+  });
+
+  const cancelled = await cancelComanda({
+    comandaId: parsed.comandaId,
+    cancelledById: actorId,
+    cancelReason: parsed.cancelReason.trim(),
+  });
+
+  await createAuditLog({
+    userId: actorId,
+    action: "pdv.comanda.cancel",
+    entity: "Comanda",
+    entityId: cancelled.id,
+    metadata: {
       cancelReason: parsed.cancelReason,
     },
   });
