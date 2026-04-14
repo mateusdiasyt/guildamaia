@@ -271,7 +271,7 @@ export function CreateSaleForm({
   const [cashReceived, setCashReceived] = useState("");
   const [paymentLineSeed, setPaymentLineSeed] = useState(1);
   const [optimisticItems, setOptimisticItems] = useState(selectedComanda.items);
-  const [customerQuery, setCustomerQuery] = useState(currentCustomerLabel);
+  const [customerQuery, setCustomerQuery] = useState(selectedComanda.customerName ?? "");
   const [isCustomerSearchOpen, setIsCustomerSearchOpen] = useState(false);
   const customerFormRef = useRef<HTMLFormElement>(null);
   const customerIdInputRef = useRef<HTMLInputElement>(null);
@@ -467,6 +467,11 @@ export function CreateSaleForm({
     customerFormRef.current.requestSubmit();
   }
 
+  function resetCustomerSearch() {
+    setCustomerQuery(selectedComanda.customerName ?? "");
+    setIsCustomerSearchOpen(false);
+  }
+
   return (
     <div className="space-y-4">
       <header className="flex flex-wrap items-start justify-between gap-4 rounded-[1.4rem] border border-border/75 bg-background/38 px-4 py-3.5">
@@ -498,9 +503,13 @@ export function CreateSaleForm({
                     }}
                     onFocus={() => setIsCustomerSearchOpen(true)}
                     onBlur={() => {
-                      window.setTimeout(() => setIsCustomerSearchOpen(false), 120);
+                      window.setTimeout(resetCustomerSearch, 120);
                     }}
-                    placeholder="Buscar cliente ou CPF"
+                    placeholder={
+                      !selectedComanda.customerId && !isCustomerSearchOpen
+                        ? "Comanda avulsa"
+                        : "Buscar cliente ou CPF"
+                    }
                     className="h-10 rounded-full border-border/70 bg-background/68 pl-9 pr-10 text-sm"
                     disabled={isUpdatingCustomer}
                     autoComplete="off"
