@@ -17,17 +17,20 @@ function isValidDateInput(value: string) {
   return !Number.isNaN(parsed.getTime());
 }
 
-export const createCustomerSchema = z
-  .object({
-    fullName: z.string().min(5, "Nome completo obrigatorio"),
-    birthDate: z.string().min(1, "Data de nascimento obrigatoria"),
-    documentType: z.nativeEnum(CustomerDocumentType),
-    documentNumber: z.string().min(5, "Documento obrigatorio"),
-    phone: z.string().max(20).optional().or(z.literal("")),
-    email: z.string().email("Email invalido").optional().or(z.literal("")),
-    status: z.nativeEnum(RecordStatus).default(RecordStatus.ACTIVE),
-  })
-  .superRefine((data, context) => {
+const customerPayloadSchema = z.object({
+  fullName: z.string().min(5, "Nome completo obrigatorio"),
+  birthDate: z.string().min(1, "Data de nascimento obrigatoria"),
+  documentType: z.nativeEnum(CustomerDocumentType),
+  documentNumber: z.string().min(5, "Documento obrigatorio"),
+  phone: z.string().max(20).optional().or(z.literal("")),
+  email: z.string().email("Email invalido").optional().or(z.literal("")),
+  status: z.nativeEnum(RecordStatus).default(RecordStatus.ACTIVE),
+});
+
+function validateCustomerPayload(
+  data: z.infer<typeof customerPayloadSchema>,
+  context: z.RefinementCtx,
+) {
     const normalized = normalizeDocument(data.documentNumber);
 
     if (data.documentType === CustomerDocumentType.CPF && !cpfRegex.test(normalized)) {
@@ -63,6 +66,16 @@ export const createCustomerSchema = z
         message: "Data de nascimento nao pode ser futura.",
       });
     }
+}
+
+export const createCustomerSchema = customerPayloadSchema.superRefine(validateCustomerPayload);
+
+export const updateCustomerSchema = customerPayloadSchema
+  .extend({
+    customerId: z.string().min(1, "Cliente obrigatorio"),
+  })
+  .superRefine((data, context) => {
+    validateCustomerPayload(data, context);
   });
 
 export function sanitizeDocumentNumber(value: string) {

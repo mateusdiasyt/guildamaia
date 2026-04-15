@@ -5,9 +5,10 @@ import { createAuditLog } from "@/infrastructure/db/repositories/audit-log-repos
 import {
   createCustomer,
   listCustomers,
+  updateCustomer,
   updateCustomerStatus,
 } from "@/infrastructure/db/repositories/customer-repository";
-import { createCustomerSchema, sanitizeDocumentNumber } from "@/domain/customers/schemas";
+import { createCustomerSchema, sanitizeDocumentNumber, updateCustomerSchema } from "@/domain/customers/schemas";
 import { emptyToUndefined } from "@/domain/shared/normalizers";
 
 export async function getCustomers(search?: string) {
@@ -68,6 +69,44 @@ export async function updateCustomerStatusRecord(input: FormData, actorId?: stri
     entity: "Customer",
     entityId: updated.id,
     metadata: {
+      status: updated.status,
+    },
+  });
+}
+
+export async function updateCustomerRecord(input: FormData, actorId?: string) {
+  const parsed = updateCustomerSchema.parse({
+    customerId: input.get("customerId"),
+    fullName: input.get("fullName"),
+    birthDate: input.get("birthDate"),
+    documentType: input.get("documentType"),
+    documentNumber: input.get("documentNumber"),
+    phone: input.get("phone"),
+    email: input.get("email"),
+    status: input.get("status"),
+  });
+
+  const updated = await updateCustomer({
+    customerId: parsed.customerId,
+    fullName: parsed.fullName.trim(),
+    birthDate: new Date(`${parsed.birthDate}T00:00:00.000Z`),
+    documentType: parsed.documentType,
+    documentNumber: sanitizeDocumentNumber(parsed.documentNumber),
+    phone: emptyToUndefined(parsed.phone),
+    email: emptyToUndefined(parsed.email)?.toLowerCase(),
+    status: parsed.status,
+  });
+
+  await createAuditLog({
+    userId: actorId,
+    action: "customers.update",
+    entity: "Customer",
+    entityId: updated.id,
+    metadata: {
+      fullName: updated.fullName,
+      birthDate: updated.birthDate,
+      documentType: updated.documentType,
+      documentNumber: updated.documentNumber,
       status: updated.status,
     },
   });

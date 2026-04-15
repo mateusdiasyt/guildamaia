@@ -76,3 +76,29 @@ export async function updateCustomerStatus(data: { customerId: string; status: R
     },
   });
 }
+
+export async function updateCustomer(data: {
+  customerId: string;
+  fullName: string;
+  birthDate: Date;
+  documentType: CustomerDocumentType;
+  documentNumber: string;
+  phone?: string;
+  email?: string;
+  status: RecordStatus;
+}) {
+  return prisma.customer.update({
+    where: {
+      id: data.customerId,
+    },
+    data: {
+      fullName: data.fullName,
+      birthDate: data.birthDate,
+      documentType: data.documentType,
+      documentNumber: data.documentNumber,
+      phone: data.phone,
+      email: data.email,
+      status: data.status,
+    },
+  });
+}

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { hasPermission, PERMISSIONS } from "@/domain/auth/permissions";
 import { CreateCustomerDialog } from "@/presentation/admin/customers/create-customer-dialog";
+import { EditCustomerDialog } from "@/presentation/admin/customers/edit-customer-dialog";
 import { toggleCustomerStatusAction } from "@/presentation/admin/customers/actions";
 
 type CustomersPageProps = {
@@ -32,6 +33,14 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
     }
 
     return date.toLocaleDateString("pt-BR", { timeZone: "UTC" });
+  }
+
+  function formatBirthDateInput(date: Date | null) {
+    if (!date) {
+      return "";
+    }
+
+    return date.toISOString().slice(0, 10);
   }
 
   return (
@@ -81,7 +90,7 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
                 <TableHead className="text-right">Acoes</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody className="[&_td]:text-foreground">
               {customers.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center text-sm text-zinc-500">
@@ -91,7 +100,7 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
               ) : null}
               {customers.map((customer) => (
                 <TableRow key={customer.id}>
-                  <TableCell className="font-medium text-zinc-900">{customer.fullName}</TableCell>
+                  <TableCell className="font-medium text-foreground">{customer.fullName}</TableCell>
                   <TableCell>{formatBirthDate(customer.birthDate)}</TableCell>
                   <TableCell>
                     {customer.documentType}: {customer.documentNumber}
@@ -114,23 +123,37 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
                   <TableCell className="text-right">{customer._count.comandas}</TableCell>
                   <TableCell className="text-right">
                     {canManage ? (
-                      <form action={toggleCustomerStatusAction}>
-                        <input type="hidden" name="customerId" value={customer.id} />
-                        <input
-                          type="hidden"
-                          name="status"
-                          value={
-                            customer.status === RecordStatus.ACTIVE
-                              ? RecordStatus.INACTIVE
-                              : RecordStatus.ACTIVE
-                          }
+                      <div className="flex items-center justify-end gap-2">
+                        <EditCustomerDialog
+                          customer={{
+                            id: customer.id,
+                            fullName: customer.fullName,
+                            birthDate: formatBirthDateInput(customer.birthDate),
+                            documentType: customer.documentType,
+                            documentNumber: customer.documentNumber,
+                            phone: customer.phone,
+                            email: customer.email,
+                            status: customer.status,
+                          }}
                         />
-                        <Button type="submit" variant="outline" size="sm">
-                          {customer.status === RecordStatus.ACTIVE ? "Desativar" : "Reativar"}
-                        </Button>
-                      </form>
+                        <form action={toggleCustomerStatusAction}>
+                          <input type="hidden" name="customerId" value={customer.id} />
+                          <input
+                            type="hidden"
+                            name="status"
+                            value={
+                              customer.status === RecordStatus.ACTIVE
+                                ? RecordStatus.INACTIVE
+                                : RecordStatus.ACTIVE
+                            }
+                          />
+                          <Button type="submit" variant="outline" size="sm">
+                            {customer.status === RecordStatus.ACTIVE ? "Desativar" : "Reativar"}
+                          </Button>
+                        </form>
+                      </div>
                     ) : (
-                      <span className="text-xs text-zinc-500">Sem permissao</span>
+                      <span className="text-xs text-muted-foreground">Sem permissao</span>
                     )}
                   </TableCell>
                 </TableRow>
