@@ -50,6 +50,7 @@ export async function createSupportTicket(data: {
   ticketNumber: string;
   title: string;
   description: string;
+  attachmentImage?: string;
   priority: SupportTicketPriority;
   createdById?: string;
   createdByName: string;

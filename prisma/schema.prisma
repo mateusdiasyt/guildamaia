@@ -486,6 +486,7 @@ model SupportTicket {
   ticketNumber  String               @unique
   title         String
   description   String
+  attachmentImage String?
   priority      SupportTicketPriority @default(MEDIUM)
   status        SupportTicketStatus   @default(OPEN)
   createdById   String?

@@ -27,15 +27,17 @@ export function UpdateSupportTicketStatusForm({
   const [state, formAction] = useActionState(updateSupportTicketStatusAction, initialActionState);
 
   return (
-    <form action={formAction} className="space-y-2">
+    <form action={formAction} className="w-full max-w-[156px] space-y-2">
       <input type="hidden" name="ticketId" value={ticketId} />
       <div className="space-y-1.5">
-        <Label htmlFor={`support-status-${ticketId}`}>Status</Label>
-        <div className="flex flex-wrap items-center gap-2">
+        <Label htmlFor={`support-status-${ticketId}`} className="text-[11px] uppercase tracking-[0.14em]">
+          Status
+        </Label>
+        <div className="space-y-2">
           <select
             id={`support-status-${ticketId}`}
             name="status"
-            className="admin-native-select min-w-[180px]"
+            className="admin-native-select w-full min-w-0"
             defaultValue={status}
           >
             {Object.values(SupportTicketStatus).map((statusOption) => (

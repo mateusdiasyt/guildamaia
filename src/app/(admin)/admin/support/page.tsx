@@ -190,7 +190,25 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
                       {ticket.description}
                     </p>
 
-                    <div className="mt-4 grid gap-3 rounded-2xl border border-border/70 bg-background/50 p-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+                    {ticket.attachmentImage ? (
+                      <div className="mt-3 overflow-hidden rounded-2xl border border-border/70 bg-background/45 p-2">
+                        <a
+                          href={ticket.attachmentImage}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="group block overflow-hidden rounded-xl border border-border/70 bg-background/40 transition-colors hover:border-primary/55"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={ticket.attachmentImage}
+                            alt={`Anexo do ticket ${ticket.ticketNumber}`}
+                            className="h-36 w-full object-cover transition-transform duration-300 group-hover:scale-[1.01]"
+                          />
+                        </a>
+                      </div>
+                    ) : null}
+
+                    <div className="mt-4 grid gap-3 rounded-2xl border border-border/70 bg-background/50 p-3 lg:grid-cols-[minmax(0,1fr)_156px] lg:items-start">
                       <div className="space-y-1 text-xs text-muted-foreground">
                         <p>
                           Atualizado em {dateFormatter.format(ticket.updatedAt)}

@@ -1,6 +1,7 @@
 import { SupportTicketStatus } from "@prisma/client";
 
 import { createSupportTicketSchema, updateSupportTicketStatusSchema } from "@/domain/support/schemas";
+import { emptyToUndefined } from "@/domain/shared/normalizers";
 import { createAuditLog } from "@/infrastructure/db/repositories/audit-log-repository";
 import {
   createSupportTicket,
@@ -53,6 +54,7 @@ export async function createSupportTicketRecord(input: FormData, actor: { id?: s
   const parsed = createSupportTicketSchema.parse({
     title: input.get("title"),
     description: input.get("description"),
+    attachmentImage: input.get("attachmentImage"),
     priority: input.get("priority"),
   });
 
@@ -63,6 +65,7 @@ export async function createSupportTicketRecord(input: FormData, actor: { id?: s
       ticketNumber: createTicketNumber(),
       title: parsed.title.trim(),
       description: parsed.description.trim(),
+      attachmentImage: emptyToUndefined(parsed.attachmentImage),
       priority: parsed.priority,
       createdById: actor.id,
       createdByName: actor.name,
@@ -80,6 +83,7 @@ export async function createSupportTicketRecord(input: FormData, actor: { id?: s
       ticketNumber: created.ticketNumber,
       priority: created.priority,
       status: created.status,
+      hasAttachment: Boolean(created.attachmentImage),
     },
   });
 }
