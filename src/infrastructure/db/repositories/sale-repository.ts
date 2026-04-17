@@ -24,6 +24,36 @@ type CreateSaleWithStockAdjustmentInput = {
 
 type PrismaTx = Prisma.TransactionClient;
 
+const PDV_TRANSACTION_OPTIONS = {
+  maxWait: 20_000,
+  timeout: 40_000,
+};
+
+function isRetryableTransactionError(error: unknown) {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    return error.code === "P2028";
+  }
+
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+    return message.includes("transaction not found") || message.includes("transaction api error");
+  }
+
+  return false;
+}
+
+async function runWithTransactionRetry<T>(operation: () => Promise<T>) {
+  try {
+    return await operation();
+  } catch (error) {
+    if (!isRetryableTransactionError(error)) {
+      throw error;
+    }
+
+    return operation();
+  }
+}
+
 function isMissingProductImageColumnError(error: unknown) {
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     return error.code === "P2022" && String(error.meta?.column ?? "").toLowerCase().includes("imageurl");
@@ -334,7 +364,9 @@ async function runCreateSaleWithStockAdjustment(
 }
 
 export async function createSaleWithStockAdjustment(data: CreateSaleWithStockAdjustmentInput) {
-  return prisma.$transaction((tx) => runCreateSaleWithStockAdjustment(tx, data));
+  return runWithTransactionRetry(() =>
+    prisma.$transaction((tx) => runCreateSaleWithStockAdjustment(tx, data), PDV_TRANSACTION_OPTIONS),
+  );
 }
 
 export async function createSaleWithStockAdjustmentInTransaction(
@@ -349,72 +381,74 @@ export async function cancelSaleAndRestock(data: {
   cancelReason: string;
   cancelledById: string;
 }) {
-  return prisma.$transaction(async (tx) => {
-    const sale = await tx.sale.findUniqueOrThrow({
-      where: { id: data.saleId },
-      include: {
-        items: true,
-      },
-    });
-
-    if (sale.status === SaleStatus.CANCELLED) {
-      throw new Error("A venda selecionada ja foi cancelada.");
-    }
-
-    const productIds = [...new Set(sale.items.map((item) => item.productId))];
-    const products = await tx.product.findMany({
-      where: { id: { in: productIds } },
-      select: {
-        id: true,
-        currentStock: true,
-        costPrice: true,
-      },
-    });
-    const productMap = new Map(products.map((product) => [product.id, product]));
-
-    const cancelledSale = await tx.sale.update({
-      where: { id: sale.id },
-      data: {
-        status: SaleStatus.CANCELLED,
-        cancelReason: data.cancelReason,
-        cancelledById: data.cancelledById,
-        cancelledAt: new Date(),
-      },
-    });
-
-    for (const item of sale.items) {
-      const product = productMap.get(item.productId);
-      if (!product) {
-        continue;
-      }
-
-      const resultingStock = product.currentStock + item.quantity;
-
-      const stockUpdate = await tx.product.updateMany({
-        where: { id: item.productId },
-        data: {
-          currentStock: resultingStock,
+  return runWithTransactionRetry(() =>
+    prisma.$transaction(async (tx) => {
+      const sale = await tx.sale.findUniqueOrThrow({
+        where: { id: data.saleId },
+        include: {
+          items: true,
         },
       });
 
-      if (stockUpdate.count === 0) {
-        throw new Error("Produto nao encontrado para atualizar o estoque.");
+      if (sale.status === SaleStatus.CANCELLED) {
+        throw new Error("A venda selecionada ja foi cancelada.");
       }
 
-      await tx.stockMovement.create({
-        data: {
-          productId: item.productId,
-          type: StockMovementType.IN,
-          quantity: item.quantity,
-          unitCost: product.costPrice,
-          previousStock: product.currentStock,
-          resultingStock,
-          note: `Retorno por cancelamento da venda ${sale.saleNumber}`,
-          operatorId: data.cancelledById,
+      const productIds = [...new Set(sale.items.map((item) => item.productId))];
+      const products = await tx.product.findMany({
+        where: { id: { in: productIds } },
+        select: {
+          id: true,
+          currentStock: true,
+          costPrice: true,
         },
       });
-    }
+      const productMap = new Map(products.map((product) => [product.id, product]));
 
-    return cancelledSale;
-  });
+      const cancelledSale = await tx.sale.update({
+        where: { id: sale.id },
+        data: {
+          status: SaleStatus.CANCELLED,
+          cancelReason: data.cancelReason,
+          cancelledById: data.cancelledById,
+          cancelledAt: new Date(),
+        },
+      });
+
+      for (const item of sale.items) {
+        const product = productMap.get(item.productId);
+        if (!product) {
+          continue;
+        }
+
+        const resultingStock = product.currentStock + item.quantity;
+
+        const stockUpdate = await tx.product.updateMany({
+          where: { id: item.productId },
+          data: {
+            currentStock: resultingStock,
+          },
+        });
+
+        if (stockUpdate.count === 0) {
+          throw new Error("Produto nao encontrado para atualizar o estoque.");
+        }
+
+        await tx.stockMovement.create({
+          data: {
+            productId: item.productId,
+            type: StockMovementType.IN,
+            quantity: item.quantity,
+            unitCost: product.costPrice,
+            previousStock: product.currentStock,
+            resultingStock,
+            note: `Retorno por cancelamento da venda ${sale.saleNumber}`,
+            operatorId: data.cancelledById,
+          },
+        });
+      }
+
+      return cancelledSale;
+    }, PDV_TRANSACTION_OPTIONS),
+  );
 }

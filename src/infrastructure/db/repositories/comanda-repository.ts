@@ -3,6 +3,36 @@ import { ComandaStatus, Prisma, RecordStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { createSaleWithStockAdjustmentInTransaction } from "@/infrastructure/db/repositories/sale-repository";
 
+const PDV_TRANSACTION_OPTIONS = {
+  maxWait: 20_000,
+  timeout: 40_000,
+};
+
+function isRetryableTransactionError(error: unknown) {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    return error.code === "P2028";
+  }
+
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+    return message.includes("transaction not found") || message.includes("transaction api error");
+  }
+
+  return false;
+}
+
+async function runWithTransactionRetry<T>(operation: () => Promise<T>) {
+  try {
+    return await operation();
+  } catch (error) {
+    if (!isRetryableTransactionError(error)) {
+      throw error;
+    }
+
+    return operation();
+  }
+}
+
 function isMissingProductImageColumnError(error: unknown) {
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     return error.code === "P2022" && String(error.meta?.column ?? "").toLowerCase().includes("imageurl");
@@ -479,59 +509,61 @@ export async function closeComandaWithSale(data: {
   operatorId: string;
   saleNumber: string;
 }) {
-  return prisma.$transaction(async (tx) => {
-    const comanda = await tx.comanda.findUnique({
-      where: {
-        id: data.comandaId,
-      },
-      include: {
-        customer: {
-          select: {
-            fullName: true,
+  return runWithTransactionRetry(() =>
+    prisma.$transaction(async (tx) => {
+      const comanda = await tx.comanda.findUnique({
+        where: {
+          id: data.comandaId,
+        },
+        include: {
+          customer: {
+            select: {
+              fullName: true,
+            },
+          },
+          items: {
+            select: {
+              productId: true,
+              quantity: true,
+            },
           },
         },
-        items: {
-          select: {
-            productId: true,
-            quantity: true,
-          },
+      });
+
+      if (!comanda || comanda.status !== ComandaStatus.OPEN) {
+        throw new Error("A comanda selecionada nao esta aberta.");
+      }
+
+      if (comanda.items.length === 0) {
+        throw new Error("Adicione itens na comanda antes de fechar a venda.");
+      }
+
+      const sale = await createSaleWithStockAdjustmentInTransaction(tx, {
+        saleNumber: data.saleNumber,
+        cashSessionId: data.cashSessionId,
+        operatorId: data.operatorId,
+        customerName: comanda.customer?.fullName ?? comanda.customerNameSnapshot ?? undefined,
+        discountAmount: data.discountAmount,
+        items: comanda.items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+        })),
+        payments: data.payments,
+      });
+
+      await tx.comanda.update({
+        where: {
+          id: comanda.id,
         },
-      },
-    });
+        data: {
+          status: ComandaStatus.CLOSED,
+          closedById: data.operatorId,
+          closedAt: new Date(),
+          closedSaleId: sale.id,
+        },
+      });
 
-    if (!comanda || comanda.status !== ComandaStatus.OPEN) {
-      throw new Error("A comanda selecionada nao esta aberta.");
-    }
-
-    if (comanda.items.length === 0) {
-      throw new Error("Adicione itens na comanda antes de fechar a venda.");
-    }
-
-    const sale = await createSaleWithStockAdjustmentInTransaction(tx, {
-      saleNumber: data.saleNumber,
-      cashSessionId: data.cashSessionId,
-      operatorId: data.operatorId,
-      customerName: comanda.customer?.fullName ?? comanda.customerNameSnapshot ?? undefined,
-      discountAmount: data.discountAmount,
-      items: comanda.items.map((item) => ({
-        productId: item.productId,
-        quantity: item.quantity,
-      })),
-      payments: data.payments,
-    });
-
-    await tx.comanda.update({
-      where: {
-        id: comanda.id,
-      },
-      data: {
-        status: ComandaStatus.CLOSED,
-        closedById: data.operatorId,
-        closedAt: new Date(),
-        closedSaleId: sale.id,
-      },
-    });
-
-    return sale;
-  });
+      return sale;
+    }, PDV_TRANSACTION_OPTIONS),
+  );
 }

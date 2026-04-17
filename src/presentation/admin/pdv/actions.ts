@@ -103,7 +103,7 @@ export async function closeComandaAction(
   }
 
   if (!result) {
-    return { status: "error", message: "Nao foi possivel concluir o fechamento da comanda." };
+    return { status: "error", message: toActionErrorMessage(new Error("Nao foi possivel concluir o fechamento da comanda")) };
   }
 
   const params = new URLSearchParams({
