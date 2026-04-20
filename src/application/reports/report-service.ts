@@ -2,7 +2,17 @@ import { Prisma, SaleStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 
-export type ReportPeriod = "daily" | "weekly";
+export const REPORT_PERIODS = [
+  "1d",
+  "7d",
+  "30d",
+  "3m",
+  "6m",
+  "1y",
+  "custom",
+] as const;
+
+export type ReportPeriod = (typeof REPORT_PERIODS)[number];
 
 type ReportRange = {
   start: Date;
@@ -57,14 +67,18 @@ type ReportPeriodData = {
 type ReportsDataInput = {
   period?: string;
   date?: string;
+  startDate?: string;
+  endDate?: string;
 };
 
 type ReportsData = {
   referenceDate: string;
+  customStartDate: string;
+  customEndDate: string;
   selectedPeriod: ReportPeriod;
   active: ReportPeriodData;
-  daily: ReportPeriodData;
-  weekly: ReportPeriodData;
+  oneDay: ReportPeriodData;
+  sevenDays: ReportPeriodData;
 };
 
 function toNumber(value: Prisma.Decimal | null | undefined) {
@@ -107,6 +121,12 @@ function startOfDay(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
+function endExclusiveOfDay(date: Date) {
+  const end = startOfDay(date);
+  end.setDate(end.getDate() + 1);
+  return end;
+}
+
 function formatDateLabel(date: Date) {
   return date.toLocaleDateString("pt-BR", {
     day: "2-digit",
@@ -115,47 +135,147 @@ function formatDateLabel(date: Date) {
   });
 }
 
-function parseReferenceDate(value?: string) {
+function parseDateInput(value?: string) {
   if (!value) {
-    return startOfDay(new Date());
+    return null;
   }
 
   const parsed = new Date(`${value}T00:00:00`);
   if (Number.isNaN(parsed.getTime())) {
-    return startOfDay(new Date());
+    return null;
   }
 
   return startOfDay(parsed);
 }
 
-function getDailyRange(referenceDate: Date): ReportRange {
+function parseReferenceDate(value?: string) {
+  return parseDateInput(value) ?? startOfDay(new Date());
+}
+
+function toDateInputValue(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function resolvePeriod(period?: string): ReportPeriod {
+  if (!period) {
+    return "1d";
+  }
+
+  if ((REPORT_PERIODS as readonly string[]).includes(period)) {
+    return period as ReportPeriod;
+  }
+
+  return "1d";
+}
+
+function getTrailingDaysRange(referenceDate: Date, days: number, label: string): ReportRange {
+  const end = endExclusiveOfDay(referenceDate);
   const start = startOfDay(referenceDate);
-  const end = new Date(start);
-  end.setDate(end.getDate() + 1);
+  start.setDate(start.getDate() - (days - 1));
 
   return {
     start,
     end,
-    label: `Dia ${formatDateLabel(start)}`,
+    label: `${label}: ${formatDateLabel(start)} ate ${formatDateLabel(referenceDate)}`,
   };
 }
 
-function getWeeklyRange(referenceDate: Date): ReportRange {
+function getTrailingMonthsRange(referenceDate: Date, months: number, label: string): ReportRange {
+  const end = endExclusiveOfDay(referenceDate);
   const start = startOfDay(referenceDate);
-  const weekday = (start.getDay() + 6) % 7;
-  start.setDate(start.getDate() - weekday);
-
-  const end = new Date(start);
-  end.setDate(end.getDate() + 7);
-
-  const lastDay = new Date(end);
-  lastDay.setDate(lastDay.getDate() - 1);
+  start.setMonth(start.getMonth() - months);
+  start.setDate(start.getDate() + 1);
 
   return {
     start,
     end,
-    label: `${formatDateLabel(start)} ate ${formatDateLabel(lastDay)}`,
+    label: `${label}: ${formatDateLabel(start)} ate ${formatDateLabel(referenceDate)}`,
   };
+}
+
+function getCustomRange(startDateInput?: string, endDateInput?: string) {
+  const today = startOfDay(new Date());
+  const fallbackEnd = parseDateInput(endDateInput) ?? today;
+  const fallbackStart = parseDateInput(startDateInput) ?? fallbackEnd;
+
+  let start = fallbackStart;
+  let end = fallbackEnd;
+
+  if (start > end) {
+    const tmp = start;
+    start = end;
+    end = tmp;
+  }
+
+  return {
+    range: {
+      start,
+      end: endExclusiveOfDay(end),
+      label: `Personalizado: ${formatDateLabel(start)} ate ${formatDateLabel(end)}`,
+    },
+    startDate: toDateInputValue(start),
+    endDate: toDateInputValue(end),
+  };
+}
+
+function getRangeForPeriod(
+  period: ReportPeriod,
+  referenceDate: Date,
+  customStartDate?: string,
+  customEndDate?: string,
+) {
+  switch (period) {
+    case "1d":
+      return {
+        range: getTrailingDaysRange(referenceDate, 1, "Periodo de 1 dia"),
+        customStartDate: customStartDate ?? toDateInputValue(referenceDate),
+        customEndDate: customEndDate ?? toDateInputValue(referenceDate),
+      };
+    case "7d":
+      return {
+        range: getTrailingDaysRange(referenceDate, 7, "Periodo de 7 dias"),
+        customStartDate: customStartDate ?? toDateInputValue(referenceDate),
+        customEndDate: customEndDate ?? toDateInputValue(referenceDate),
+      };
+    case "30d":
+      return {
+        range: getTrailingDaysRange(referenceDate, 30, "Periodo de 30 dias"),
+        customStartDate: customStartDate ?? toDateInputValue(referenceDate),
+        customEndDate: customEndDate ?? toDateInputValue(referenceDate),
+      };
+    case "3m":
+      return {
+        range: getTrailingMonthsRange(referenceDate, 3, "Periodo de 3 meses"),
+        customStartDate: customStartDate ?? toDateInputValue(referenceDate),
+        customEndDate: customEndDate ?? toDateInputValue(referenceDate),
+      };
+    case "6m":
+      return {
+        range: getTrailingMonthsRange(referenceDate, 6, "Periodo de 6 meses"),
+        customStartDate: customStartDate ?? toDateInputValue(referenceDate),
+        customEndDate: customEndDate ?? toDateInputValue(referenceDate),
+      };
+    case "1y":
+      return {
+        range: getTrailingMonthsRange(referenceDate, 12, "Periodo de 1 ano"),
+        customStartDate: customStartDate ?? toDateInputValue(referenceDate),
+        customEndDate: customEndDate ?? toDateInputValue(referenceDate),
+      };
+    case "custom": {
+      const custom = getCustomRange(customStartDate, customEndDate);
+      return {
+        range: custom.range,
+        customStartDate: custom.startDate,
+        customEndDate: custom.endDate,
+      };
+    }
+    default:
+      return {
+        range: getTrailingDaysRange(referenceDate, 1, "Periodo de 1 dia"),
+        customStartDate: customStartDate ?? toDateInputValue(referenceDate),
+        customEndDate: customEndDate ?? toDateInputValue(referenceDate),
+      };
+  }
 }
 
 async function getReportPeriodData(period: ReportPeriod, range: ReportRange): Promise<ReportPeriodData> {
@@ -193,7 +313,6 @@ async function getReportPeriodData(period: ReportPeriod, range: ReportRange): Pr
         },
       },
       select: {
-        productId: true,
         productNameSnapshot: true,
         quantity: true,
         lineTotal: true,
@@ -304,7 +423,20 @@ async function getReportPeriodData(period: ReportPeriod, range: ReportRange): Pr
 
   return {
     period,
-    label: period === "daily" ? "Relatorio diario" : "Relatorio semanal",
+    label:
+      period === "1d"
+        ? "Relatorio de 1 dia"
+        : period === "7d"
+          ? "Relatorio de 7 dias"
+          : period === "30d"
+            ? "Relatorio de 30 dias"
+            : period === "3m"
+              ? "Relatorio de 3 meses"
+              : period === "6m"
+                ? "Relatorio de 6 meses"
+                : period === "1y"
+                  ? "Relatorio de 1 ano"
+                  : "Relatorio personalizado",
     range,
     summary,
     categoryRows,
@@ -313,21 +445,26 @@ async function getReportPeriodData(period: ReportPeriod, range: ReportRange): Pr
 }
 
 export async function getReportsData(input: ReportsDataInput): Promise<ReportsData> {
-  const selectedPeriod: ReportPeriod = input.period === "weekly" ? "weekly" : "daily";
+  const selectedPeriod = resolvePeriod(input.period);
   const referenceDate = parseReferenceDate(input.date);
-  const dailyRange = getDailyRange(referenceDate);
-  const weeklyRange = getWeeklyRange(referenceDate);
 
-  const [daily, weekly] = await Promise.all([
-    getReportPeriodData("daily", dailyRange),
-    getReportPeriodData("weekly", weeklyRange),
+  const oneDayRange = getRangeForPeriod("1d", referenceDate, input.startDate, input.endDate).range;
+  const sevenDaysRange = getRangeForPeriod("7d", referenceDate, input.startDate, input.endDate).range;
+  const selectedRangeData = getRangeForPeriod(selectedPeriod, referenceDate, input.startDate, input.endDate);
+
+  const [oneDay, sevenDays, active] = await Promise.all([
+    getReportPeriodData("1d", oneDayRange),
+    getReportPeriodData("7d", sevenDaysRange),
+    getReportPeriodData(selectedPeriod, selectedRangeData.range),
   ]);
 
   return {
-    referenceDate: referenceDate.toISOString().slice(0, 10),
+    referenceDate: toDateInputValue(referenceDate),
+    customStartDate: selectedRangeData.customStartDate,
+    customEndDate: selectedRangeData.customEndDate,
     selectedPeriod,
-    active: selectedPeriod === "weekly" ? weekly : daily,
-    daily,
-    weekly,
+    active,
+    oneDay,
+    sevenDays,
   };
 }

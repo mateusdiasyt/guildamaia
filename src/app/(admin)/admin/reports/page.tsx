@@ -1,20 +1,19 @@
-import Link from "next/link";
-
 import { requirePermission } from "@/application/auth/guards";
 import { getReportsData } from "@/application/reports/report-service";
 import { MetricCard } from "@/components/admin/metric-card";
 import { PageHeader } from "@/components/admin/page-header";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PERMISSIONS } from "@/domain/auth/permissions";
 import { formatCurrency } from "@/lib/format";
+import { ReportFilterForm } from "@/presentation/admin/reports/report-filter-form";
 
 type ReportsPageProps = {
   searchParams: Promise<{
     period?: string;
     date?: string;
+    startDate?: string;
+    endDate?: string;
   }>;
 };
 
@@ -24,55 +23,44 @@ function formatPercent(value: number) {
 
 export default async function ReportsPage({ searchParams }: ReportsPageProps) {
   await requirePermission(PERMISSIONS.DASHBOARD_VIEW);
-  const { period, date } = await searchParams;
-  const reports = await getReportsData({ period, date });
+  const { period, date, startDate, endDate } = await searchParams;
+  const reports = await getReportsData({ period, date, startDate, endDate });
 
   return (
     <div className="space-y-6">
       <PageHeader
         eyebrow="Modulo ERP"
         title="Relatorios"
-        description="Visao financeira diaria e semanal com custo, lucro, margem e ROI por categoria e por item."
+        description="Visao financeira por periodo com custo, lucro, margem e ROI por categoria e por item."
       />
 
       <Card>
         <CardHeader className="border-b border-border/70 pb-4">
           <CardTitle>Filtro do relatorio</CardTitle>
-          <CardDescription>Escolha a data de referencia e o tipo de consolidacao.</CardDescription>
+          <CardDescription>
+            Selecione o periodo e o calendario atualiza automaticamente sem precisar confirmar.
+          </CardDescription>
         </CardHeader>
         <CardContent className="pt-4">
-          <form method="GET" className="grid gap-3 md:grid-cols-[180px_220px_auto_auto]">
-            <select name="period" className="admin-native-select" defaultValue={reports.selectedPeriod}>
-              <option value="daily">Diario</option>
-              <option value="weekly">Semanal</option>
-            </select>
-
-            <Input name="date" type="date" defaultValue={reports.referenceDate} />
-
-            <Button type="submit" variant="secondary">
-              Atualizar
-            </Button>
-
-            <Link
-              href="/admin/reports"
-              className="inline-flex h-9 items-center justify-center rounded-xl border border-border/80 bg-background/85 px-3 text-sm font-medium text-foreground shadow-sm transition-colors hover:border-border hover:bg-muted/70"
-            >
-              Limpar
-            </Link>
-          </form>
+          <ReportFilterForm
+            selectedPeriod={reports.selectedPeriod}
+            referenceDate={reports.referenceDate}
+            customStartDate={reports.customStartDate}
+            customEndDate={reports.customEndDate}
+          />
         </CardContent>
       </Card>
 
       <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard
-          title="Relatorio diario"
-          value={formatCurrency(reports.daily.summary.netRevenue)}
-          helper={reports.daily.range.label}
+          title="Relatorio 1 dia"
+          value={formatCurrency(reports.oneDay.summary.netRevenue)}
+          helper={reports.oneDay.range.label}
         />
         <MetricCard
-          title="Relatorio semanal"
-          value={formatCurrency(reports.weekly.summary.netRevenue)}
-          helper={reports.weekly.range.label}
+          title="Relatorio 7 dias"
+          value={formatCurrency(reports.sevenDays.summary.netRevenue)}
+          helper={reports.sevenDays.range.label}
         />
         <MetricCard
           title="Lucro bruto (periodo)"
