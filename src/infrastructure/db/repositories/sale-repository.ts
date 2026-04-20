@@ -150,6 +150,8 @@ export async function listPdvOpenSessions() {
 }
 
 export async function listRecentSales() {
+  const recentSalesLimit = 30;
+
   return prisma.sale.findMany({
     include: {
       operator: {
@@ -175,7 +177,7 @@ export async function listRecentSales() {
     orderBy: {
       createdAt: "desc",
     },
-    take: 100,
+    take: recentSalesLimit,
   });
 }
 

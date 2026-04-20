@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Fragment } from "react";
 
 import { SaleStatus } from "@prisma/client";
 
@@ -14,9 +15,14 @@ import { PdvWorkspace } from "@/presentation/admin/pdv/pdv-workspace";
 import { ReceiptPrintMode } from "@/presentation/admin/pdv/receipt-print-mode";
 import { ReceiptPreviewCard } from "@/presentation/admin/pdv/receipt-preview-card";
 
-const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
-  dateStyle: "short",
-  timeStyle: "short",
+const dayFormatter = new Intl.DateTimeFormat("pt-BR", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+});
+const timeFormatter = new Intl.DateTimeFormat("pt-BR", {
+  hour: "2-digit",
+  minute: "2-digit",
 });
 
 type PdvPageProps = {
@@ -113,6 +119,25 @@ export default async function PdvPage({ searchParams }: PdvPageProps) {
     })),
   }));
 
+  const groupedSales = sales.reduce<Array<{ dateKey: string; dateLabel: string; sales: typeof sales }>>(
+    (accumulator, sale) => {
+      const dateKey = sale.createdAt.toISOString().slice(0, 10);
+      const group = accumulator.find((entry) => entry.dateKey === dateKey);
+      if (group) {
+        group.sales.push(sale);
+        return accumulator;
+      }
+
+      accumulator.push({
+        dateKey,
+        dateLabel: dayFormatter.format(sale.createdAt),
+        sales: [sale],
+      });
+      return accumulator;
+    },
+    [],
+  );
+
   return (
     <div className="space-y-6">
       {issues.length > 0 ? (
@@ -140,7 +165,9 @@ export default async function PdvPage({ searchParams }: PdvPageProps) {
         <Card>
           <CardHeader className="border-b border-border/70 pb-4">
             <CardTitle>Vendas recentes</CardTitle>
-            <CardDescription>{sales.length} venda(s) encontrada(s).</CardDescription>
+            <CardDescription>
+              Exibindo as ultimas {sales.length} venda(s), agrupadas por data.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
@@ -164,44 +191,53 @@ export default async function PdvPage({ searchParams }: PdvPageProps) {
                     </TableCell>
                   </TableRow>
                 ) : null}
-                {sales.map((sale) => (
-                  <TableRow key={sale.id}>
-                    <TableCell className="font-medium text-foreground">
-                      {sale.saleNumber}
-                      {sale.customerName ? <p className="text-xs text-muted-foreground">{sale.customerName}</p> : null}
-                    </TableCell>
-                    <TableCell>{dateFormatter.format(sale.createdAt)}</TableCell>
-                    <TableCell>{sale.cashSession.cashRegister.name}</TableCell>
-                    <TableCell>{sale.operator.name}</TableCell>
-                    <TableCell>
-                      <Badge
-                        className={
-                          sale.status === SaleStatus.COMPLETED
-                            ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
-                            : "bg-rose-100 text-rose-700 hover:bg-rose-100"
-                        }
-                      >
-                        {sale.status === SaleStatus.COMPLETED ? "Concluida" : "Cancelada"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">{sale.items.length}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(Number(sale.totalAmount))}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Link
-                          href={`/admin/pdv?receipt=${sale.id}`}
-                          className="inline-flex h-8 items-center justify-center rounded-xl border border-border/80 bg-background/85 px-3 text-[0.8rem] font-medium text-foreground shadow-sm transition-colors hover:border-border hover:bg-muted/70"
-                        >
-                          Comprovante
-                        </Link>
-                        {canCancel && sale.status === SaleStatus.COMPLETED ? (
-                          <CancelSaleForm saleId={sale.id} />
-                        ) : (
-                          <span className="text-xs text-muted-foreground">-</span>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                {groupedSales.map((group) => (
+                  <Fragment key={`group-fragment-${group.dateKey}`}>
+                    <TableRow key={`group-${group.dateKey}`} className="bg-muted/20">
+                      <TableCell colSpan={8} className="py-2 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                        {group.dateLabel}
+                      </TableCell>
+                    </TableRow>
+                    {group.sales.map((sale) => (
+                      <TableRow key={sale.id}>
+                        <TableCell className="font-medium text-foreground">
+                          {sale.saleNumber}
+                          {sale.customerName ? <p className="text-xs text-muted-foreground">{sale.customerName}</p> : null}
+                        </TableCell>
+                        <TableCell>{timeFormatter.format(sale.createdAt)}</TableCell>
+                        <TableCell>{sale.cashSession.cashRegister.name}</TableCell>
+                        <TableCell>{sale.operator.name}</TableCell>
+                        <TableCell>
+                          <Badge
+                            className={
+                              sale.status === SaleStatus.COMPLETED
+                                ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+                                : "bg-rose-100 text-rose-700 hover:bg-rose-100"
+                            }
+                          >
+                            {sale.status === SaleStatus.COMPLETED ? "Concluida" : "Cancelada"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">{sale.items.length}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(Number(sale.totalAmount))}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Link
+                              href={`/admin/pdv?receipt=${sale.id}`}
+                              className="inline-flex h-8 items-center justify-center rounded-xl border border-border/80 bg-background/85 px-3 text-[0.8rem] font-medium text-foreground shadow-sm transition-colors hover:border-border hover:bg-muted/70"
+                            >
+                              Comprovante
+                            </Link>
+                            {canCancel && sale.status === SaleStatus.COMPLETED ? (
+                              <CancelSaleForm saleId={sale.id} />
+                            ) : (
+                              <span className="text-xs text-muted-foreground">-</span>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </Fragment>
                 ))}
               </TableBody>
             </Table>
