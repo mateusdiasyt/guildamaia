@@ -34,22 +34,6 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
         description="Visao financeira por periodo com custo, lucro, margem e ROI por categoria e por item."
       />
 
-      <Card>
-        <CardHeader className="border-b border-border/70 pb-4">
-          <CardTitle>Filtro do relatorio</CardTitle>
-          <CardDescription>
-            Selecione o periodo e o calendario atualiza automaticamente sem precisar confirmar.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-4">
-          <ReportFilterForm
-            selectedPeriod={reports.selectedPeriod}
-            customStartDate={reports.customStartDate}
-            customEndDate={reports.customEndDate}
-          />
-        </CardContent>
-      </Card>
-
       <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           title="Relatorio 1 dia"
@@ -100,6 +84,22 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
           helper="Lucro bruto dividido pelo custo total"
         />
       </section>
+
+      <Card>
+        <CardHeader className="border-b border-border/70 pb-4">
+          <CardTitle>Filtro do relatorio</CardTitle>
+          <CardDescription>
+            Selecione o periodo e o calendario atualiza automaticamente sem precisar confirmar.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <ReportFilterForm
+            selectedPeriod={reports.selectedPeriod}
+            customStartDate={reports.customStartDate}
+            customEndDate={reports.customEndDate}
+          />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
