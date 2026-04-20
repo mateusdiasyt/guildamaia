@@ -5,6 +5,7 @@ import {
   ChartColumnBig,
   ContactRound,
   Receipt,
+  LineChart,
   Package,
   ShieldUser,
   Store,
@@ -34,6 +35,12 @@ export const adminNavigation: AdminNavigationItem[] = [
     href: "/admin/pdv",
     icon: Receipt,
     permission: PERMISSIONS.PDV_VIEW,
+  },
+  {
+    label: "Relatorios",
+    href: "/admin/reports",
+    icon: LineChart,
+    permission: PERMISSIONS.DASHBOARD_VIEW,
   },
   {
     label: "Usuarios",
