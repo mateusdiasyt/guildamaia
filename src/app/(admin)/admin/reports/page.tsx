@@ -85,14 +85,14 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
         />
       </section>
 
-      <Card>
+      <Card className="z-20 overflow-visible">
         <CardHeader className="border-b border-border/70 pb-4">
           <CardTitle>Filtro do relatorio</CardTitle>
           <CardDescription>
             Selecione o periodo e o calendario atualiza automaticamente sem precisar confirmar.
           </CardDescription>
         </CardHeader>
-        <CardContent className="pt-4">
+        <CardContent className="overflow-visible pt-4">
           <ReportFilterForm
             selectedPeriod={reports.selectedPeriod}
             customStartDate={reports.customStartDate}

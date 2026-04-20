@@ -222,7 +222,7 @@ export function ReportFilterForm({
       </div>
 
       {isCustom ? (
-        <div ref={calendarContainerRef} className="relative w-[360px] max-w-full">
+        <div ref={calendarContainerRef} className="relative z-40 w-[360px] max-w-full">
           <button
             type="button"
             onClick={toggleCalendar}
@@ -235,7 +235,7 @@ export function ReportFilterForm({
           </button>
 
           {calendarOpen ? (
-            <div className="absolute left-0 top-12 z-30 w-[360px] max-w-[92vw] rounded-2xl border border-border/80 bg-card/95 p-3 shadow-2xl shadow-black/45 backdrop-blur">
+            <div className="absolute left-0 top-12 z-[80] w-[360px] max-w-[92vw] rounded-2xl border border-border/80 bg-card/95 p-3 shadow-2xl shadow-black/45 backdrop-blur">
               <div className="mb-3 flex items-center justify-between">
                 <button
                   type="button"
