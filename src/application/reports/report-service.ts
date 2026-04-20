@@ -195,8 +195,11 @@ function getTrailingMonthsRange(referenceDate: Date, months: number, label: stri
 
 function getCustomRange(startDateInput?: string, endDateInput?: string) {
   const today = startOfDay(new Date());
-  const fallbackEnd = parseDateInput(endDateInput) ?? today;
-  const fallbackStart = parseDateInput(startDateInput) ?? fallbackEnd;
+  const parsedStart = parseDateInput(startDateInput);
+  const parsedEnd = parseDateInput(endDateInput);
+
+  const fallbackStart = parsedStart ?? parsedEnd ?? today;
+  const fallbackEnd = parsedEnd ?? parsedStart ?? today;
 
   let start = fallbackStart;
   let end = fallbackEnd;
