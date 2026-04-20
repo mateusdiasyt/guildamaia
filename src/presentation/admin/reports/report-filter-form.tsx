@@ -10,7 +10,6 @@ import type { ReportPeriod } from "@/application/reports/report-service";
 
 type ReportFilterFormProps = {
   selectedPeriod: ReportPeriod;
-  referenceDate: string;
   customStartDate: string;
   customEndDate: string;
 };
@@ -32,7 +31,6 @@ const periodOptions: PeriodOption[] = [
 
 export function ReportFilterForm({
   selectedPeriod,
-  referenceDate,
   customStartDate,
   customEndDate,
 }: ReportFilterFormProps) {
@@ -59,7 +57,7 @@ export function ReportFilterForm({
     <form
       ref={formRef}
       method="GET"
-      className="grid gap-3 md:grid-cols-[260px_minmax(0,1fr)_44px] xl:grid-cols-[260px_minmax(0,1fr)_44px]"
+      className="grid gap-3 md:grid-cols-[260px_minmax(0,1fr)_44px]"
     >
       <div className="relative">
         <select
@@ -105,20 +103,9 @@ export function ReportFilterForm({
           </label>
         </div>
       ) : (
-        <label className="group relative">
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/90">
-            <CalendarDays className="h-4 w-4" />
-          </span>
-          <Input
-            name="date"
-            type="date"
-            defaultValue={referenceDate}
-            onChange={submitForm}
-            className="pl-9 shadow-[0_0_0_1px_color-mix(in_oklab,var(--primary)_14%,transparent)] transition-shadow group-focus-within:shadow-[0_0_0_1px_color-mix(in_oklab,var(--primary)_42%,transparent)]"
-          />
-          <input type="hidden" name="startDate" value={customStartDate} />
-          <input type="hidden" name="endDate" value={customEndDate} />
-        </label>
+        <div className="flex h-10 items-center rounded-xl border border-dashed border-border/70 bg-background/35 px-3 text-sm text-muted-foreground">
+          Intervalo automatico para o periodo selecionado
+        </div>
       )}
 
       <Button

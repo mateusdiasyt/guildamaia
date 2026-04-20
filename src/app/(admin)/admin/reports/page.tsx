@@ -44,7 +44,6 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
         <CardContent className="pt-4">
           <ReportFilterForm
             selectedPeriod={reports.selectedPeriod}
-            referenceDate={reports.referenceDate}
             customStartDate={reports.customStartDate}
             customEndDate={reports.customEndDate}
           />
