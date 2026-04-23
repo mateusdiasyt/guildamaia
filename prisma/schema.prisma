@@ -140,6 +140,7 @@ model User {
   openedComandas Comanda[] @relation("ComandaOpenedBy")
   closedComandas Comanda[] @relation("ComandaClosedBy")
   uploadedStockXmls StockInvoiceXml[] @relation("StockInvoiceXmlUploadedBy")
+  createdSystemUpdates SystemUpdate[] @relation("SystemUpdateCreatedBy")
 
   @@index([status])
   @@index([roleId])
@@ -522,4 +523,18 @@ model SupportTicket {
 
   @@index([status, createdAt])
   @@index([priority])
+}
+
+model SystemUpdate {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  createdById String?
+  createdByName String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy User? @relation("SystemUpdateCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
 }

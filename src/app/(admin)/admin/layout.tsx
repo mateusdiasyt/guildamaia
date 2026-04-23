@@ -28,6 +28,7 @@ export default async function AdminLayout({
         <div className="flex min-h-screen flex-1 flex-col">
           <AdminHeader
             userName={session.user.name}
+            userEmail={session.user.email}
             roleSlug={session.user.roleSlug}
             permissions={session.user.permissions}
           />

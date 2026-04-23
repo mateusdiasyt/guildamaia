@@ -6,7 +6,6 @@ import { Menu } from "lucide-react";
 
 import { BrandLogo } from "@/components/admin/brand-logo";
 import { adminNavigation } from "@/components/admin/navigation";
-import { SignOutButton } from "@/components/admin/sign-out-button";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -56,9 +55,6 @@ export function AdminMobileNav({ roleSlug, permissions }: AdminMobileNavProps) {
               </Link>
             );
           })}
-        </div>
-        <div className="border-t border-sidebar-border/75 p-3">
-          <SignOutButton />
         </div>
       </SheetContent>
     </Sheet>

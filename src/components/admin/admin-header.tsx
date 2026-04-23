@@ -1,17 +1,18 @@
 import { Bell } from "lucide-react";
 
 import { BrandLogo } from "@/components/admin/brand-logo";
+import { AdminUserMenu } from "@/components/admin/admin-user-menu";
 import { AdminMobileNav } from "@/components/admin/admin-mobile-nav";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 type AdminHeaderProps = {
   userName?: string | null;
+  userEmail?: string | null;
   roleSlug: string;
   permissions: string[];
 };
 
-export function AdminHeader({ userName, roleSlug, permissions }: AdminHeaderProps) {
+export function AdminHeader({ userName, userEmail, roleSlug, permissions }: AdminHeaderProps) {
   return (
     <header className="sticky top-0 z-30 border-b border-border/80 bg-background/78 px-4 py-3 backdrop-blur-xl md:px-8">
       <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between">
@@ -29,12 +30,7 @@ export function AdminHeader({ userName, roleSlug, permissions }: AdminHeaderProp
       </div>
 
       <div className="flex items-center gap-3">
-        <Badge
-          variant="outline"
-          className="hidden rounded-full border-border bg-card/85 px-2.5 text-foreground/85 shadow-sm sm:inline-flex"
-        >
-          {userName ?? "Usuario"}
-        </Badge>
+        <AdminUserMenu userName={userName} userEmail={userEmail} />
         <Button variant="outline" size="icon-sm" className="rounded-full">
           <Bell className="h-4 w-4" />
           <span className="sr-only">Alertas</span>

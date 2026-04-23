@@ -1,0 +1,61 @@
+"use client";
+
+import { LogOut, Megaphone, UserRound } from "lucide-react";
+import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
+
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+
+type AdminUserMenuProps = {
+  userName?: string | null;
+  userEmail?: string | null;
+};
+
+export function AdminUserMenu({ userName, userEmail }: AdminUserMenuProps) {
+  const router = useRouter();
+  const [isPendingSignOut, startSignOutTransition] = useTransition();
+
+  function handleSignOut() {
+    startSignOutTransition(async () => {
+      await signOut({ callbackUrl: "/login" });
+    });
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            type="button"
+            variant="outline"
+            className="h-9 rounded-full border-border bg-card/85 px-3 text-sm font-medium text-foreground/90 shadow-sm"
+          />
+        }
+      >
+        <span className="max-w-[13rem] truncate">{userName ?? "Usuario"}</span>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-64 min-w-64">
+        <DropdownMenuLabel>
+          <p className="truncate font-medium text-foreground">{userName ?? "Usuario"}</p>
+          <p className="truncate text-xs text-muted-foreground">{userEmail ?? "Sem email"}</p>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => router.push("/admin/profile")}>
+          <UserRound className="h-4 w-4" />
+          Perfil
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => router.push("/admin/updates")}>
+          <Megaphone className="h-4 w-4" />
+          Atualizacoes
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleSignOut} variant="destructive" disabled={isPendingSignOut}>
+          <LogOut className="h-4 w-4" />
+          {isPendingSignOut ? "Saindo..." : "Sair"}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}

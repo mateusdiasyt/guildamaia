@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 
 import { BrandLogo } from "@/components/admin/brand-logo";
 import { adminNavigation } from "@/components/admin/navigation";
-import { SignOutButton } from "@/components/admin/sign-out-button";
 import { cn } from "@/lib/utils";
 
 type AdminSidebarProps = {
@@ -63,9 +62,6 @@ export function AdminSidebar({ roleSlug, permissions }: AdminSidebarProps) {
         })}
       </nav>
 
-      <div className="border-t border-sidebar-border/75 p-3">
-        <SignOutButton />
-      </div>
     </aside>
   );
 }
