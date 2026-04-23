@@ -90,3 +90,63 @@ export async function registerStockMovement(data: RegisterStockMovementInput) {
 export async function countStockMovements() {
   return prisma.stockMovement.count();
 }
+
+export function isMissingStockInvoiceXmlTableError(error: unknown) {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    return error.code === "P2021" && String(error.meta?.table ?? "").includes("StockInvoiceXml");
+  }
+
+  if (error instanceof Error) {
+    const normalizedMessage = error.message.toLowerCase();
+    return normalizedMessage.includes("stockinvoicexml") && normalizedMessage.includes("does not exist");
+  }
+
+  return false;
+}
+
+export async function listStockInvoiceXmls() {
+  return prisma.stockInvoiceXml.findMany({
+    select: {
+      id: true,
+      accessKey: true,
+      invoiceNumber: true,
+      invoiceSeries: true,
+      supplierName: true,
+      issuedAt: true,
+      totalAmount: true,
+      itemCount: true,
+      sourceFileName: true,
+      createdAt: true,
+      uploadedBy: {
+        select: {
+          name: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: 30,
+  });
+}
+
+type CreateStockInvoiceXmlInput = {
+  accessKey: string;
+  invoiceNumber?: string;
+  invoiceSeries?: string;
+  supplierName?: string;
+  supplierDocument?: string;
+  issuedAt?: Date;
+  totalAmount?: Prisma.Decimal;
+  itemCount: number;
+  rawXml: string;
+  sourceFileName: string;
+  sourceFileSize: number;
+  uploadedById?: string;
+};
+
+export async function createStockInvoiceXmlRecord(data: CreateStockInvoiceXmlInput) {
+  return prisma.stockInvoiceXml.create({
+    data,
+  });
+}

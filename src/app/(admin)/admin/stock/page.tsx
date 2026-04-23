@@ -1,13 +1,14 @@
 import { StockMovementType } from "@prisma/client";
 
 import { requirePermission } from "@/application/auth/guards";
-import { getStockFormOptions, getStockMovements } from "@/application/stock/stock-service";
+import { getStockFormOptions, getStockInvoiceXmlHistory, getStockMovements } from "@/application/stock/stock-service";
 import { PageHeader } from "@/components/admin/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { hasPermission, PERMISSIONS } from "@/domain/auth/permissions";
 import { CreateStockMovementForm } from "@/presentation/admin/stock/create-stock-movement-form";
+import { UploadStockInvoiceXmlForm } from "@/presentation/admin/stock/upload-stock-invoice-xml-form";
 
 function movementTypeLabel(type: StockMovementType) {
   if (type === StockMovementType.IN) {
@@ -38,9 +39,22 @@ const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
   timeStyle: "short",
 });
 
+const dateOnlyFormatter = new Intl.DateTimeFormat("pt-BR", {
+  dateStyle: "short",
+});
+
+const currencyFormatter = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+});
+
 export default async function StockPage() {
   const session = await requirePermission(PERMISSIONS.STOCK_VIEW);
-  const [movements, products] = await Promise.all([getStockMovements(), getStockFormOptions()]);
+  const [movements, products, xmlHistory] = await Promise.all([
+    getStockMovements(),
+    getStockFormOptions(),
+    getStockInvoiceXmlHistory(),
+  ]);
   const canManage = hasPermission(session.user.permissions, PERMISSIONS.STOCK_MANAGE);
 
   return (
@@ -50,6 +64,20 @@ export default async function StockPage() {
         title="Estoque e Movimentacoes"
         description="Historico auditavel de entradas, saidas e ajustes com operador responsavel."
       />
+
+      {canManage ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>XML de notas de compra</CardTitle>
+            <CardDescription>
+              Carregue o XML recebido do fornecedor para guarda fiscal e rastreabilidade. Nenhum produto e importado automaticamente.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <UploadStockInvoiceXmlForm />
+          </CardContent>
+        </Card>
+      ) : null}
 
       {canManage ? (
         <Card>
@@ -64,6 +92,67 @@ export default async function StockPage() {
           </CardContent>
         </Card>
       ) : null}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>XMLs guardados</CardTitle>
+          <CardDescription>
+            Ultimos XMLs enviados para o estoque. Use como base de conferencia, contador e auditoria.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {xmlHistory.setupPending ? (
+            <p className="text-sm text-amber-600">
+              A tabela de XML ainda nao foi criada neste banco. Execute o db:push para habilitar o armazenamento.
+            </p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Chave NF-e</TableHead>
+                  <TableHead>Fornecedor</TableHead>
+                  <TableHead>Nota</TableHead>
+                  <TableHead>Data emissao</TableHead>
+                  <TableHead className="text-right">Itens</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead>Arquivo</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {xmlHistory.entries.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center text-sm text-zinc-500">
+                      Nenhum XML de estoque foi carregado.
+                    </TableCell>
+                  </TableRow>
+                ) : null}
+
+                {xmlHistory.entries.map((xmlEntry) => (
+                  <TableRow key={xmlEntry.id}>
+                    <TableCell className="font-mono text-xs text-zinc-700">{xmlEntry.accessKey}</TableCell>
+                    <TableCell>{xmlEntry.supplierName ?? "-"}</TableCell>
+                    <TableCell>
+                      {xmlEntry.invoiceNumber ? `N${xmlEntry.invoiceNumber}` : "-"}
+                      {xmlEntry.invoiceSeries ? (
+                        <p className="text-xs text-zinc-500">Serie {xmlEntry.invoiceSeries}</p>
+                      ) : null}
+                    </TableCell>
+                    <TableCell>{xmlEntry.issuedAt ? dateOnlyFormatter.format(xmlEntry.issuedAt) : "-"}</TableCell>
+                    <TableCell className="text-right">{xmlEntry.itemCount}</TableCell>
+                    <TableCell className="text-right">
+                      {xmlEntry.totalAmount ? currencyFormatter.format(Number(xmlEntry.totalAmount)) : "-"}
+                    </TableCell>
+                    <TableCell>
+                      <p className="max-w-[14rem] truncate text-sm">{xmlEntry.sourceFileName}</p>
+                      <p className="text-xs text-zinc-500">Upload em {dateFormatter.format(xmlEntry.createdAt)}</p>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
