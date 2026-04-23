@@ -15,26 +15,26 @@ export default async function UpdatesPage() {
   const { updates, setupPending } = await getSystemUpdates();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-white [&_.text-muted-foreground]:text-white/80">
       <PageHeader
         eyebrow="Modulo ERP"
         title="Atualizacoes do sistema"
         description="Registro interno das melhorias e mudancas publicadas no sistema via codigo."
       />
 
-      <Card>
+      <Card className="bg-card/78">
         <CardHeader>
-          <CardTitle>Historico de atualizacoes</CardTitle>
-          <CardDescription>Ultimas atualizacoes publicadas no sistema.</CardDescription>
+          <CardTitle className="text-white">Historico de atualizacoes</CardTitle>
+          <CardDescription className="text-white/80">Ultimas atualizacoes publicadas no sistema.</CardDescription>
         </CardHeader>
         <CardContent>
           {setupPending ? (
-            <p className="text-sm text-amber-600">
+            <p className="text-sm text-amber-200">
               O armazenamento em banco para atualizacoes nao esta ativo neste ambiente. Exibindo atualizacoes publicadas via codigo.
             </p>
           ) : (
-            <Table>
-              <TableHeader>
+            <Table className="text-white">
+              <TableHeader className="[&_th]:text-white/85">
                 <TableRow>
                   <TableHead>Data</TableHead>
                   <TableHead>Titulo</TableHead>
@@ -45,19 +45,19 @@ export default async function UpdatesPage() {
               <TableBody>
                 {updates.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-sm text-zinc-500">
+                    <TableCell colSpan={4} className="text-center text-sm text-white/75">
                       Nenhuma atualizacao foi registrada ainda.
                     </TableCell>
                   </TableRow>
                 ) : null}
                 {updates.map((updateEntry) => (
                   <TableRow key={updateEntry.id}>
-                    <TableCell className="whitespace-nowrap">{dateFormatter.format(updateEntry.createdAt)}</TableCell>
-                    <TableCell className="font-medium text-zinc-900">{updateEntry.title}</TableCell>
-                    <TableCell className="max-w-[38rem] whitespace-pre-wrap text-sm text-zinc-700">
+                    <TableCell className="whitespace-nowrap text-white">{dateFormatter.format(updateEntry.createdAt)}</TableCell>
+                    <TableCell className="font-medium text-white">{updateEntry.title}</TableCell>
+                    <TableCell className="max-w-[38rem] whitespace-pre-wrap text-sm text-white/88">
                       {updateEntry.description}
                     </TableCell>
-                    <TableCell>{updateEntry.createdByName}</TableCell>
+                    <TableCell className="text-white">{updateEntry.createdByName}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
