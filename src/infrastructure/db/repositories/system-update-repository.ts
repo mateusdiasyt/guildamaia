@@ -23,14 +23,3 @@ export async function listSystemUpdates() {
     take: 100,
   });
 }
-
-export async function createSystemUpdate(data: {
-  title: string;
-  description: string;
-  createdById?: string;
-  createdByName: string;
-}) {
-  return prisma.systemUpdate.create({
-    data,
-  });
-}

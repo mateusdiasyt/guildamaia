@@ -4,7 +4,6 @@ import { PageHeader } from "@/components/admin/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PERMISSIONS } from "@/domain/auth/permissions";
-import { CreateSystemUpdateForm } from "@/presentation/admin/updates/create-system-update-form";
 
 const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
   dateStyle: "short",
@@ -20,28 +19,18 @@ export default async function UpdatesPage() {
       <PageHeader
         eyebrow="Modulo ERP"
         title="Atualizacoes do sistema"
-        description="Registro interno das melhorias e mudancas publicadas no sistema."
+        description="Registro interno das melhorias e mudancas publicadas no sistema via codigo."
       />
 
       <Card>
         <CardHeader>
-          <CardTitle>Nova atualizacao</CardTitle>
-          <CardDescription>Publique um resumo sempre que algo for alterado para manter o time alinhado.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <CreateSystemUpdateForm />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
           <CardTitle>Historico de atualizacoes</CardTitle>
-          <CardDescription>Ultimas 100 atualizacoes registradas no painel.</CardDescription>
+          <CardDescription>Ultimas atualizacoes publicadas no sistema.</CardDescription>
         </CardHeader>
         <CardContent>
           {setupPending ? (
             <p className="text-sm text-amber-600">
-              A tabela de atualizacoes ainda nao foi criada neste banco. Execute o db:push para habilitar o modulo.
+              O armazenamento em banco para atualizacoes nao esta ativo neste ambiente. Exibindo atualizacoes publicadas via codigo.
             </p>
           ) : (
             <Table>

@@ -1,66 +1,56 @@
-import { createSystemUpdateSchema } from "@/domain/updates/schemas";
-import { createAuditLog } from "@/infrastructure/db/repositories/audit-log-repository";
-import {
-  createSystemUpdate,
-  isMissingSystemUpdateTableError,
-  listSystemUpdates,
-} from "@/infrastructure/db/repositories/system-update-repository";
+import { isMissingSystemUpdateTableError, listSystemUpdates } from "@/infrastructure/db/repositories/system-update-repository";
 
-function ensureSystemUpdateStorageAvailable(error: unknown): never {
-  if (isMissingSystemUpdateTableError(error)) {
-    throw new Error("Modulo de atualizacoes aguardando sincronizacao do banco. Rode o db:push no ambiente atual.");
+type SystemUpdateFeedItem = {
+  id: string;
+  title: string;
+  description: string;
+  createdByName: string;
+  createdAt: Date;
+};
+
+const CODE_SYSTEM_UPDATES: SystemUpdateFeedItem[] = [
+  {
+    id: "code-update-stock-xml-20260423",
+    title: "XML de produtos no estoque",
+    description:
+      "Novo fluxo para carregar XML de NF-e direto na aba Estoque.\n\nComo funciona:\n1. Clique em Carregar XML e selecione o arquivo .xml recebido do fornecedor.\n2. O sistema valida chave de acesso, numero/serie da nota, fornecedor, total e quantidade de itens.\n3. O XML original fica guardado com metadados para auditoria e contador.\n4. Nenhum produto e criado ou alterado automaticamente nessa etapa.\n5. O historico de XMLs fica visivel no painel de estoque para conferencia.",
+    createdByName: "Equipe de desenvolvimento",
+    createdAt: new Date("2026-04-23T11:45:00-03:00"),
+  },
+];
+
+function mergeSystemUpdatesById(dbUpdates: SystemUpdateFeedItem[]) {
+  const merged = new Map<string, SystemUpdateFeedItem>();
+
+  for (const updateEntry of dbUpdates) {
+    merged.set(updateEntry.id, updateEntry);
   }
 
-  throw error instanceof Error ? error : new Error("Nao foi possivel carregar as atualizacoes do sistema.");
+  for (const updateEntry of CODE_SYSTEM_UPDATES) {
+    merged.set(updateEntry.id, updateEntry);
+  }
+
+  return Array.from(merged.values()).sort((firstEntry, secondEntry) => {
+    return secondEntry.createdAt.getTime() - firstEntry.createdAt.getTime();
+  });
 }
 
 export async function getSystemUpdates() {
   try {
     const updates = await listSystemUpdates();
     return {
-      updates,
+      updates: mergeSystemUpdatesById(updates),
       setupPending: false,
     };
   } catch (error) {
     if (isMissingSystemUpdateTableError(error)) {
       console.warn("[SYSTEM_UPDATE] Tabela SystemUpdate ainda nao existe neste banco.");
       return {
-        updates: [],
+        updates: CODE_SYSTEM_UPDATES,
         setupPending: true,
       };
     }
 
     throw error;
   }
-}
-
-export async function createSystemUpdateRecord(input: FormData, actor: { id?: string; name: string }) {
-  const parsed = createSystemUpdateSchema.parse({
-    title: input.get("title"),
-    description: input.get("description"),
-  });
-
-  let created: Awaited<ReturnType<typeof createSystemUpdate>>;
-  try {
-    created = await createSystemUpdate({
-      title: parsed.title,
-      description: parsed.description,
-      createdById: actor.id,
-      createdByName: actor.name,
-    });
-  } catch (error) {
-    ensureSystemUpdateStorageAvailable(error);
-  }
-
-  await createAuditLog({
-    userId: actor.id,
-    action: "system.update.create",
-    entity: "SystemUpdate",
-    entityId: created.id,
-    metadata: {
-      title: created.title,
-      createdByName: created.createdByName,
-      createdAt: created.createdAt.toISOString(),
-    },
-  });
 }
