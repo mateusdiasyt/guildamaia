@@ -70,25 +70,11 @@ export default async function StockPage() {
           <CardHeader>
             <CardTitle>XML de notas de compra</CardTitle>
             <CardDescription>
-              Carregue o XML recebido do fornecedor para guarda fiscal e rastreabilidade. Nenhum produto e importado automaticamente.
+              Fluxo principal: carregue o XML recebido do fornecedor para guarda fiscal e rastreabilidade.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <UploadStockInvoiceXmlForm />
-          </CardContent>
-        </Card>
-      ) : null}
-
-      {canManage ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Novo registro de estoque</CardTitle>
-            <CardDescription>
-              Entradas, saidas e ajustes atualizam o saldo do produto com consistencia transacional.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <CreateStockMovementForm products={products} />
           </CardContent>
         </Card>
       ) : null}
@@ -200,6 +186,29 @@ export default async function StockPage() {
           </Table>
         </CardContent>
       </Card>
+
+      {canManage ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Movimentacao manual</CardTitle>
+            <CardDescription>
+              Acao opcional para ajustes pontuais. Fica fechada por padrao e abre somente quando necessario.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <details className="group rounded-xl border border-border/75 bg-card/50">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-foreground [&::-webkit-details-marker]:hidden">
+                <span>Abrir registro manual de estoque</span>
+                <span className="text-xs text-muted-foreground group-open:hidden">Fechado</span>
+                <span className="hidden text-xs text-muted-foreground group-open:inline">Aberto</span>
+              </summary>
+              <div className="border-t border-border/70 p-4">
+                <CreateStockMovementForm products={products} />
+              </div>
+            </details>
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   );
 }
