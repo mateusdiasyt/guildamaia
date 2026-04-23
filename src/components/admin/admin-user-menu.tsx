@@ -6,7 +6,15 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type AdminUserMenuProps = {
   userName?: string | null;
@@ -37,10 +45,12 @@ export function AdminUserMenu({ userName, userEmail }: AdminUserMenuProps) {
         <span className="max-w-[13rem] truncate">{userName ?? "Usuario"}</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64 min-w-64">
-        <DropdownMenuLabel>
-          <p className="truncate font-medium text-foreground">{userName ?? "Usuario"}</p>
-          <p className="truncate text-xs text-muted-foreground">{userEmail ?? "Sem email"}</p>
-        </DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>
+            <p className="truncate font-medium text-foreground">{userName ?? "Usuario"}</p>
+            <p className="truncate text-xs text-muted-foreground">{userEmail ?? "Sem email"}</p>
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => router.push("/admin/profile")}>
           <UserRound className="h-4 w-4" />
