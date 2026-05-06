@@ -12,6 +12,7 @@ import {
   Target,
   LifeBuoy,
   Warehouse,
+  PaintbrushVertical,
 } from "lucide-react";
 
 import { PERMISSIONS, type PermissionKey } from "@/domain/auth/permissions";
@@ -88,6 +89,12 @@ export const adminNavigation: AdminNavigationItem[] = [
     label: "Suporte",
     href: "/admin/support",
     icon: LifeBuoy,
+    permission: PERMISSIONS.DASHBOARD_VIEW,
+  },
+  {
+    label: "Personalizacao",
+    href: "/admin/customization",
+    icon: PaintbrushVertical,
     permission: PERMISSIONS.DASHBOARD_VIEW,
   },
   {

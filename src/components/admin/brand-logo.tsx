@@ -11,12 +11,13 @@ export function BrandLogo({ className, priority = false }: BrandLogoProps) {
   return (
     <div className={cn("relative w-full", className)}>
       <Image
-        src="/logo-maia.png"
-        alt="Logo Maia"
+        src="/api/branding/logo"
+        alt="Logo da empresa"
         width={960}
         height={320}
         className="h-auto w-full object-contain"
         priority={priority}
+        unoptimized
       />
     </div>
   );
